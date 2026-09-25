@@ -135,8 +135,11 @@ th.m { text-align: center; }
 td.kind { font-weight: 600; white-space: nowrap; }
 .row-actual td.kind { color: var(--done); }
 .row-plan td.kind { color: var(--brand); }
-tr.grp td { background: color-mix(in srgb, var(--brand) 8%, var(--panel)); font-weight: 700; }
+tr.grp { background: color-mix(in srgb, var(--brand) 8%, var(--panel)); }
+tr.grp td { font-weight: 700; background: transparent; }
 tr.grp td.sticky { background: color-mix(in srgb, var(--brand) 8%, var(--panel)); }
+tr.grp td.c-name { height: 36px; overflow: visible; z-index: 2; }
+.grp-title { position: absolute; left: 8px; top: 7px; white-space: nowrap; }
 .num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .empty { text-align: center; color: var(--muted); padding: 24px; }
 .badge { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: .8rem; white-space: nowrap; color: #fff; }
@@ -147,6 +150,8 @@ table.grid td.txt { white-space: pre-wrap; min-width: 280px; }
 .col-S { background: var(--shape-S); } .col-I { background: var(--shape-I); } .col-P { background: var(--lane-P); }
 .col-O { background: var(--shape-O); } .col-C { background: var(--shape-C); }
 
+.topic-info { display: flex; flex-wrap: wrap; gap: 4px 18px; margin-top: 10px; font-size: .88rem; }
+.src-extra { margin-top: 4px; }
 .foot { padding: 0 20px 24px; color: var(--muted); font-size: .82rem; }
 
 /* หน้าต่างแก้ไข */

@@ -30,6 +30,13 @@
   const itemById = {};
   data.topics.forEach(t => t.items.forEach(i => { itemById[i.id] = Object.assign({ topicId: t.id }, i); }));
 
+  function outputsFor(item) {
+    const end = item.rowEnd || item.row;
+    return topicById[item.topicId].items
+      .filter(o => o.col === 'O' && o.row <= end && (o.rowEnd || o.row) >= item.row)
+      .map(o => o.text.replace(/\n/g, ' ')).join('\n');
+  }
+
   function blank() {
     return {
       name: '', topicId: '', output: '', kpi: '', planQty: '', actualQty: '', unit: '',
@@ -48,7 +55,13 @@
   function get(id) {
     const base = blank();
     const item = itemById[id];
-    if (item) { base.name = item.text.replace(/\n/g, ' '); base.topicId = item.topicId; }
+    if (item) {
+      // ค่าเริ่มต้นจากไฟล์ต้นฉบับ: ชื่อ, ผลผลิตที่อยู่แถวเดียวกัน และเดือนเป้าหมายในคอลัมน์ระยะเวลา
+      base.name = item.text.replace(/\n/g, ' ');
+      base.topicId = item.topicId;
+      base.output = outputsFor(item);
+      (item.planMonths || []).forEach(i => { base.planMonths[i] = true; });
+    }
     const rec = Object.assign(base, state.records[id] || {}, { id, custom: !item });
     rec.overdue = isOverdue(rec);
     return rec;

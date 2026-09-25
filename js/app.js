@@ -3,7 +3,7 @@
   const $ = s => document.querySelector(s);
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const thDate = d => (d ? new Date(d + 'T00:00:00').toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' }) : '');
-  const topicName = id => (topicById[id] ? topicById[id].title : 'ไม่ระบุกระบวนการ');
+  const topicName = id => (topicById[id] ? `ข้อ ${topicById[id].id} ${topicById[id].title}` : 'ไม่ระบุกระบวนการ');
   const statusText = r => (r.overdue ? STATUS[r.status] + ' (เกินกำหนด)' : STATUS[r.status]);
   const qty = (v, r) => (v === '' || v == null ? '' : v + (r.unit ? ' ' + r.unit : ''));
   const COL_NAME = { S: 'ผู้ส่งมอบ', I: 'ปัจจัยนำเข้า', P: 'ขั้นตอนทำงาน', O: 'ผลผลิต', C: 'ผู้รับบริการ' };
@@ -23,7 +23,7 @@
   }
 
   const topicOptions = (all) => (all ? '<option value="">ทุกหัวข้อ</option>' : '') +
-    data.topics.map(t => `<option value="${t.id}">${esc(t.sheet)} — ${esc(t.title)}</option>`).join('');
+    data.topics.map(t => `<option value="${t.id}">${esc(topicName(t.id))}</option>`).join('');
   $('#diag-topic').innerHTML = topicOptions(false);
   $('#list-topic').innerHTML = topicOptions(true);
   $('#src-topic').innerHTML = topicOptions(false);
@@ -54,7 +54,13 @@
   // ---------- ผัง ----------
   function renderDiagram() {
     const t = topicById[$('#diag-topic').value];
-    if (t) Diagram.render($('#diagram'), t, { onActivity: openEdit });
+    if (!t) return;
+    $('#diag-info').innerHTML = [
+      t.unit && `<span><b>หน่วยงานที่รับผิดชอบ:</b> ${esc(t.unit)}</span>`,
+      t.objective && `<span><b>วัตถุประสงค์:</b> ${esc(t.objective)}</span>`,
+      `<span class="muted">ต้นฉบับ: ${esc(t.file || '')} · ชีต "${esc(t.sheet)}"</span>`,
+    ].filter(Boolean).join('');
+    Diagram.render($('#diagram'), t, { onActivity: openEdit });
   }
   $('#diag-topic').addEventListener('change', renderDiagram);
   $('#diagram-wrap').addEventListener('wheel', e => {
@@ -91,7 +97,7 @@
     const order = data.topics.map(t => t.id).concat(Object.keys(groups).filter(k => !topicById[k]));
     let body = '', n = 0;
     order.filter(k => groups[k]).forEach(k => {
-      body += `<tr class="grp"><td class="sticky c-no"></td><td class="sticky c-name" colspan="1">${esc(topicName(k))}</td><td colspan="20"></td></tr>`;
+      body += `<tr class="grp"><td class="sticky c-no"></td><td class="sticky c-name"><span class="grp-title">${esc(topicName(k))}</span></td><td colspan="20"></td></tr>`;
       groups[k].forEach(r => {
         n++;
         const cls = r.overdue ? 'overdue' : r.status;
@@ -121,15 +127,25 @@
   $('#btn-add').addEventListener('click', () => openEdit(null));
 
   // ---------- ข้อมูลต้นฉบับ ----------
+  function sourceExtra(i) {
+    const parts = [
+      i.timePlan && `ระยะเวลา/เป้าหมาย: ${esc(i.timePlan)}`,
+      i.timeActual && `ผล: ${esc(i.timeActual)}`,
+      i.sourceNote && `หมายเหตุ: ${esc(i.sourceNote)}`,
+    ].filter(Boolean);
+    return parts.length ? `<small class="src-extra">${parts.join('<br>')}</small>` : '';
+  }
+
   function renderSource() {
     const t = topicById[$('#src-topic').value];
     if (!t) return;
     const q = $('#src-search').value.trim().toLowerCase();
     const counts = 'SIPOC'.split('').map(c => `${c} ${t.items.filter(i => i.col === c).length}`).join(' · ');
-    $('#src-meta').textContent = `ชีต "${t.sheet}" · ${t.title} · ${t.items.length} รายการ (${counts})`;
+    $('#src-meta').textContent = `ข้อ ${t.id} ${t.title} · ไฟล์ ${t.file || '-'} ชีต "${t.sheet}" · ${t.items.length} รายการ (${counts})` +
+      (t.otherSheets && t.otherSheets.length ? ` · ไฟล์นี้มีชีตผังอื่นที่ไม่ได้ใช้: ${t.otherSheets.map(s => s.trim()).join(', ')}` : '');
     const rows = t.items.filter(i => !q || i.text.toLowerCase().includes(q)).map((i, k) => `<tr>
       <td>${k + 1}</td><td><span class="col-tag col-${i.col}">${i.col}</span> ${COL_NAME[i.col]}</td>
-      <td class="txt">${esc(i.text)}</td><td>${esc(i.ref)}</td><td>${i.row}</td>
+      <td class="txt">${esc(i.text)}${sourceExtra(i)}</td><td>${esc(i.ref)}</td><td>${i.row}${i.rowEnd > i.row ? '–' + i.rowEnd : ''}</td>
       <td>${i.col === 'P' ? `<button class="btn small" data-edit="${i.id}">ติดตามงาน</button>` : ''}</td></tr>`).join('');
     $('#src-table').innerHTML = `<thead><tr><th>ที่</th><th>คอลัมน์ SIPOC</th><th>ข้อความที่ถอดได้</th><th>ตำแหน่งอ้างอิง</th><th>แถว</th><th></th></tr></thead>
       <tbody>${rows || '<tr><td colspan="6" class="empty">ไม่พบข้อความ</td></tr>'}</tbody>`;
@@ -153,7 +169,9 @@
       ['plan', 'actual'].map(k => `<tr><th>${k === 'plan' ? 'แผน' : 'ผล'}</th>${(k === 'plan' ? r.planMonths : r.actualMonths)
         .map((on, i) => `<td><input type="checkbox" data-kind="${k}" data-m="${i}" ${on ? 'checked' : ''} aria-label="${k === 'plan' ? 'แผน' : 'ผล'} ${MONTHS[i]}"></td>`).join('')}</tr>`).join('') + '</table>';
     const item = id && Store.itemById[id];
-    $('#edit-ref').textContent = item ? `ต้นฉบับ: ชีต "${topicById[item.topicId].sheet}" · ${item.ref}` : (id ? 'กิจกรรมที่เพิ่มในระบบ' : '');
+    $('#edit-ref').innerHTML = item
+      ? `ต้นฉบับ: ข้อ ${esc(item.topicId)} · ชีต "${esc(topicById[item.topicId].sheet)}" · ${esc(item.ref)}${sourceExtra(item)}`
+      : (id ? 'กิจกรรมที่เพิ่มในระบบ' : '');
     $('#btn-delete').hidden = !(id && r.custom);
     renderFiles();
     dlg.showModal();
@@ -235,7 +253,7 @@
       </div>
       <h3>สรุปตามกระบวนการ</h3>
       <table class="grid"><thead><tr><th>กระบวนการ</th><th>กิจกรรม</th><th>เสร็จสิ้น</th><th>กำลังดำเนินการ</th><th>เกินกำหนด</th></tr></thead>
-      <tbody>${byTopic.map(x => `<tr><td>${esc(x.t.title)}</td><td class="num">${x.total}</td><td class="num">${x.done}</td><td class="num">${x.doing}</td><td class="num">${x.overdue}</td></tr>`).join('')}</tbody></table>
+      <tbody>${byTopic.map(x => `<tr><td>${esc(topicName(x.t.id))}</td><td class="num">${x.total}</td><td class="num">${x.done}</td><td class="num">${x.doing}</td><td class="num">${x.overdue}</td></tr>`).join('')}</tbody></table>
       <h3>งานเกินกำหนด (${s.overdue})</h3>
       ${s.overdue ? `<table class="grid"><thead><tr><th>กิจกรรม</th><th>ผู้รับผิดชอบ</th><th>ครบกำหนด</th><th>สถานะ</th></tr></thead><tbody>
         ${list.filter(r => r.overdue).map(r => `<tr><td>${esc(r.name)}</td><td>${esc(r.owner)}</td><td>${thDate(r.due)}</td><td>${STATUS[r.status]}</td></tr>`).join('')}</tbody></table>` : '<p class="muted">ไม่มี</p>'}
