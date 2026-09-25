@@ -17,6 +17,14 @@
     color-scheme: dark;
   }
 }
+:root[data-theme="dark"] {
+  --bg: #12161d; --panel: #1b212b; --ink: #e5e9f0; --muted: #98a2b3; --line: #313a48;
+  --brand: #5b9be6; --brand-ink: #0b1220;
+  --lane-S: #18223a; --lane-I: #1a2619; --lane-P: #2a2214; --lane-O: #221c33; --lane-C: #152a2a;
+  --shape-S: #26375c; --shape-I: #2b4227; --shape-P: #1b212b; --shape-O: #3a2f5c; --shape-C: #1f4545;
+  --stroke: #8b97ab;
+  color-scheme: dark;
+}
 
 * { box-sizing: border-box; }
 body {
