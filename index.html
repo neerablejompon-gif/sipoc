@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ระบบติดตามผล SIPOC</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <h1>ระบบติดตามและรายงานผลการดำเนินงานตาม SIPOC</h1>
+      <p class="sub" id="subtitle"></p>
+    </div>
+    <div class="actions">
+      <button class="btn" id="btn-report">สรุปรายงาน</button>
+      <button class="btn" id="btn-csv">ส่งออก CSV</button>
+      <details class="menu">
+        <summary class="btn">สำรองข้อมูล</summary>
+        <div class="menu-body">
+          <button class="btn ghost" id="btn-backup">ดาวน์โหลดไฟล์สำรอง (JSON)</button>
+          <label class="btn ghost">นำเข้าไฟล์สำรอง<input type="file" id="inp-restore" accept="application/json,.json" hidden></label>
+          <small>ไฟล์สำรองไม่รวมตัวไฟล์แนบ</small>
+        </div>
+      </details>
+    </div>
+  </header>
+
+  <div id="sample-banner" class="banner" hidden>
+    ขณะนี้ใช้ <b>ข้อมูลตัวอย่าง</b> — รัน <code>python3 tools/extract_sipoc.py "ไฟล์ SIPOC.xlsx"</code> เพื่อสร้างข้อมูลตั้งต้นจากไฟล์จริง
+  </div>
+
+  <section class="cards" id="cards"></section>
+
+  <nav class="tabs" role="tablist">
+    <button role="tab" data-view="diagram" class="active">ผัง SIPOC</button>
+    <button role="tab" data-view="list">รายการกิจกรรม</button>
+    <button role="tab" data-view="source">ข้อมูลต้นฉบับ</button>
+  </nav>
+
+  <main>
+    <section id="view-diagram" class="view">
+      <div class="toolbar">
+        <label>หัวข้อ <select id="diag-topic"></select></label>
+        <span class="legend">
+          <i class="lg st-todo"></i>ยังไม่เริ่ม <i class="lg st-doing"></i>กำลังดำเนินการ
+          <i class="lg st-done"></i>เสร็จสิ้น <i class="lg st-overdue"></i>เกินกำหนด
+        </span>
+      </div>
+      <p class="hint">คลิกกล่องขั้นตอนทำงาน (P) เพื่อแก้ไขข้อมูลติดตามงาน · ล้อเมาส์เลื่อนขึ้นลง · Shift + ล้อเมาส์เลื่อนแนวนอน · ข้อความเต็มดูได้ที่แท็บข้อมูลต้นฉบับ</p>
+      <div class="diagram-wrap" id="diagram-wrap"><svg id="diagram"></svg></div>
+      <p class="note">ผังนี้ระบบสร้างจากตำแหน่งข้อความใน Excel เส้นเชื่อมไม่ได้รับรองว่าตรงกับผังต้นฉบับทุกจุด หากจะใช้เป็นผังกระบวนการทางการ ควรทวนความสัมพันธ์ของแต่ละหัวข้ออีกครั้ง</p>
+    </section>
+
+    <section id="view-list" class="view" hidden>
+      <div class="toolbar">
+        <label>หัวข้อ <select id="list-topic"></select></label>
+        <label>สถานะ
+          <select id="list-status">
+            <option value="">ทั้งหมด</option>
+            <option value="todo">ยังไม่เริ่ม</option>
+            <option value="doing">กำลังดำเนินการ</option>
+            <option value="done">เสร็จสิ้น</option>
+            <option value="overdue">เกินกำหนด</option>
+          </select>
+        </label>
+        <input type="search" id="list-search" placeholder="ค้นหากิจกรรม / ผู้รับผิดชอบ">
+        <button class="btn primary" id="btn-add">+ เพิ่มกิจกรรม</button>
+      </div>
+      <p class="hint">แผน/ผลรายเดือน ปีงบประมาณ 2570 (ต.ค. 2569 – ก.ย. 2570) · คลิกช่องเดือนเพื่อทำเครื่องหมาย คลิกซ้ำเพื่อยกเลิก · ● = มีแผนในเดือนนั้น, ✔ = มีผลการดำเนินงานในเดือนนั้น</p>
+      <div class="table-wrap"><table class="plan" id="plan-table"></table></div>
+    </section>
+
+    <section id="view-source" class="view" hidden>
+      <div class="toolbar">
+        <label>ชีต <select id="src-topic"></select></label>
+        <input type="search" id="src-search" placeholder="ค้นหาข้อความ">
+      </div>
+      <p class="hint" id="src-meta"></p>
+      <div class="table-wrap"><table class="grid" id="src-table"></table></div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    ข้อมูลที่กรอกและไฟล์แนบเก็บเฉพาะในเบราว์เซอร์ของเครื่องนี้ (localStorage / IndexedDB, ไฟล์ละไม่เกิน 15 MB)
+    ไม่ซิงก์ระหว่างเครื่องหรือระหว่างผู้ใช้ การล้างข้อมูลเว็บไซต์หรือเปลี่ยนเบราว์เซอร์อาจทำให้ข้อมูลสูญหาย — ควรสำรองข้อมูลเป็นระยะ
+  </footer>
+
+  <dialog id="dlg-edit" class="dlg">
+    <form id="edit-form" method="dialog">
+      <h2 id="edit-title">แก้ไขกิจกรรม</h2>
+      <div class="form-grid">
+        <label class="span2">ชื่อกิจกรรม<input name="name" required></label>
+        <label class="span2">กระบวนการที่สังกัด<select name="topicId" required></select></label>
+        <label class="span2">ผลผลิต / หลักฐาน<textarea name="output" rows="2"></textarea></label>
+        <label class="span2">ตัวชี้วัดของกิจกรรม<textarea name="kpi" rows="2"></textarea></label>
+        <label>ปริมาณงานตามแผน<input name="planQty" inputmode="decimal"></label>
+        <label>ปริมาณงานที่ทำได้จริง<input name="actualQty" inputmode="decimal"></label>
+        <label>หน่วยนับ<input name="unit" placeholder="เช่น ครั้ง, ฉบับ, ราย"></label>
+        <label>สถานะ
+          <select name="status">
+            <option value="todo">ยังไม่เริ่ม</option>
+            <option value="doing">กำลังดำเนินการ</option>
+            <option value="done">เสร็จสิ้น</option>
+          </select>
+        </label>
+        <label>ผู้รับผิดชอบ<input name="owner"></label>
+        <label>วันครบกำหนด<input name="due" type="date"></label>
+        <label class="span2">ผลการดำเนินงานจริง<textarea name="result" rows="3"></textarea></label>
+        <label class="span2">หมายเหตุ<textarea name="note" rows="2"></textarea></label>
+      </div>
+      <fieldset class="months">
+        <legend>แผน/ผลรายเดือน ปีงบประมาณ 2570</legend>
+        <div id="edit-months"></div>
+      </fieldset>
+      <fieldset class="files">
+        <legend>ไฟล์แนบ (ไฟล์ละไม่เกิน 15 MB)</legend>
+        <div id="edit-files"></div>
+      </fieldset>
+      <p class="src-ref" id="edit-ref"></p>
+      <div class="dlg-actions">
+        <button type="button" class="btn danger" id="btn-delete" hidden>ลบกิจกรรม</button>
+        <span class="spacer"></span>
+        <button type="button" class="btn" id="btn-cancel">ยกเลิก</button>
+        <button type="submit" class="btn primary" value="save">บันทึก</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="dlg-report" class="dlg wide">
+    <div id="report-body"></div>
+    <div class="dlg-actions no-print">
+      <span class="spacer"></span>
+      <button class="btn" id="btn-print">พิมพ์</button>
+      <button class="btn primary" id="btn-report-close">ปิด</button>
+    </div>
+  </dialog>
+
+  <script src="js/sipoc-data.js"></script>
+  <script src="js/store.js"></script>
+  <script src="js/diagram.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
