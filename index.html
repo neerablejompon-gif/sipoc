@@ -15,9 +15,12 @@
       <p class="sub" id="subtitle"></p>
     </div>
     <div class="actions">
+      <span class="user-info" id="user-info"></span>
+      <button class="btn" id="btn-reload" hidden>โหลดข้อมูลล่าสุด</button>
+      <a class="btn" id="lnk-sheet" target="_blank" rel="noopener" hidden>เปิด Google Sheet</a>
       <button class="btn" id="btn-report">สรุปรายงาน</button>
       <button class="btn" id="btn-csv">ส่งออก CSV</button>
-      <details class="menu">
+      <details class="menu" id="backup-menu">
         <summary class="btn">สำรองข้อมูล</summary>
         <div class="menu-body">
           <button class="btn ghost" id="btn-backup">ดาวน์โหลดไฟล์สำรอง (JSON)</button>
@@ -84,7 +87,7 @@
     </section>
   </main>
 
-  <footer class="foot">
+  <footer class="foot" id="footer">
     ข้อมูลที่กรอกและไฟล์แนบเก็บเฉพาะในเบราว์เซอร์ของเครื่องนี้ (localStorage / IndexedDB, ไฟล์ละไม่เกิน 15 MB)
     ไม่ซิงก์ระหว่างเครื่องหรือระหว่างผู้ใช้ การล้างข้อมูลเว็บไซต์หรือเปลี่ยนเบราว์เซอร์อาจทำให้ข้อมูลสูญหาย — ควรสำรองข้อมูลเป็นระยะ
   </footer>
@@ -121,6 +124,7 @@
         <div id="edit-files"></div>
       </fieldset>
       <p class="src-ref" id="edit-ref"></p>
+      <p class="src-ref" id="edit-updated"></p>
       <div class="dlg-actions">
         <button type="button" class="btn danger" id="btn-delete" hidden>ลบกิจกรรม</button>
         <span class="spacer"></span>
@@ -138,6 +142,8 @@
       <button class="btn primary" id="btn-report-close">ปิด</button>
     </div>
   </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
   <script src="js/sipoc-data.js"></script>
   <script src="js/store.js"></script>

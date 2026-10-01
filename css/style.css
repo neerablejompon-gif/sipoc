@@ -27,6 +27,7 @@
 }
 
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 body {
   margin: 0; background: var(--bg); color: var(--ink);
   font: 15px/1.5 "Sarabun", "Noto Sans Thai", "Leelawadee UI", Tahoma, sans-serif;
@@ -160,6 +161,15 @@ table.grid td.txt { white-space: pre-wrap; min-width: 280px; }
 
 .topic-info { display: flex; flex-wrap: wrap; gap: 4px 18px; margin-top: 10px; font-size: .88rem; }
 .src-extra { margin-top: 4px; }
+.user-info { align-self: center; color: var(--muted); font-size: .85rem; }
+a.btn { text-decoration: none; color: inherit; }
+.toast {
+  position: fixed; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 50;
+  background: var(--ink); color: var(--panel); padding: 8px 16px; border-radius: 999px; font-size: .9rem;
+  box-shadow: 0 6px 18px rgba(0,0,0,.25);
+}
+.loading { padding: 48px 20px; text-align: center; color: var(--muted); }
+.loading.error { color: var(--overdue); white-space: pre-wrap; }
 .foot { padding: 0 20px 24px; color: var(--muted); font-size: .82rem; }
 
 /* หน้าต่างแก้ไข */
@@ -203,3 +213,8 @@ table.mini th, table.mini td { border: 0; padding: 2px 4px; text-align: center; 
   #dlg-report::backdrop { display: none; }
   .no-print { display: none !important; }
 }
+
+/* ผู้ใช้สิทธิ์ดูอย่างเดียว */
+.read-only #btn-add { display: none; }
+.read-only td.m { cursor: default; }
+.read-only td.m:hover { background: none; }

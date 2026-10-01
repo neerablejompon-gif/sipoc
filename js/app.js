@@ -14,6 +14,32 @@
   $('#subtitle').textContent = `ข้อมูลตั้งต้น: ${meta.source || '-'} · ${data.topics.length} หัวข้อ · ${nP} กล่องกิจกรรม · ปีงบประมาณ 2570`;
   $('#sample-banner').hidden = !meta.sample;
 
+  // ฐานข้อมูลส่วนกลาง (Google Sheets) มีปุ่มโหลดใหม่และลิงก์ชีต; ผู้ใช้สิทธิ์ดูอย่างเดียวแก้ไขไม่ได้
+  const readOnly = !!Store.readOnly;
+  document.body.classList.toggle('read-only', readOnly);
+  if (!Store.exportJSON) $('#backup-menu').hidden = true;
+  if (Store.reload) {
+    $('#btn-reload').hidden = false;
+    $('#btn-reload').addEventListener('click', () => busy(Store.reload(), 'กำลังโหลดข้อมูลล่าสุด…').then(refresh, showError));
+  }
+  if (Store.sheetUrl) { $('#lnk-sheet').href = Store.sheetUrl; $('#lnk-sheet').hidden = false; }
+  if (Store.user) $('#user-info').textContent = (Store.user.email || 'ผู้ใช้') + (readOnly ? ' · ดูอย่างเดียว' : '');
+  if (Store.footer) $('#footer').textContent = Store.footer;
+
+  // แสดงสถานะระหว่างรอการบันทึก
+  let busyCount = 0;
+  function busy(promise, text) {
+    const toast = $('#toast');
+    busyCount++;
+    toast.textContent = text || 'กำลังบันทึก…';
+    toast.hidden = false;
+    return Promise.resolve(promise).finally(() => { if (--busyCount === 0) toast.hidden = true; });
+  }
+  function showError(err) {
+    alert((err && err.message) || String(err));
+    if (err && err.conflict) refresh();
+  }
+
   function renderCards() {
     const s = Store.summary();
     $('#cards').innerHTML = [
@@ -118,7 +144,11 @@
   }
   $('#plan-table').addEventListener('click', e => {
     const m = e.target.closest('td.m[data-id]');
-    if (m) { Store.toggleMonth(m.dataset.id, m.dataset.kind, +m.dataset.m); refresh(); return; }
+    if (m) {
+      if (readOnly) return;
+      busy(Store.toggleMonth(m.dataset.id, m.dataset.kind, +m.dataset.m)).then(refresh, showError);
+      return;
+    }
     const b = e.target.closest('[data-edit]');
     if (b) openEdit(b.dataset.edit);
   });
@@ -172,7 +202,9 @@
     $('#edit-ref').innerHTML = item
       ? `ต้นฉบับ: ข้อ ${esc(item.topicId)} · ชีต "${esc(topicById[item.topicId].sheet)}" · ${esc(item.ref)}${sourceExtra(item)}`
       : (id ? 'กิจกรรมที่เพิ่มในระบบ' : '');
-    $('#btn-delete').hidden = !(id && r.custom);
+    $('#btn-delete').hidden = readOnly || !(id && r.custom);
+    form.querySelector('button[type=submit]').hidden = readOnly;
+    $('#edit-updated').textContent = r.updatedBy ? `แก้ไขล่าสุดโดย ${r.updatedBy} · ${new Date(r.updatedAt).toLocaleString('th-TH')}` : '';
     renderFiles();
     dlg.showModal();
   }
@@ -187,50 +219,64 @@
     box.innerHTML = (r.attachments.length ? '<ul class="file-list">' + r.attachments.map(a => `<li>
         <button type="button" class="link" data-dl="${a.id}">${esc(a.name)}</button>
         <small>${(a.size / 1024 / 1024).toFixed(2)} MB · ${new Date(a.addedAt).toLocaleDateString('th-TH')}</small>
-        <button type="button" class="btn small danger" data-rm="${a.id}">ลบ</button></li>`).join('') + '</ul>'
+        ${readOnly ? '' : `<button type="button" class="btn small danger" data-rm="${a.id}">ลบ</button>`}</li>`).join('') + '</ul>'
       : '<p class="muted">ยังไม่มีไฟล์แนบ</p>') +
-      '<label class="btn small">+ แนบไฟล์<input type="file" id="inp-file" multiple hidden></label>';
+      (readOnly ? '' : '<label class="btn small">+ แนบไฟล์<input type="file" id="inp-file" multiple hidden></label>');
   }
 
   $('#edit-files').addEventListener('change', async e => {
     if (e.target.id !== 'inp-file') return;
     for (const f of e.target.files) {
-      try { await Store.Files.add(editing, f); } catch (err) { alert(err.message); }
+      try { await busy(Store.Files.add(editing, f), `กำลังอัปโหลด ${f.name}…`); } catch (err) { showError(err); }
     }
     renderFiles();
     refresh();
   });
   $('#edit-files').addEventListener('click', async e => {
     const dl = e.target.closest('[data-dl]'), rm = e.target.closest('[data-rm]');
-    if (dl) {
-      const f = await Store.Files.get(dl.dataset.dl);
-      if (!f) { alert('ไม่พบไฟล์นี้ในเบราว์เซอร์เครื่องนี้'); return; }
-      download(f.blob, f.name);
-    }
-    if (rm) {
-      const a = Store.get(editing).attachments.find(x => x.id === rm.dataset.rm);
-      if (a && confirm(`ลบไฟล์ "${a.name}" ?`)) { await Store.Files.remove(editing, a.id); renderFiles(); refresh(); }
-    }
+    try {
+      if (dl) {
+        const f = await busy(Store.Files.get(dl.dataset.dl), 'กำลังดาวน์โหลด…');
+        if (!f) { alert('ไม่พบไฟล์นี้'); return; }
+        download(f.blob, f.name);
+      }
+      if (rm) {
+        const a = Store.get(editing).attachments.find(x => x.id === rm.dataset.rm);
+        if (a && confirm(`ลบไฟล์ "${a.name}" ?`)) { await busy(Store.Files.remove(editing, a.id)); renderFiles(); refresh(); }
+      }
+    } catch (err) { showError(err); }
   });
 
-  form.addEventListener('submit', e => {
+  form.addEventListener('submit', async e => {
     e.preventDefault();
+    if (readOnly) return;
     const f = {};
     ['name', 'topicId', 'output', 'kpi', 'planQty', 'actualQty', 'unit', 'owner', 'due', 'status', 'result', 'note']
       .forEach(k => { f[k] = form.elements[k].value.trim(); });
     f.planMonths = Array(12).fill(false);
     f.actualMonths = Array(12).fill(false);
     $('#edit-months').querySelectorAll('input').forEach(c => { f[c.dataset.kind === 'plan' ? 'planMonths' : 'actualMonths'][+c.dataset.m] = c.checked; });
-    Store.save(editing, f);
-    dlg.close();
-    refresh();
+    const btn = form.querySelector('button[type=submit]');
+    btn.disabled = true;
+    try {
+      await busy(Store.save(editing, f));
+      dlg.close();
+      refresh();
+    } catch (err) {
+      if (err && err.conflict) dlg.close();
+      showError(err);
+    } finally {
+      btn.disabled = false;
+    }
   });
   $('#btn-cancel').addEventListener('click', () => dlg.close());
   $('#btn-delete').addEventListener('click', async () => {
     if (!confirm('ลบกิจกรรมนี้และไฟล์แนบทั้งหมด?')) return;
-    await Store.remove(editing);
-    dlg.close();
-    refresh();
+    try {
+      await busy(Store.remove(editing), 'กำลังลบ…');
+      dlg.close();
+      refresh();
+    } catch (err) { showError(err); }
   });
 
   // ---------- รายงาน ----------
@@ -290,9 +336,9 @@
     download(new Blob([csv], { type: 'text/csv;charset=utf-8' }), `sipoc-report-${Store.today()}.csv`);
   });
 
-  $('#btn-backup').addEventListener('click', () =>
+  if (Store.exportJSON) $('#btn-backup').addEventListener('click', () =>
     download(new Blob([Store.exportJSON()], { type: 'application/json' }), `sipoc-backup-${Store.today()}.json`));
-  $('#inp-restore').addEventListener('change', async e => {
+  if (Store.importJSON) $('#inp-restore').addEventListener('change', async e => {
     const f = e.target.files[0];
     e.target.value = '';
     if (!f || !confirm('นำเข้าไฟล์สำรองจะแทนที่ข้อมูลกิจกรรมในเครื่องนี้ทั้งหมด ต้องการดำเนินการต่อ?')) return;

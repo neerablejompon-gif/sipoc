@@ -1,0 +1,1063 @@
+<!-- สร้างโดย tools/build_gas.py จาก index.html, css/, js/ — แก้ที่ไฟล์ต้นทางแล้วรันใหม่ -->
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ระบบติดตามผล SIPOC</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+:root {
+  --bg: #f4f6f9; --panel: #fff; --ink: #1d2433; --muted: #667085; --line: #d9dee7;
+  --brand: #1f5fa8; --brand-ink: #fff;
+  --todo: #98a2b3; --doing: #d98b0b; --done: #1a8f5a; --overdue: #c9372c;
+  --lane-S: #eef4ff; --lane-I: #f1f7ee; --lane-P: #fff7e8; --lane-O: #f4efff; --lane-C: #eaf7f7;
+  --shape-S: #d6e4ff; --shape-I: #d8ecd0; --shape-P: #fff; --shape-O: #e2d7ff; --shape-C: #cdeeee;
+  --stroke: #50607a;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #12161d; --panel: #1b212b; --ink: #e5e9f0; --muted: #98a2b3; --line: #313a48;
+    --brand: #5b9be6; --brand-ink: #0b1220;
+    --lane-S: #18223a; --lane-I: #1a2619; --lane-P: #2a2214; --lane-O: #221c33; --lane-C: #152a2a;
+    --shape-S: #26375c; --shape-I: #2b4227; --shape-P: #1b212b; --shape-O: #3a2f5c; --shape-C: #1f4545;
+    --stroke: #8b97ab;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #12161d; --panel: #1b212b; --ink: #e5e9f0; --muted: #98a2b3; --line: #313a48;
+  --brand: #5b9be6; --brand-ink: #0b1220;
+  --lane-S: #18223a; --lane-I: #1a2619; --lane-P: #2a2214; --lane-O: #221c33; --lane-C: #152a2a;
+  --shape-S: #26375c; --shape-I: #2b4227; --shape-P: #1b212b; --shape-O: #3a2f5c; --shape-C: #1f4545;
+  --stroke: #8b97ab;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body {
+  margin: 0; background: var(--bg); color: var(--ink);
+  font: 15px/1.5 "Sarabun", "Noto Sans Thai", "Leelawadee UI", Tahoma, sans-serif;
+}
+button, input, select, textarea { font: inherit; color: inherit; }
+
+.topbar {
+  display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; align-items: center;
+  padding: 16px 20px; background: var(--panel); border-bottom: 1px solid var(--line);
+}
+.topbar h1 { margin: 0; font-size: 1.3rem; }
+.sub { margin: 2px 0 0; color: var(--muted); font-size: .9rem; }
+.actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: flex-start; }
+
+.btn {
+  display: inline-flex; align-items: center; gap: 4px; cursor: pointer;
+  padding: 6px 14px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel);
+}
+.btn:hover { border-color: var(--brand); }
+.btn.primary { background: var(--brand); color: var(--brand-ink); border-color: var(--brand); }
+.btn.danger { color: var(--overdue); }
+.btn.ghost { border-color: transparent; width: 100%; justify-content: flex-start; }
+.btn.small { padding: 2px 10px; font-size: .85rem; }
+button.link { background: none; border: 0; padding: 0; color: var(--brand); cursor: pointer; text-decoration: underline; text-align: left; }
+
+.menu { position: relative; }
+.menu summary { list-style: none; }
+.menu summary::-webkit-details-marker { display: none; }
+.menu-body {
+  position: absolute; right: 0; top: calc(100% + 4px); z-index: 20; width: 240px;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 6px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.15); display: grid; gap: 2px;
+}
+.menu-body small { color: var(--muted); padding: 4px 14px; }
+
+.banner { margin: 12px 20px 0; padding: 10px 14px; border-radius: 8px; background: #fff4d6; color: #5c4400; border: 1px solid #f0d58a; }
+.banner code { background: rgba(0,0,0,.06); padding: 1px 4px; border-radius: 4px; }
+
+.cards { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; padding: 16px 20px 0; }
+.card { background: var(--panel); border: 1px solid var(--line); border-left: 5px solid var(--todo); border-radius: 10px; padding: 10px 14px; }
+.card span { display: block; color: var(--muted); font-size: .9rem; }
+.card b { font-size: 1.8rem; font-variant-numeric: tabular-nums; }
+.card small { margin-left: 6px; color: var(--muted); }
+.c-total { border-left-color: var(--brand); } .c-done { border-left-color: var(--done); }
+.c-doing { border-left-color: var(--doing); } .c-overdue { border-left-color: var(--overdue); }
+
+.tabs { display: flex; gap: 4px; padding: 16px 20px 0; border-bottom: 1px solid var(--line); overflow-x: auto; }
+.tabs button {
+  border: 1px solid transparent; border-bottom: 0; background: none; padding: 8px 16px;
+  border-radius: 8px 8px 0 0; cursor: pointer; color: var(--muted); white-space: nowrap;
+}
+.tabs button.active { background: var(--panel); border-color: var(--line); color: var(--ink); font-weight: 600; margin-bottom: -1px; }
+
+main { padding: 16px 20px 24px; }
+.toolbar { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.toolbar select, .toolbar input, .form-grid input, .form-grid select, .form-grid textarea {
+  padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--panel);
+}
+.toolbar select { max-width: min(520px, 80vw); }
+.toolbar input[type=search] { min-width: 220px; flex: 1; max-width: 360px; }
+.hint { color: var(--muted); font-size: .88rem; margin: 8px 0; }
+.note { color: var(--muted); font-size: .82rem; margin: 8px 0 0; }
+.muted { color: var(--muted); }
+.legend { display: inline-flex; flex-wrap: wrap; gap: 4px 10px; align-items: center; font-size: .88rem; color: var(--muted); }
+.lg { display: inline-block; width: 12px; height: 12px; border-radius: 3px; border: 2px solid; margin-right: -4px; }
+.lg.st-todo { border-color: var(--todo); } .lg.st-doing { border-color: var(--doing); }
+.lg.st-done { border-color: var(--done); } .lg.st-overdue { border-color: var(--overdue); }
+
+/* ผัง */
+.diagram-wrap {
+  overflow: auto; max-height: calc(100vh - 260px); min-height: 360px;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+}
+#diagram { display: block; }
+.lane-title { font-weight: 700; font-size: 14px; fill: var(--ink); }
+.lane-S { fill: var(--lane-S); } .lane-I { fill: var(--lane-I); } .lane-P { fill: var(--lane-P); }
+.lane-O { fill: var(--lane-O); } .lane-C { fill: var(--lane-C); }
+.shape { stroke: var(--stroke); stroke-width: 1.2; }
+.node-S .shape { fill: var(--shape-S); } .node-I .shape { fill: var(--shape-I); }
+.node-O .shape { fill: var(--shape-O); } .node-C .shape { fill: var(--shape-C); }
+.node-P .shape { fill: var(--shape-P); stroke-width: 2.4; }
+.node-P { cursor: pointer; }
+.node-P:hover .shape, .node-P:focus .shape { filter: drop-shadow(0 2px 4px rgba(0,0,0,.25)); }
+.node-P:focus { outline: none; }
+.node-P:focus .shape { stroke-dasharray: 5 3; }
+.shape.st-todo { stroke: var(--todo); } .shape.st-doing { stroke: var(--doing); }
+.shape.st-done { stroke: var(--done); } .shape.st-overdue { stroke: var(--overdue); }
+.node-text { font: 13px "Sarabun", "Noto Sans Thai", sans-serif; fill: var(--ink); pointer-events: none; }
+.link { fill: none; stroke: var(--stroke); stroke-width: 1.2; opacity: .7; }
+.arrow-head { fill: var(--stroke); }
+
+/* ตาราง */
+.table-wrap {
+  overflow: auto; max-height: calc(100vh - 260px); min-height: 300px;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+}
+table { border-collapse: separate; border-spacing: 0; width: 100%; }
+th, td { border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 6px 8px; vertical-align: top; text-align: left; }
+thead th { position: sticky; top: 0; z-index: 3; background: var(--panel); font-weight: 600; font-size: .88rem; }
+table.plan thead tr:nth-child(2) th { top: 33px; }
+table.plan th, table.plan td { font-size: .88rem; }
+table.plan .sticky { position: sticky; background: var(--panel); z-index: 2; }
+table.plan thead .sticky { z-index: 4; }
+table.plan .c-no { left: 0; width: 44px; min-width: 44px; text-align: center; }
+table.plan .c-name { left: 44px; min-width: 260px; max-width: 320px; box-shadow: 2px 0 0 var(--line); }
+table.plan .c-result { min-width: 220px; }
+table.plan .c-owner { min-width: 140px; }
+table small, td small { display: block; color: var(--muted); font-size: .8rem; }
+td.m { width: 38px; min-width: 38px; text-align: center; cursor: pointer; user-select: none; font-size: 1rem; }
+td.m:hover { background: color-mix(in srgb, var(--brand) 12%, transparent); }
+td.m.plan.on { color: var(--brand); }
+td.m.actual.on { color: var(--done); background: color-mix(in srgb, var(--done) 10%, transparent); }
+th.m { text-align: center; }
+td.kind { font-weight: 600; white-space: nowrap; }
+.row-actual td.kind { color: var(--done); }
+.row-plan td.kind { color: var(--brand); }
+tr.grp { background: color-mix(in srgb, var(--brand) 8%, var(--panel)); }
+tr.grp td { font-weight: 700; background: transparent; }
+tr.grp td.sticky { background: color-mix(in srgb, var(--brand) 8%, var(--panel)); }
+tr.grp td.c-name { height: 36px; overflow: visible; z-index: 2; }
+.grp-title { position: absolute; left: 8px; top: 7px; white-space: nowrap; }
+.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.empty { text-align: center; color: var(--muted); padding: 24px; }
+.badge { display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: .8rem; white-space: nowrap; color: #fff; }
+.badge.st-todo { background: var(--todo); } .badge.st-doing { background: var(--doing); }
+.badge.st-done { background: var(--done); } .badge.st-overdue { background: var(--overdue); }
+table.grid td.txt { white-space: pre-wrap; min-width: 280px; }
+.col-tag { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 5px; font-weight: 700; font-size: .8rem; border: 1px solid var(--stroke); }
+.col-S { background: var(--shape-S); } .col-I { background: var(--shape-I); } .col-P { background: var(--lane-P); }
+.col-O { background: var(--shape-O); } .col-C { background: var(--shape-C); }
+
+.topic-info { display: flex; flex-wrap: wrap; gap: 4px 18px; margin-top: 10px; font-size: .88rem; }
+.src-extra { margin-top: 4px; }
+.user-info { align-self: center; color: var(--muted); font-size: .85rem; }
+a.btn { text-decoration: none; color: inherit; }
+.toast {
+  position: fixed; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 50;
+  background: var(--ink); color: var(--panel); padding: 8px 16px; border-radius: 999px; font-size: .9rem;
+  box-shadow: 0 6px 18px rgba(0,0,0,.25);
+}
+.loading { padding: 48px 20px; text-align: center; color: var(--muted); }
+.loading.error { color: var(--overdue); white-space: pre-wrap; }
+.foot { padding: 0 20px 24px; color: var(--muted); font-size: .82rem; }
+
+/* หน้าต่างแก้ไข */
+.dlg {
+  width: min(820px, calc(100vw - 32px)); max-height: calc(100vh - 32px); padding: 20px;
+  border: 1px solid var(--line); border-radius: 14px; background: var(--panel); color: var(--ink);
+}
+.dlg.wide { width: min(1000px, calc(100vw - 32px)); }
+.dlg::backdrop { background: rgba(10, 16, 28, .45); }
+.dlg h2 { margin: 0 0 12px; font-size: 1.2rem; }
+.dlg h3 { margin: 18px 0 6px; font-size: 1rem; }
+.dlg .cards { padding: 0; }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 14px; }
+.form-grid label { display: grid; gap: 3px; font-size: .88rem; color: var(--muted); }
+.form-grid label > * { color: var(--ink); width: 100%; }
+.form-grid .span2 { grid-column: span 2; }
+fieldset { border: 1px solid var(--line); border-radius: 8px; margin: 14px 0 0; padding: 8px 12px; min-width: 0; }
+legend { font-size: .88rem; color: var(--muted); padding: 0 4px; }
+.months { overflow-x: auto; }
+table.mini { width: auto; }
+table.mini th, table.mini td { border: 0; padding: 2px 4px; text-align: center; font-size: .78rem; font-weight: 400; white-space: nowrap; position: static; }
+.file-list { list-style: none; margin: 0 0 8px; padding: 0; display: grid; gap: 4px; }
+.file-list li { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.file-list small { display: inline; }
+.src-ref { color: var(--muted); font-size: .82rem; margin: 10px 0 0; }
+.dlg-actions { display: flex; gap: 8px; margin-top: 16px; align-items: center; }
+.spacer { flex: 1; }
+
+@media (max-width: 720px) {
+  .topbar, .cards, .tabs, main { padding-left: 16px; padding-right: 16px; }
+  .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .form-grid { grid-template-columns: 1fr; }
+  .form-grid .span2 { grid-column: auto; }
+  .toolbar input[type=search] { min-width: 0; max-width: none; width: 100%; }
+  table.plan .c-name { min-width: 180px; }
+}
+
+@media print {
+  body > *:not(#dlg-report) { display: none !important; }
+  #dlg-report { position: static; border: 0; width: auto; max-height: none; padding: 0; }
+  #dlg-report::backdrop { display: none; }
+  .no-print { display: none !important; }
+}
+
+/* ผู้ใช้สิทธิ์ดูอย่างเดียว */
+.read-only #btn-add { display: none; }
+.read-only td.m { cursor: default; }
+.read-only td.m:hover { background: none; }
+</style>
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <h1>ระบบติดตามและรายงานผลการดำเนินงานตาม SIPOC</h1>
+      <p class="sub" id="subtitle"></p>
+    </div>
+    <div class="actions">
+      <span class="user-info" id="user-info"></span>
+      <button class="btn" id="btn-reload" hidden>โหลดข้อมูลล่าสุด</button>
+      <a class="btn" id="lnk-sheet" target="_blank" rel="noopener" hidden>เปิด Google Sheet</a>
+      <button class="btn" id="btn-report">สรุปรายงาน</button>
+      <button class="btn" id="btn-csv">ส่งออก CSV</button>
+      <details class="menu" id="backup-menu">
+        <summary class="btn">สำรองข้อมูล</summary>
+        <div class="menu-body">
+          <button class="btn ghost" id="btn-backup">ดาวน์โหลดไฟล์สำรอง (JSON)</button>
+          <label class="btn ghost">นำเข้าไฟล์สำรอง<input type="file" id="inp-restore" accept="application/json,.json" hidden></label>
+          <small>ไฟล์สำรองไม่รวมตัวไฟล์แนบ</small>
+        </div>
+      </details>
+    </div>
+  </header>
+
+  <div id="sample-banner" class="banner" hidden>
+    ขณะนี้ใช้ <b>ข้อมูลตัวอย่าง</b> — รัน <code>python3 tools/extract_sipoc.py "ไฟล์ SIPOC.xlsx"</code> เพื่อสร้างข้อมูลตั้งต้นจากไฟล์จริง
+  </div>
+
+  <div class="loading" id="loading">กำลังโหลดข้อมูลจาก Google Sheets…</div>
+  <section class="cards" id="cards"></section>
+
+  <nav class="tabs" role="tablist">
+    <button role="tab" data-view="diagram" class="active">ผัง SIPOC</button>
+    <button role="tab" data-view="list">รายการกิจกรรม</button>
+    <button role="tab" data-view="source">ข้อมูลต้นฉบับ</button>
+  </nav>
+
+  <main>
+    <section id="view-diagram" class="view">
+      <div class="toolbar">
+        <label>หัวข้อ <select id="diag-topic"></select></label>
+        <span class="legend">
+          <i class="lg st-todo"></i>ยังไม่เริ่ม <i class="lg st-doing"></i>กำลังดำเนินการ
+          <i class="lg st-done"></i>เสร็จสิ้น <i class="lg st-overdue"></i>เกินกำหนด
+        </span>
+      </div>
+      <div class="topic-info" id="diag-info"></div>
+      <p class="hint">คลิกกล่องขั้นตอนทำงาน (P) เพื่อแก้ไขข้อมูลติดตามงาน · ล้อเมาส์เลื่อนขึ้นลง · Shift + ล้อเมาส์เลื่อนแนวนอน · ข้อความเต็มดูได้ที่แท็บข้อมูลต้นฉบับ</p>
+      <div class="diagram-wrap" id="diagram-wrap"><svg id="diagram"></svg></div>
+      <p class="note">ผังนี้ระบบสร้างจากตำแหน่งข้อความใน Excel เส้นเชื่อมไม่ได้รับรองว่าตรงกับผังต้นฉบับทุกจุด หากจะใช้เป็นผังกระบวนการทางการ ควรทวนความสัมพันธ์ของแต่ละหัวข้ออีกครั้ง</p>
+    </section>
+
+    <section id="view-list" class="view" hidden>
+      <div class="toolbar">
+        <label>หัวข้อ <select id="list-topic"></select></label>
+        <label>สถานะ
+          <select id="list-status">
+            <option value="">ทั้งหมด</option>
+            <option value="todo">ยังไม่เริ่ม</option>
+            <option value="doing">กำลังดำเนินการ</option>
+            <option value="done">เสร็จสิ้น</option>
+            <option value="overdue">เกินกำหนด</option>
+          </select>
+        </label>
+        <input type="search" id="list-search" placeholder="ค้นหากิจกรรม / ผู้รับผิดชอบ">
+        <button class="btn primary" id="btn-add">+ เพิ่มกิจกรรม</button>
+      </div>
+      <p class="hint">แผน/ผลรายเดือน ปีงบประมาณ 2570 (ต.ค. 2569 – ก.ย. 2570) · คลิกช่องเดือนเพื่อทำเครื่องหมาย คลิกซ้ำเพื่อยกเลิก · ● = มีแผนในเดือนนั้น, ✔ = มีผลการดำเนินงานในเดือนนั้น</p>
+      <div class="table-wrap"><table class="plan" id="plan-table"></table></div>
+    </section>
+
+    <section id="view-source" class="view" hidden>
+      <div class="toolbar">
+        <label>ชีต <select id="src-topic"></select></label>
+        <input type="search" id="src-search" placeholder="ค้นหาข้อความ">
+      </div>
+      <p class="hint" id="src-meta"></p>
+      <div class="table-wrap"><table class="grid" id="src-table"></table></div>
+    </section>
+  </main>
+
+  <footer class="foot" id="footer">
+    ข้อมูลที่กรอกและไฟล์แนบเก็บเฉพาะในเบราว์เซอร์ของเครื่องนี้ (localStorage / IndexedDB, ไฟล์ละไม่เกิน 15 MB)
+    ไม่ซิงก์ระหว่างเครื่องหรือระหว่างผู้ใช้ การล้างข้อมูลเว็บไซต์หรือเปลี่ยนเบราว์เซอร์อาจทำให้ข้อมูลสูญหาย — ควรสำรองข้อมูลเป็นระยะ
+  </footer>
+
+  <dialog id="dlg-edit" class="dlg">
+    <form id="edit-form" method="dialog">
+      <h2 id="edit-title">แก้ไขกิจกรรม</h2>
+      <div class="form-grid">
+        <label class="span2">ชื่อกิจกรรม<input name="name" required></label>
+        <label class="span2">กระบวนการที่สังกัด<select name="topicId" required></select></label>
+        <label class="span2">ผลผลิต / หลักฐาน<textarea name="output" rows="2"></textarea></label>
+        <label class="span2">ตัวชี้วัดของกิจกรรม<textarea name="kpi" rows="2"></textarea></label>
+        <label>ปริมาณงานตามแผน<input name="planQty" inputmode="decimal"></label>
+        <label>ปริมาณงานที่ทำได้จริง<input name="actualQty" inputmode="decimal"></label>
+        <label>หน่วยนับ<input name="unit" placeholder="เช่น ครั้ง, ฉบับ, ราย"></label>
+        <label>สถานะ
+          <select name="status">
+            <option value="todo">ยังไม่เริ่ม</option>
+            <option value="doing">กำลังดำเนินการ</option>
+            <option value="done">เสร็จสิ้น</option>
+          </select>
+        </label>
+        <label>ผู้รับผิดชอบ<input name="owner"></label>
+        <label>วันครบกำหนด<input name="due" type="date"></label>
+        <label class="span2">ผลการดำเนินงานจริง<textarea name="result" rows="3"></textarea></label>
+        <label class="span2">หมายเหตุ<textarea name="note" rows="2"></textarea></label>
+      </div>
+      <fieldset class="months">
+        <legend>แผน/ผลรายเดือน ปีงบประมาณ 2570 (เดือนแผนเริ่มต้นตามคอลัมน์ระยะเวลาในไฟล์ต้นฉบับ)</legend>
+        <div id="edit-months"></div>
+      </fieldset>
+      <fieldset class="files">
+        <legend>ไฟล์แนบ (ไฟล์ละไม่เกิน 15 MB)</legend>
+        <div id="edit-files"></div>
+      </fieldset>
+      <p class="src-ref" id="edit-ref"></p>
+      <p class="src-ref" id="edit-updated"></p>
+      <div class="dlg-actions">
+        <button type="button" class="btn danger" id="btn-delete" hidden>ลบกิจกรรม</button>
+        <span class="spacer"></span>
+        <button type="button" class="btn" id="btn-cancel">ยกเลิก</button>
+        <button type="submit" class="btn primary" value="save">บันทึก</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="dlg-report" class="dlg wide">
+    <div id="report-body"></div>
+    <div class="dlg-actions no-print">
+      <span class="spacer"></span>
+      <button class="btn" id="btn-print">พิมพ์</button>
+      <button class="btn primary" id="btn-report-close">ปิด</button>
+    </div>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+  <script>
+// วาดผัง SIPOC (S → I → P → O → C) เป็น SVG จากตำแหน่งข้อความในไฟล์ Excel
+(function () {
+  const COLS = ['S', 'I', 'P', 'O', 'C'];
+  const HEAD = {
+    S: 'ผู้ส่งมอบ (Suppliers)', I: 'ปัจจัยนำเข้า (Inputs)', P: 'ขั้นตอนทำงาน (Process)',
+    O: 'ผลผลิต (Outputs)', C: 'ผู้รับบริการ (Customers)',
+  };
+  const W = 200, H = 70, GAP_X = 70, GAP_Y = 18, PAD = 24, TOP = 70;
+  const FONT = '13px "Sarabun", "Noto Sans Thai", sans-serif';
+  const LINE_H = 16, MAX_LINES = 3;
+  const SVGNS = 'http://www.w3.org/2000/svg';
+
+  const ctx = document.createElement('canvas').getContext('2d');
+  const seg = window.Intl && Intl.Segmenter ? new Intl.Segmenter('th', { granularity: 'word' }) : null;
+
+  function words(text) {
+    if (seg) return Array.from(seg.segment(text), s => s.segment);
+    return text.split(/(\s+)/);
+  }
+
+  // ตัดคำภาษาไทยให้อยู่ในกรอบ ถ้าเกินจำนวนบรรทัดให้ต่อท้ายด้วย "…"
+  function wrap(text, maxW) {
+    ctx.font = FONT;
+    const lines = [];
+    let truncated = false;
+    for (const para of text.split('\n')) {
+      let cur = '';
+      for (const w of words(para)) {
+        if (ctx.measureText(cur + w).width <= maxW || !cur) {
+          cur += w;
+          // คำเดียวยาวเกินบรรทัด
+          while (ctx.measureText(cur).width > maxW && cur.length > 1) {
+            let cut = cur.length - 1;
+            while (cut > 1 && ctx.measureText(cur.slice(0, cut)).width > maxW) cut--;
+            lines.push(cur.slice(0, cut));
+            cur = cur.slice(cut);
+          }
+        } else {
+          lines.push(cur.trim());
+          cur = w.trimStart();
+        }
+      }
+      lines.push(cur.trim());
+    }
+    const out = lines.filter((l, i) => l || i === 0);
+    if (out.length > MAX_LINES) { out.length = MAX_LINES; truncated = true; }
+    if (truncated) {
+      let last = out[MAX_LINES - 1];
+      while (last && ctx.measureText(last + '…').width > maxW) last = last.slice(0, -1);
+      out[MAX_LINES - 1] = last + '…';
+    }
+    return out;
+  }
+
+  function el(name, attrs, parent) {
+    const e = document.createElementNS(SVGNS, name);
+    for (const k in attrs) e.setAttribute(k, attrs[k]);
+    if (parent) parent.appendChild(e);
+    return e;
+  }
+
+  function shapePath(col, x, y, w, h) {
+    switch (col) {
+      case 'I': { const k = 12; return `M${x + k},${y} H${x + w} L${x + w - k},${y + h} H${x} Z`; }
+      case 'O': {
+        const b = y + h - 8;
+        return `M${x},${y} H${x + w} V${b} C${x + w * 0.75},${b - 12} ${x + w * 0.5},${b + 14} ${x + w * 0.25},${b + 4} ` +
+          `S${x + 8},${b - 4} ${x},${b + 2} Z`;
+      }
+      case 'C': { const r = h / 2; return `M${x + r},${y} H${x + w - r} A${r},${r} 0 0 1 ${x + w - r},${y + h} H${x + r} A${r},${r} 0 0 1 ${x + r},${y} Z`; }
+      case 'P': { const k = 12; return `M${x},${y} H${x + w - k} L${x + w},${y + h / 2} L${x + w - k},${y + h} H${x} Z`; }
+      default: { const r = 10; return `M${x + r},${y} H${x + w - r} Q${x + w},${y} ${x + w},${y + r} V${y + h - r} Q${x + w},${y + h} ${x + w - r},${y + h} H${x + r} Q${x},${y + h} ${x},${y + h - r} V${y + r} Q${x},${y} ${x + r},${y} Z`; }
+    }
+  }
+
+  // จัดตำแหน่ง: กล่องที่อยู่แถวเดียวกันใน Excel จะเรียงระดับเดียวกัน
+  function layout(topic) {
+    const colX = Object.fromEntries(COLS.map((c, i) => [c, PAD + i * (W + GAP_X)]));
+    const next = Object.fromEntries(COLS.map(c => [c, TOP]));
+    const rows = [...new Set(topic.items.map(i => i.row))].sort((a, b) => a - b);
+    const pos = {};
+    for (const r of rows) {
+      const inRow = topic.items.filter(i => i.row === r);
+      const cols = [...new Set(inRow.map(i => i.col))];
+      let y = Math.max(...cols.map(c => next[c]));
+      for (const c of cols) {
+        let yy = y;
+        inRow.filter(i => i.col === c).forEach(i => { pos[i.id] = { x: colX[c], y: yy, item: i }; yy += H + GAP_Y; });
+        next[c] = yy;
+      }
+    }
+    const height = Math.max(...Object.values(next)) + PAD;
+    return { pos, colX, width: PAD * 2 + COLS.length * W + (COLS.length - 1) * GAP_X, height };
+  }
+
+  // เส้นเชื่อม: ใช้ตัวเชื่อมจาก Excel ถ้ามี ไม่เช่นนั้นเชื่อมกับกล่องที่ใกล้ที่สุดในคอลัมน์ถัดไป
+  function links(topic, pos) {
+    const out = new Set(topic.links.map(l => l.join('>')));
+    const byCol = c => topic.items.filter(i => i.col === c && pos[i.id]);
+    const cy = id => pos[id].y + H / 2;
+    const nearest = (id, list) => list.reduce((b, i) => (!b || Math.abs(cy(i.id) - cy(id)) < Math.abs(cy(b.id) - cy(id)) ? i : b), null);
+    for (let k = 0; k < COLS.length - 1; k++) {
+      const a = byCol(COLS[k]), b = byCol(COLS[k + 1]);
+      if (!a.length || !b.length) continue;
+      // ขั้นตอน P ไม่จำเป็นต้องมีผลผลิตทุกขั้น จึงเชื่อมจากฝั่งผลผลิตกลับมาเท่านั้น
+      if (COLS[k] !== 'P') a.forEach(i => out.add(i.id + '>' + nearest(i.id, b).id));
+      b.forEach(i => { if (![...out].some(l => l.endsWith('>' + i.id))) out.add(nearest(i.id, a).id + '>' + i.id); });
+    }
+    const ps = byCol('P').sort((x, y) => pos[x.id].y - pos[y.id].y);
+    if (!topic.links.length) for (let i = 1; i < ps.length; i++) out.add(ps[i - 1].id + '>' + ps[i].id);
+    return [...out].map(s => s.split('>')).filter(([a, b]) => pos[a] && pos[b]);
+  }
+
+  function render(svg, topic, opts) {
+    svg.innerHTML = '';
+    const { pos, colX, width, height } = layout(topic);
+    svg.setAttribute('width', width);
+    svg.setAttribute('height', height);
+    svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+
+    const defs = el('defs', {}, svg);
+    const m = el('marker', { id: 'arr', viewBox: '0 0 10 10', refX: 9, refY: 5, markerWidth: 7, markerHeight: 7, orient: 'auto-start-reverse' }, defs);
+    el('path', { d: 'M0,0 L10,5 L0,10 z', class: 'arrow-head' }, m);
+
+    COLS.forEach(c => {
+      el('rect', { x: colX[c] - 12, y: 8, width: W + 24, height: height - 16, rx: 12, class: 'lane lane-' + c }, svg);
+      const t = el('text', { x: colX[c] + W / 2, y: 38, class: 'lane-title', 'text-anchor': 'middle' }, svg);
+      t.textContent = c + ' · ' + HEAD[c];
+    });
+
+    const gl = el('g', { class: 'links' }, svg);
+    for (const [a, b] of links(topic, pos)) {
+      const A = pos[a], B = pos[b];
+      let d;
+      if (A.x === B.x) {
+        const x = A.x + W / 2;
+        d = B.y > A.y ? `M${x},${A.y + H} V${B.y}` : `M${A.x},${A.y + H / 2} h-14 V${B.y + H / 2} h14`;
+      } else {
+        const x1 = A.x + W, y1 = A.y + H / 2, x2 = B.x, y2 = B.y + H / 2, mx = x1 + (x2 - x1) / 2;
+        d = `M${x1},${y1} H${mx} V${y2} H${x2}`;
+      }
+      el('path', { d, class: 'link', 'marker-end': 'url(#arr)' }, gl);
+    }
+
+    for (const id in pos) {
+      const { x, y, item } = pos[id];
+      const g = el('g', { class: 'node node-' + item.col, 'data-id': id }, svg);
+      let cls = 'shape';
+      if (item.col === 'P') {
+        const r = Store.get(id);
+        cls += ' st-' + (r.overdue ? 'overdue' : r.status);
+        g.setAttribute('tabindex', '0');
+        g.setAttribute('role', 'button');
+        g.addEventListener('click', () => opts.onActivity(id));
+        g.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); opts.onActivity(id); } });
+      }
+      el('path', { d: shapePath(item.col, x, y, W, H), class: cls }, g);
+      el('title', {}, g).textContent = item.text + '\n— ' + item.ref;
+      const padL = item.col === 'I' ? 16 : item.col === 'C' ? 22 : 12;
+      const lines = wrap(item.text, W - padL - (item.col === 'P' ? 22 : 14));
+      const ty = y + H / 2 - ((lines.length - 1) * LINE_H) / 2 + 4 - (item.col === 'O' ? 3 : 0);
+      const t = el('text', { x: x + padL, y: ty, class: 'node-text' }, g);
+      lines.forEach((l, i) => { el('tspan', { x: x + padL, dy: i ? LINE_H : 0 }, t).textContent = l; });
+    }
+  }
+
+  window.Diagram = { render, wrap };
+})();
+
+  </script>
+  <script>
+// การจัดเก็บข้อมูลผ่าน Google Apps Script: ข้อมูลกิจกรรมใน Google Sheets, ไฟล์แนบใน Google Drive
+// API เดียวกับ js/store.js แต่การบันทึกเป็น Promise
+function createGasStore(data) {
+  const MAX_FILE = 15 * 1024 * 1024;
+  const MONTHS = ['ต.ค. 69', 'พ.ย. 69', 'ธ.ค. 69', 'ม.ค. 70', 'ก.พ. 70', 'มี.ค. 70',
+    'เม.ย. 70', 'พ.ค. 70', 'มิ.ย. 70', 'ก.ค. 70', 'ส.ค. 70', 'ก.ย. 70'];
+  const STATUS = { todo: 'ยังไม่เริ่ม', doing: 'กำลังดำเนินการ', done: 'เสร็จสิ้น' };
+
+  function run(fn, ...args) {
+    return new Promise((resolve, reject) => {
+      google.script.run.withSuccessHandler(resolve).withFailureHandler(reject)[fn](...args);
+    });
+  }
+
+  let records = data.records || {};
+  let attachments = data.attachments || {};
+  let serverToday = data.today;
+  const topicById = Object.fromEntries(data.topics.map(t => [t.id, t]));
+  const itemById = {};
+  data.topics.forEach(t => t.items.forEach(i => { itemById[i.id] = Object.assign({ topicId: t.id }, i); }));
+
+  function outputsFor(item) {
+    const end = item.rowEnd || item.row;
+    return topicById[item.topicId].items
+      .filter(o => o.col === 'O' && o.row <= end && (o.rowEnd || o.row) >= item.row)
+      .map(o => o.text.replace(/\n/g, ' ')).join('\n');
+  }
+
+  function blank() {
+    return {
+      name: '', topicId: '', output: '', kpi: '', planQty: '', actualQty: '', unit: '',
+      owner: '', due: '', status: 'todo', result: '', note: '',
+      planMonths: Array(12).fill(false), actualMonths: Array(12).fill(false), attachments: [],
+      updatedAt: '', updatedBy: '',
+    };
+  }
+
+  function activityIds() {
+    const ids = [];
+    data.topics.forEach(t => t.items.forEach(i => { if (i.col === 'P') ids.push(i.id); }));
+    return ids.concat(Object.keys(records).filter(id => !itemById[id]));
+  }
+
+  function get(id) {
+    const base = blank();
+    const item = itemById[id];
+    if (item) {
+      base.name = item.text.replace(/\n/g, ' ');
+      base.topicId = item.topicId;
+      base.output = outputsFor(item);
+      (item.planMonths || []).forEach(i => { base.planMonths[i] = true; });
+    }
+    const rec = Object.assign(base, records[id] || {}, { id, custom: !item, attachments: attachments[id] || [] });
+    rec.overdue = !!rec.due && rec.status !== 'done' && rec.due < today();
+    return rec;
+  }
+
+  function all() { return activityIds().map(get); }
+
+  function today() {
+    if (serverToday) return serverToday;
+    const d = new Date();
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+
+  function summary(list) {
+    list = list || all();
+    return {
+      total: list.length,
+      done: list.filter(r => r.status === 'done').length,
+      doing: list.filter(r => r.status === 'doing').length,
+      overdue: list.filter(r => r.overdue).length,
+    };
+  }
+
+  async function save(id, fields) {
+    const expected = id && records[id] ? records[id].updatedAt : null;
+    const res = await run('saveActivity', id, fields, expected);
+    if (res.conflict) {
+      records[id] = res.record;
+      const err = new Error(`รายการนี้ถูกแก้ไขโดย ${res.record.updatedBy || 'ผู้ใช้อื่น'} ระหว่างที่คุณแก้ไข ระบบโหลดข้อมูลล่าสุดแล้ว กรุณาเปิดรายการและบันทึกอีกครั้ง`);
+      err.conflict = true;
+      throw err;
+    }
+    records[res.id] = res.record;
+    return res.id;
+  }
+
+  async function toggleMonth(id, kind, idx) {
+    const r = get(id);
+    const idxs = arr => arr.map((on, i) => (on ? i : -1)).filter(i => i >= 0);
+    const res = await run('toggleMonth', id, kind, idx,
+      { planMonths: idxs(r.planMonths), actualMonths: idxs(r.actualMonths), name: r.name, topicId: r.topicId });
+    records[id] = res.record;
+  }
+
+  async function remove(id) {
+    await run('deleteActivity', id);
+    delete records[id];
+    delete attachments[id];
+  }
+
+  function toBase64(file) {
+    return new Promise((resolve, reject) => {
+      const fr = new FileReader();
+      fr.onload = () => resolve(String(fr.result).split(',')[1] || '');
+      fr.onerror = () => reject(fr.error);
+      fr.readAsDataURL(file);
+    });
+  }
+
+  const Files = {
+    MAX: MAX_FILE,
+    async add(activityId, file) {
+      if (file.size > MAX_FILE) throw new Error(`ไฟล์ "${file.name}" ใหญ่เกิน 15 MB`);
+      const meta = await run('uploadAttachment', activityId, file.name, file.type, await toBase64(file));
+      (attachments[activityId] = attachments[activityId] || []).push(meta);
+      return meta;
+    },
+    async get(fileId) {
+      const f = await run('getAttachment', fileId);
+      const bin = atob(f.base64);
+      const bytes = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+      return { name: f.name, blob: new Blob([bytes], { type: f.mimeType }) };
+    },
+    async remove(activityId, fileId) {
+      await run('deleteAttachment', fileId);
+      attachments[activityId] = (attachments[activityId] || []).filter(a => a.id !== fileId);
+    },
+  };
+
+  async function reload() {
+    const d = await run('getAppData');
+    records = d.records || {};
+    attachments = d.attachments || {};
+    serverToday = d.today;
+  }
+
+  return {
+    MONTHS, STATUS, data, topicById, itemById, all, get, save, remove, toggleMonth, summary, today, Files,
+    reload,
+    user: data.user,
+    readOnly: !data.user || data.user.role !== 'editor',
+    sheetUrl: data.sheetUrl,
+    footer: 'ข้อมูลเก็บใน Google Sheets และไฟล์แนบเก็บใน Google Drive (ไฟล์ละไม่เกิน 15 MB) ใช้ร่วมกันทุกผู้ใช้ ' +
+      'ทุกการแก้ไขบันทึกผู้แก้ไขและเวลาในชีต Log กด "โหลดข้อมูลล่าสุด" เพื่อดูการแก้ไขของผู้อื่น',
+  };
+}
+
+  </script>
+  <script>
+function bootApp() {
+(function () {
+  const { MONTHS, STATUS, data, topicById } = Store;
+  const $ = s => document.querySelector(s);
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const thDate = d => (d ? new Date(d + 'T00:00:00').toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' }) : '');
+  const topicName = id => (topicById[id] ? `ข้อ ${topicById[id].id} ${topicById[id].title}` : 'ไม่ระบุกระบวนการ');
+  const statusText = r => (r.overdue ? STATUS[r.status] + ' (เกินกำหนด)' : STATUS[r.status]);
+  const qty = (v, r) => (v === '' || v == null ? '' : v + (r.unit ? ' ' + r.unit : ''));
+  const COL_NAME = { S: 'ผู้ส่งมอบ', I: 'ปัจจัยนำเข้า', P: 'ขั้นตอนทำงาน', O: 'ผลผลิต', C: 'ผู้รับบริการ' };
+
+  // ---------- ส่วนหัว ----------
+  const meta = data.meta || {};
+  const nP = data.topics.reduce((n, t) => n + t.items.filter(i => i.col === 'P').length, 0);
+  $('#subtitle').textContent = `ข้อมูลตั้งต้น: ${meta.source || '-'} · ${data.topics.length} หัวข้อ · ${nP} กล่องกิจกรรม · ปีงบประมาณ 2570`;
+  $('#sample-banner').hidden = !meta.sample;
+
+  // ฐานข้อมูลส่วนกลาง (Google Sheets) มีปุ่มโหลดใหม่และลิงก์ชีต; ผู้ใช้สิทธิ์ดูอย่างเดียวแก้ไขไม่ได้
+  const readOnly = !!Store.readOnly;
+  document.body.classList.toggle('read-only', readOnly);
+  if (!Store.exportJSON) $('#backup-menu').hidden = true;
+  if (Store.reload) {
+    $('#btn-reload').hidden = false;
+    $('#btn-reload').addEventListener('click', () => busy(Store.reload(), 'กำลังโหลดข้อมูลล่าสุด…').then(refresh, showError));
+  }
+  if (Store.sheetUrl) { $('#lnk-sheet').href = Store.sheetUrl; $('#lnk-sheet').hidden = false; }
+  if (Store.user) $('#user-info').textContent = (Store.user.email || 'ผู้ใช้') + (readOnly ? ' · ดูอย่างเดียว' : '');
+  if (Store.footer) $('#footer').textContent = Store.footer;
+
+  // แสดงสถานะระหว่างรอการบันทึก
+  let busyCount = 0;
+  function busy(promise, text) {
+    const toast = $('#toast');
+    busyCount++;
+    toast.textContent = text || 'กำลังบันทึก…';
+    toast.hidden = false;
+    return Promise.resolve(promise).finally(() => { if (--busyCount === 0) toast.hidden = true; });
+  }
+  function showError(err) {
+    alert((err && err.message) || String(err));
+    if (err && err.conflict) refresh();
+  }
+
+  function renderCards() {
+    const s = Store.summary();
+    $('#cards').innerHTML = [
+      ['กิจกรรมทั้งหมด', s.total, 'c-total'], ['เสร็จสิ้น', s.done, 'c-done'],
+      ['กำลังดำเนินการ', s.doing, 'c-doing'], ['เกินกำหนด', s.overdue, 'c-overdue'],
+    ].map(([l, v, c]) => `<div class="card ${c}"><span>${l}</span><b>${v}</b></div>`).join('');
+  }
+
+  const topicOptions = (all) => (all ? '<option value="">ทุกหัวข้อ</option>' : '') +
+    data.topics.map(t => `<option value="${t.id}">${esc(topicName(t.id))}</option>`).join('');
+  $('#diag-topic').innerHTML = topicOptions(false);
+  $('#list-topic').innerHTML = topicOptions(true);
+  $('#src-topic').innerHTML = topicOptions(false);
+  $('#edit-form [name=topicId]').innerHTML = topicOptions(false);
+
+  // ---------- แท็บ ----------
+  let view = 'diagram';
+  try { view = localStorage.getItem('sipoc-view') || view; } catch (e) { /* ไม่มี storage */ }
+  function show(v) {
+    view = v;
+    document.querySelectorAll('.tabs button').forEach(b => {
+      b.classList.toggle('active', b.dataset.view === v);
+      b.setAttribute('aria-selected', b.dataset.view === v);
+    });
+    document.querySelectorAll('.view').forEach(s => { s.hidden = s.id !== 'view-' + v; });
+    try { localStorage.setItem('sipoc-view', v); } catch (e) { /* ไม่มี storage */ }
+    refresh();
+  }
+  document.querySelectorAll('.tabs button').forEach(b => b.addEventListener('click', () => show(b.dataset.view)));
+
+  function refresh() {
+    renderCards();
+    if (view === 'diagram') renderDiagram();
+    if (view === 'list') renderTable();
+    if (view === 'source') renderSource();
+  }
+
+  // ---------- ผัง ----------
+  function renderDiagram() {
+    const t = topicById[$('#diag-topic').value];
+    if (!t) return;
+    $('#diag-info').innerHTML = [
+      t.unit && `<span><b>หน่วยงานที่รับผิดชอบ:</b> ${esc(t.unit)}</span>`,
+      t.objective && `<span><b>วัตถุประสงค์:</b> ${esc(t.objective)}</span>`,
+      `<span class="muted">ต้นฉบับ: ${esc(t.file || '')} · ชีต "${esc(t.sheet)}"</span>`,
+    ].filter(Boolean).join('');
+    Diagram.render($('#diagram'), t, { onActivity: openEdit });
+  }
+  $('#diag-topic').addEventListener('change', renderDiagram);
+  $('#diagram-wrap').addEventListener('wheel', e => {
+    if (e.shiftKey && !e.deltaX) {
+      e.preventDefault();
+      e.currentTarget.scrollLeft += e.deltaY;
+    }
+  }, { passive: false });
+
+  // ---------- ตารางแผน/ผลรายเดือน ----------
+  function filtered() {
+    const topic = $('#list-topic').value, st = $('#list-status').value;
+    const q = $('#list-search').value.trim().toLowerCase();
+    return Store.all().filter(r =>
+      (!topic || r.topicId === topic) &&
+      (!st || (st === 'overdue' ? r.overdue : r.status === st)) &&
+      (!q || [r.name, r.owner, r.kpi, r.output].join(' ').toLowerCase().includes(q)));
+  }
+
+  function renderTable() {
+    const list = filtered();
+    const head = `<thead><tr>
+      <th class="sticky c-no" rowspan="2">ที่</th><th class="sticky c-name" rowspan="2">กิจกรรม / ตัวชี้วัด</th>
+      <th rowspan="2">แผน/ผล</th><th colspan="3">ปี 2569</th><th colspan="9">ปี 2570</th>
+      <th rowspan="2">ปริมาณงาน</th><th rowspan="2" class="c-owner">ผู้รับผิดชอบ</th><th rowspan="2">สถานะ</th>
+      <th rowspan="2" class="c-result">ผลการดำเนินงานจริง</th><th rowspan="2"></th></tr>
+      <tr>${MONTHS.map(m => `<th class="m">${m.split(' ')[0]}</th>`).join('')}</tr></thead>`;
+    if (!list.length) {
+      $('#plan-table').innerHTML = head + '<tbody><tr><td colspan="22" class="empty">ไม่พบกิจกรรมตามเงื่อนไข</td></tr></tbody>';
+      return;
+    }
+    const groups = {};
+    list.forEach(r => (groups[r.topicId] = groups[r.topicId] || []).push(r));
+    const order = data.topics.map(t => t.id).concat(Object.keys(groups).filter(k => !topicById[k]));
+    let body = '', n = 0;
+    order.filter(k => groups[k]).forEach(k => {
+      body += `<tr class="grp"><td class="sticky c-no"></td><td class="sticky c-name"><span class="grp-title">${esc(topicName(k))}</span></td><td colspan="20"></td></tr>`;
+      groups[k].forEach(r => {
+        n++;
+        const cls = r.overdue ? 'overdue' : r.status;
+        const cells = kind => (kind === 'plan' ? r.planMonths : r.actualMonths).map((on, i) =>
+          `<td class="m ${kind}${on ? ' on' : ''}" data-id="${r.id}" data-kind="${kind}" data-m="${i}" title="${MONTHS[i]} — ${kind === 'plan' ? 'แผน' : 'ผล'}">${on ? (kind === 'plan' ? '●' : '✔') : ''}</td>`).join('');
+        body += `<tr class="row-plan">
+          <td class="sticky c-no" rowspan="2">${n}</td>
+          <td class="sticky c-name" rowspan="2"><b>${esc(r.name)}</b>${r.kpi ? `<small>ตัวชี้วัด: ${esc(r.kpi)}</small>` : ''}${r.attachments.length ? `<small>📎 ${r.attachments.length} ไฟล์</small>` : ''}</td>
+          <td class="kind">แผน</td>${cells('plan')}<td class="num">${esc(qty(r.planQty, r))}</td>
+          <td rowspan="2" class="c-owner">${esc(r.owner)}${r.due ? `<small>ครบกำหนด ${thDate(r.due)}</small>` : ''}</td>
+          <td rowspan="2"><span class="badge st-${cls}">${esc(statusText(r))}</span></td>
+          <td rowspan="2" class="c-result">${esc(r.result)}</td>
+          <td rowspan="2"><button class="btn small" data-edit="${r.id}">แก้ไข / แนบไฟล์</button></td></tr>
+          <tr class="row-actual"><td class="kind">ผล</td>${cells('actual')}<td class="num">${esc(qty(r.actualQty, r))}</td></tr>`;
+      });
+    });
+    $('#plan-table').innerHTML = head + '<tbody>' + body + '</tbody>';
+  }
+  $('#plan-table').addEventListener('click', e => {
+    const m = e.target.closest('td.m[data-id]');
+    if (m) {
+      if (readOnly) return;
+      busy(Store.toggleMonth(m.dataset.id, m.dataset.kind, +m.dataset.m)).then(refresh, showError);
+      return;
+    }
+    const b = e.target.closest('[data-edit]');
+    if (b) openEdit(b.dataset.edit);
+  });
+  ['#list-topic', '#list-status'].forEach(s => $(s).addEventListener('change', renderTable));
+  $('#list-search').addEventListener('input', renderTable);
+  $('#btn-add').addEventListener('click', () => openEdit(null));
+
+  // ---------- ข้อมูลต้นฉบับ ----------
+  function sourceExtra(i) {
+    const parts = [
+      i.timePlan && `ระยะเวลา/เป้าหมาย: ${esc(i.timePlan)}`,
+      i.timeActual && `ผล: ${esc(i.timeActual)}`,
+      i.sourceNote && `หมายเหตุ: ${esc(i.sourceNote)}`,
+    ].filter(Boolean);
+    return parts.length ? `<small class="src-extra">${parts.join('<br>')}</small>` : '';
+  }
+
+  function renderSource() {
+    const t = topicById[$('#src-topic').value];
+    if (!t) return;
+    const q = $('#src-search').value.trim().toLowerCase();
+    const counts = 'SIPOC'.split('').map(c => `${c} ${t.items.filter(i => i.col === c).length}`).join(' · ');
+    $('#src-meta').textContent = `ข้อ ${t.id} ${t.title} · ไฟล์ ${t.file || '-'} ชีต "${t.sheet}" · ${t.items.length} รายการ (${counts})` +
+      (t.otherSheets && t.otherSheets.length ? ` · ไฟล์นี้มีชีตผังอื่นที่ไม่ได้ใช้: ${t.otherSheets.map(s => s.trim()).join(', ')}` : '');
+    const rows = t.items.filter(i => !q || i.text.toLowerCase().includes(q)).map((i, k) => `<tr>
+      <td>${k + 1}</td><td><span class="col-tag col-${i.col}">${i.col}</span> ${COL_NAME[i.col]}</td>
+      <td class="txt">${esc(i.text)}${sourceExtra(i)}</td><td>${esc(i.ref)}</td><td>${i.row}${i.rowEnd > i.row ? '–' + i.rowEnd : ''}</td>
+      <td>${i.col === 'P' ? `<button class="btn small" data-edit="${i.id}">ติดตามงาน</button>` : ''}</td></tr>`).join('');
+    $('#src-table').innerHTML = `<thead><tr><th>ที่</th><th>คอลัมน์ SIPOC</th><th>ข้อความที่ถอดได้</th><th>ตำแหน่งอ้างอิง</th><th>แถว</th><th></th></tr></thead>
+      <tbody>${rows || '<tr><td colspan="6" class="empty">ไม่พบข้อความ</td></tr>'}</tbody>`;
+  }
+  $('#src-topic').addEventListener('change', renderSource);
+  $('#src-search').addEventListener('input', renderSource);
+  $('#src-table').addEventListener('click', e => { const b = e.target.closest('[data-edit]'); if (b) openEdit(b.dataset.edit); });
+
+  // ---------- ฟอร์มแก้ไข ----------
+  const dlg = $('#dlg-edit'), form = $('#edit-form');
+  let editing = null;
+
+  function openEdit(id) {
+    editing = id;
+    const r = id ? Store.get(id) : Object.assign(Store.get('__new__'), { name: '', topicId: $('#list-topic').value || (data.topics[0] || {}).id || '' });
+    $('#edit-title').textContent = id ? 'แก้ไขกิจกรรม' : 'เพิ่มกิจกรรมใหม่';
+    ['name', 'topicId', 'output', 'kpi', 'planQty', 'actualQty', 'unit', 'owner', 'due', 'status', 'result', 'note']
+      .forEach(k => { form.elements[k].value = r[k] || ''; });
+    form.elements.status.value = r.status || 'todo';
+    $('#edit-months').innerHTML = `<table class="mini"><tr><th></th>${MONTHS.map(m => `<th>${m}</th>`).join('')}</tr>` +
+      ['plan', 'actual'].map(k => `<tr><th>${k === 'plan' ? 'แผน' : 'ผล'}</th>${(k === 'plan' ? r.planMonths : r.actualMonths)
+        .map((on, i) => `<td><input type="checkbox" data-kind="${k}" data-m="${i}" ${on ? 'checked' : ''} aria-label="${k === 'plan' ? 'แผน' : 'ผล'} ${MONTHS[i]}"></td>`).join('')}</tr>`).join('') + '</table>';
+    const item = id && Store.itemById[id];
+    $('#edit-ref').innerHTML = item
+      ? `ต้นฉบับ: ข้อ ${esc(item.topicId)} · ชีต "${esc(topicById[item.topicId].sheet)}" · ${esc(item.ref)}${sourceExtra(item)}`
+      : (id ? 'กิจกรรมที่เพิ่มในระบบ' : '');
+    $('#btn-delete').hidden = readOnly || !(id && r.custom);
+    form.querySelector('button[type=submit]').hidden = readOnly;
+    $('#edit-updated').textContent = r.updatedBy ? `แก้ไขล่าสุดโดย ${r.updatedBy} · ${new Date(r.updatedAt).toLocaleString('th-TH')}` : '';
+    renderFiles();
+    dlg.showModal();
+  }
+
+  function renderFiles() {
+    const box = $('#edit-files');
+    if (!editing) {
+      box.innerHTML = '<p class="muted">กิจกรรมที่เพิ่มใหม่ต้อง <b>บันทึก</b> ก่อน แล้วเปิดรายการนั้นอีกครั้งเพื่อแนบไฟล์</p>';
+      return;
+    }
+    const r = Store.get(editing);
+    box.innerHTML = (r.attachments.length ? '<ul class="file-list">' + r.attachments.map(a => `<li>
+        <button type="button" class="link" data-dl="${a.id}">${esc(a.name)}</button>
+        <small>${(a.size / 1024 / 1024).toFixed(2)} MB · ${new Date(a.addedAt).toLocaleDateString('th-TH')}</small>
+        ${readOnly ? '' : `<button type="button" class="btn small danger" data-rm="${a.id}">ลบ</button>`}</li>`).join('') + '</ul>'
+      : '<p class="muted">ยังไม่มีไฟล์แนบ</p>') +
+      (readOnly ? '' : '<label class="btn small">+ แนบไฟล์<input type="file" id="inp-file" multiple hidden></label>');
+  }
+
+  $('#edit-files').addEventListener('change', async e => {
+    if (e.target.id !== 'inp-file') return;
+    for (const f of e.target.files) {
+      try { await busy(Store.Files.add(editing, f), `กำลังอัปโหลด ${f.name}…`); } catch (err) { showError(err); }
+    }
+    renderFiles();
+    refresh();
+  });
+  $('#edit-files').addEventListener('click', async e => {
+    const dl = e.target.closest('[data-dl]'), rm = e.target.closest('[data-rm]');
+    try {
+      if (dl) {
+        const f = await busy(Store.Files.get(dl.dataset.dl), 'กำลังดาวน์โหลด…');
+        if (!f) { alert('ไม่พบไฟล์นี้'); return; }
+        download(f.blob, f.name);
+      }
+      if (rm) {
+        const a = Store.get(editing).attachments.find(x => x.id === rm.dataset.rm);
+        if (a && confirm(`ลบไฟล์ "${a.name}" ?`)) { await busy(Store.Files.remove(editing, a.id)); renderFiles(); refresh(); }
+      }
+    } catch (err) { showError(err); }
+  });
+
+  form.addEventListener('submit', async e => {
+    e.preventDefault();
+    if (readOnly) return;
+    const f = {};
+    ['name', 'topicId', 'output', 'kpi', 'planQty', 'actualQty', 'unit', 'owner', 'due', 'status', 'result', 'note']
+      .forEach(k => { f[k] = form.elements[k].value.trim(); });
+    f.planMonths = Array(12).fill(false);
+    f.actualMonths = Array(12).fill(false);
+    $('#edit-months').querySelectorAll('input').forEach(c => { f[c.dataset.kind === 'plan' ? 'planMonths' : 'actualMonths'][+c.dataset.m] = c.checked; });
+    const btn = form.querySelector('button[type=submit]');
+    btn.disabled = true;
+    try {
+      await busy(Store.save(editing, f));
+      dlg.close();
+      refresh();
+    } catch (err) {
+      if (err && err.conflict) dlg.close();
+      showError(err);
+    } finally {
+      btn.disabled = false;
+    }
+  });
+  $('#btn-cancel').addEventListener('click', () => dlg.close());
+  $('#btn-delete').addEventListener('click', async () => {
+    if (!confirm('ลบกิจกรรมนี้และไฟล์แนบทั้งหมด?')) return;
+    try {
+      await busy(Store.remove(editing), 'กำลังลบ…');
+      dlg.close();
+      refresh();
+    } catch (err) { showError(err); }
+  });
+
+  // ---------- รายงาน ----------
+  function renderReport() {
+    const list = Store.all(), s = Store.summary(list);
+    const byTopic = data.topics.map(t => {
+      const l = list.filter(r => r.topicId === t.id);
+      return Object.assign({ t }, Store.summary(l));
+    }).filter(x => x.total);
+    const withResult = list.filter(r => r.result || r.actualQty);
+    const pct = s.total ? Math.round((s.done / s.total) * 100) : 0;
+    $('#report-body').innerHTML = `
+      <h2>สรุปรายงานผลการดำเนินงานตาม SIPOC</h2>
+      <p class="muted">ปีงบประมาณ 2570 · ข้อมูล ณ วันที่ ${thDate(Store.today())}</p>
+      <div class="cards">
+        <div class="card c-total"><span>กิจกรรมทั้งหมด</span><b>${s.total}</b></div>
+        <div class="card c-done"><span>เสร็จสิ้น</span><b>${s.done}</b><small>${pct}%</small></div>
+        <div class="card c-doing"><span>กำลังดำเนินการ</span><b>${s.doing}</b></div>
+        <div class="card c-overdue"><span>เกินกำหนด</span><b>${s.overdue}</b></div>
+      </div>
+      <h3>สรุปตามกระบวนการ</h3>
+      <table class="grid"><thead><tr><th>กระบวนการ</th><th>กิจกรรม</th><th>เสร็จสิ้น</th><th>กำลังดำเนินการ</th><th>เกินกำหนด</th></tr></thead>
+      <tbody>${byTopic.map(x => `<tr><td>${esc(topicName(x.t.id))}</td><td class="num">${x.total}</td><td class="num">${x.done}</td><td class="num">${x.doing}</td><td class="num">${x.overdue}</td></tr>`).join('')}</tbody></table>
+      <h3>งานเกินกำหนด (${s.overdue})</h3>
+      ${s.overdue ? `<table class="grid"><thead><tr><th>กิจกรรม</th><th>ผู้รับผิดชอบ</th><th>ครบกำหนด</th><th>สถานะ</th></tr></thead><tbody>
+        ${list.filter(r => r.overdue).map(r => `<tr><td>${esc(r.name)}</td><td>${esc(r.owner)}</td><td>${thDate(r.due)}</td><td>${STATUS[r.status]}</td></tr>`).join('')}</tbody></table>` : '<p class="muted">ไม่มี</p>'}
+      <h3>รายการที่มีผลการดำเนินงาน (${withResult.length})</h3>
+      ${withResult.length ? `<table class="grid"><thead><tr><th>กิจกรรม</th><th>ตัวชี้วัด</th><th>แผน / ผล</th><th>ผลการดำเนินงาน</th><th>สถานะ</th></tr></thead><tbody>
+        ${withResult.map(r => `<tr><td>${esc(r.name)}<small>${esc(topicName(r.topicId))}</small></td><td>${esc(r.kpi) || '<span class="muted">-</span>'}</td>
+          <td>${esc(qty(r.planQty, r)) || '-'} / ${esc(qty(r.actualQty, r)) || '-'}</td><td>${esc(r.result)}</td><td>${esc(statusText(r))}</td></tr>`).join('')}</tbody></table>` : '<p class="muted">ยังไม่มีการบันทึกผลการดำเนินงาน</p>'}`;
+    $('#dlg-report').showModal();
+  }
+  $('#btn-report').addEventListener('click', renderReport);
+  $('#btn-report-close').addEventListener('click', () => $('#dlg-report').close());
+  $('#btn-print').addEventListener('click', () => window.print());
+
+  // ---------- ส่งออก ----------
+  function download(blob, name) {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+  }
+  const csvCell = v => { const s = String(v == null ? '' : v); return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+  const monthList = arr => MONTHS.filter((m, i) => arr[i]).join(', ');
+
+  $('#btn-csv').addEventListener('click', () => {
+    const head = ['รหัส', 'กระบวนการ', 'กิจกรรม', 'ผลผลิต/หลักฐาน', 'ตัวชี้วัด', 'ปริมาณงานตามแผน', 'ปริมาณงานจริง', 'หน่วยนับ',
+      'เดือนตามแผน', 'เดือนที่มีผล', ...MONTHS.map(m => 'แผน ' + m), ...MONTHS.map(m => 'ผล ' + m),
+      'ผู้รับผิดชอบ', 'วันครบกำหนด', 'สถานะ', 'เกินกำหนด', 'ผลการดำเนินงาน', 'หมายเหตุ', 'ไฟล์แนบ'];
+    const rows = Store.all().map(r => [r.id, topicName(r.topicId), r.name, r.output, r.kpi, r.planQty, r.actualQty, r.unit,
+      monthList(r.planMonths), monthList(r.actualMonths), ...r.planMonths.map(x => (x ? '1' : '')), ...r.actualMonths.map(x => (x ? '1' : '')),
+      r.owner, r.due, STATUS[r.status], r.overdue ? 'ใช่' : '', r.result, r.note, r.attachments.map(a => a.name).join('; ')]);
+    const csv = '﻿' + [head, ...rows].map(r => r.map(csvCell).join(',')).join('\r\n');
+    download(new Blob([csv], { type: 'text/csv;charset=utf-8' }), `sipoc-report-${Store.today()}.csv`);
+  });
+
+  if (Store.exportJSON) $('#btn-backup').addEventListener('click', () =>
+    download(new Blob([Store.exportJSON()], { type: 'application/json' }), `sipoc-backup-${Store.today()}.json`));
+  if (Store.importJSON) $('#inp-restore').addEventListener('change', async e => {
+    const f = e.target.files[0];
+    e.target.value = '';
+    if (!f || !confirm('นำเข้าไฟล์สำรองจะแทนที่ข้อมูลกิจกรรมในเครื่องนี้ทั้งหมด ต้องการดำเนินการต่อ?')) return;
+    try { Store.importJSON(await f.text()); refresh(); alert('นำเข้าข้อมูลเรียบร้อย'); } catch (err) { alert(err.message); }
+  });
+
+  show(['diagram', 'list', 'source'].includes(view) ? view : 'diagram');
+})();
+
+}
+google.script.run
+  .withSuccessHandler(function (d) {
+    window.SIPOC_DATA = d;
+    window.Store = createGasStore(d);
+    document.getElementById('loading').remove();
+    bootApp();
+  })
+  .withFailureHandler(function (e) {
+    var el = document.getElementById('loading');
+    el.className = 'loading error';
+    el.textContent = 'โหลดข้อมูลไม่สำเร็จ: ' + ((e && e.message) || e) +
+      '\nตรวจว่ารัน setup() และนำเข้าข้อมูลชีต SIPOC แล้ว';
+  })
+  .getAppData();
+  </script>
+</body>
+</html>

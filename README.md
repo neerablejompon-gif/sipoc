@@ -37,6 +37,12 @@ python3 tools/extract_sipoc.py *.xlsx -o js/sipoc-data.js
 ตรวจผลได้ในแท็บ **ข้อมูลต้นฉบับ** รหัสกิจกรรม (เช่น `3.2-P04`) อิงเลขข้อและลำดับกล่อง
 ถ้าแก้ไฟล์ Excel จนลำดับเปลี่ยนแล้วรันใหม่ ข้อมูลติดตามที่บันทึกไว้อาจจับคู่ผิดกิจกรรม
 
+## ติดตั้งบน Google Apps Script (ฐานข้อมูลส่วนกลาง)
+
+โฟลเดอร์ `apps-script/` มี `Code.gs` และ `Index.html` สำหรับ deploy เป็น Web app
+โดยใช้ Google Sheets เก็บข้อมูลและ Google Drive เก็บไฟล์แนบ ผู้ใช้ทุกคนเห็นข้อมูลชุดเดียวกัน
+มีสิทธิ์ editor/viewer และบันทึกประวัติการแก้ไข ดูขั้นตอนใน [apps-script/README.md](apps-script/README.md)
+
 ## ความสามารถ
 
 | มุมมอง | ใช้ทำอะไร |
