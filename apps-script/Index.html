@@ -1054,8 +1054,7 @@ google.script.run
   .withFailureHandler(function (e) {
     var el = document.getElementById('loading');
     el.className = 'loading error';
-    el.textContent = 'โหลดข้อมูลไม่สำเร็จ: ' + ((e && e.message) || e) +
-      '\nตรวจว่ารัน setup() และนำเข้าข้อมูลชีต SIPOC แล้ว';
+    el.textContent = 'โหลดข้อมูลไม่สำเร็จ: ' + ((e && e.message) || e);
   })
   .getAppData();
   </script>

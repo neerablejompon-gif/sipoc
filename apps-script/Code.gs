@@ -45,19 +45,11 @@ function doGet() {
 
 /** ติดตั้งชีตและโฟลเดอร์ไฟล์แนบ — รันครั้งเดียวจากหน้า Apps Script (รันซ้ำได้ ไม่ลบข้อมูล) */
 function setup() {
-  const ss = SpreadsheetApp.getActive();
-  Object.keys(HEADERS).forEach(name => {
-    let sh = ss.getSheetByName(name);
-    if (!sh) sh = ss.insertSheet(name);
-    if (sh.getLastRow() === 0) {
-      sh.getRange(1, 1, 1, HEADERS[name].length).setValues([HEADERS[name]]).setFontWeight('bold');
-      sh.setFrozenRows(1);
-    }
-    // เก็บทุกช่องเป็นข้อความ กัน Sheets แปลงวันที่/ตัวเลขเอง (เช่น "0,10" หรือ "2026-09-01")
-    if (name !== SHEETS.SIPOC) sh.getRange(1, 1, sh.getMaxRows(), sh.getMaxColumns()).setNumberFormat('@');
-  });
+  const ss = ss_();
+  Object.keys(HEADERS).forEach(name => { if (name !== SHEETS.SIPOC) ensureSheet_(name); });
+  const sipoc = findSipocSheet_();
   attachmentFolder_();
-  const sipocRows = Math.max(ss.getSheetByName(SHEETS.SIPOC).getLastRow() - 1, 0);
+  const sipocRows = sipoc ? Math.max(sipoc.getLastRow() - 1, 0) : 0;
   const msg = 'ติดตั้งเรียบร้อย\nชีต SIPOC มีข้อมูล ' + sipocRows + ' แถว' +
     (sipocRows ? '' : '\nยังไม่มีข้อมูลตั้งต้น: นำเข้า sipoc-seed.csv ลงชีต "SIPOC" (ดู README)') +
     '\nโฟลเดอร์ไฟล์แนบ: ' + attachmentFolder_().getUrl();
@@ -75,12 +67,12 @@ function getAppData() {
   const records = {};
   readTable_(SHEETS.TRACKING).rows.forEach(r => { records[r.id] = recordFromRow_(r); });
   return {
-    meta: { source: 'Google Sheets: ' + SpreadsheetApp.getActive().getName(), sample: false },
+    meta: { source: 'Google Sheets: ' + ss_().getName(), sample: false },
     topics: loadTopics_(),
     records: records,
     attachments: attachments,
     user: user,
-    sheetUrl: user.role === 'editor' ? SpreadsheetApp.getActive().getUrl() : '',
+    sheetUrl: user.role === 'editor' ? ss_().getUrl() : '',
     today: Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd'),
   };
 }
@@ -263,10 +255,55 @@ function requireEditor_() {
 
 // ---------------------------------------------------------------- ตัวช่วยชีต
 
-function sheet_(name) {
-  const sh = SpreadsheetApp.getActive().getSheetByName(name);
-  if (!sh) throw new Error('ไม่พบชีต "' + name + '" — รันฟังก์ชัน setup() ก่อน');
+/**
+ * สเปรดชีตฐานข้อมูล: สเปรดชีตที่ผูกกับสคริปต์ (Extensions > Apps Script)
+ * หรือระบุ id ใน Script Properties ชื่อ SPREADSHEET_ID เมื่อสร้างสคริปต์แยกจากชีต
+ */
+function ss_() {
+  const id = PropertiesService.getScriptProperties().getProperty('SPREADSHEET_ID');
+  const ss = id ? SpreadsheetApp.openById(id) : SpreadsheetApp.getActive();
+  if (!ss) {
+    throw new Error('สคริปต์ไม่ได้ผูกกับ Google Sheet: เปิดชีตแล้วสร้างสคริปต์จาก Extensions > Apps Script ' +
+      'หรือเพิ่ม Script Property ชื่อ SPREADSHEET_ID เป็น id ของชีต');
+  }
+  return ss;
+}
+
+/** สร้างชีตระบบพร้อมหัวคอลัมน์ถ้ายังไม่มี (ไม่ลบข้อมูลเดิม) */
+function ensureSheet_(name) {
+  const ss = ss_();
+  let sh = ss.getSheetByName(name);
+  if (!sh) sh = ss.insertSheet(name);
+  if (sh.getLastRow() === 0) {
+    // เก็บทุกช่องเป็นข้อความ กัน Sheets แปลงวันที่/ตัวเลขเอง (เช่น "0,10" หรือ "2026-09-01")
+    sh.getRange(1, 1, sh.getMaxRows(), sh.getMaxColumns()).setNumberFormat('@');
+    sh.getRange(1, 1, 1, HEADERS[name].length).setValues([HEADERS[name]]).setFontWeight('bold');
+    sh.setFrozenRows(1);
+  }
   return sh;
+}
+
+/** ชีตข้อมูลตั้งต้น: ชื่อ SIPOC หรือชีตที่นำเข้าจาก sipoc-seed.csv แล้วยังไม่เปลี่ยนชื่อ (A1 = topicId) */
+function findSipocSheet_() {
+  const ss = ss_();
+  const sh = ss.getSheetByName(SHEETS.SIPOC);
+  if (sh) return sh;
+  const imported = ss.getSheets().find(s => s.getLastRow() > 1 &&
+    String(s.getRange(1, 1).getDisplayValue()).trim() === 'topicId');
+  if (imported) imported.setName(SHEETS.SIPOC);
+  return imported || null;
+}
+
+function sheet_(name) {
+  if (name === SHEETS.SIPOC) {
+    const sh = findSipocSheet_();
+    if (!sh) {
+      throw new Error('ไม่พบข้อมูลตั้งต้น SIPOC: นำเข้า sipoc-seed.csv ด้วย File > Import > Insert new sheet(s) ' +
+        'ในสเปรดชีต "' + ss_().getName() + '"');
+    }
+    return sh;
+  }
+  return ss_().getSheetByName(name) || ensureSheet_(name);
 }
 
 /** อ่านทั้งชีตเป็น object ตามหัวคอลัมน์ (ค่าเป็นข้อความตามที่แสดง) พร้อมเลขแถวใน _row */
@@ -318,7 +355,7 @@ function attachmentFolder_() {
   if (id) {
     try { return DriveApp.getFolderById(id); } catch (e) { /* โฟลเดอร์ถูกลบ สร้างใหม่ */ }
   }
-  const folder = DriveApp.createFolder('SIPOC Attachments — ' + SpreadsheetApp.getActive().getName());
+  const folder = DriveApp.createFolder('SIPOC Attachments — ' + ss_().getName());
   props.setProperty(FOLDER_PROP, folder.getId());
   return folder;
 }

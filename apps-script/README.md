@@ -20,9 +20,11 @@
    - วางเนื้อหา `Code.gs` แทนโค้ดเดิมในไฟล์ `Code.gs`
    - กด + > HTML ตั้งชื่อ `Index` (ไม่ต้องพิมพ์ .html) แล้ววางเนื้อหา `Index.html`
    - กด Save
-4. **รัน `setup()` หนึ่งครั้ง**: เลือกฟังก์ชัน `setup` แล้วกด Run และอนุญาตสิทธิ์ (Sheets, Drive)
+4. **รัน `setup()` หนึ่งครั้ง** (แนะนำ): เลือกฟังก์ชัน `setup` แล้วกด Run และอนุญาตสิทธิ์ (Sheets, Drive)
    ระบบจะสร้างชีต `Tracking`, `Attachments`, `Users`, `Log` และโฟลเดอร์ไฟล์แนบใน Drive
    (ดูผลใน Execution log ต้องขึ้นว่า "ชีต SIPOC มีข้อมูล 762 แถว")
+   ถ้าข้ามขั้นนี้ ระบบจะสร้างชีตที่ขาดให้เองเมื่อเปิดเว็บครั้งแรก และถ้าชีตที่นำเข้ายังไม่ได้เปลี่ยนชื่อ
+   ระบบจะเปลี่ยนชื่อเป็น `SIPOC` ให้ (ชีตที่ช่อง A1 เป็น `topicId`)
 5. **Deploy**: Deploy > New deployment > เลือกชนิด **Web app**
    - Execute as: **Me** (สคริปต์ใช้สิทธิ์เจ้าของ ผู้ใช้ไม่ต้องมีสิทธิ์เปิดชีตหรือโฟลเดอร์ Drive)
    - Who has access: **Anyone within ‹องค์กร›** (ถ้าใช้ Google Workspace) หรือ **Anyone with Google account**
@@ -30,6 +32,9 @@
 
 เมื่อแก้โค้ดภายหลัง ต้องไปที่ Deploy > Manage deployments > แก้ไข (ไอคอนดินสอ) > Version: **New version**
 URL เดิมจึงจะใช้โค้ดใหม่
+
+ถ้าสร้างโปรเจกต์ Apps Script แยกจากชีต (script.google.com) ให้เพิ่ม Script Property ชื่อ `SPREADSHEET_ID`
+เป็น id ของชีต (Project Settings > Script Properties)
 
 ## สิทธิ์ผู้ใช้ (ชีต `Users`)
 
