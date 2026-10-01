@@ -60,6 +60,11 @@ function setup() {
 /** โหลดข้อมูลทั้งหมดที่หน้าเว็บต้องใช้ */
 function getAppData() {
   const user = currentUser_();
+  const topics = loadTopics_();
+  if (!topics.length) {
+    throw new Error('ชีต "' + sheet_(SHEETS.SIPOC).getName() + '" ไม่มีข้อมูลกิจกรรม SIPOC ' +
+      '(ต้องมีหัวคอลัมน์ topicId, id, col, text ในแถวที่ 1 ตามไฟล์ sipoc-seed.csv)\n\n' + checkData());
+  }
   const attachments = {};
   readTable_(SHEETS.ATTACHMENTS).rows.forEach(a => {
     (attachments[a.activityId] = attachments[a.activityId] || []).push(attachmentMeta_(a));
@@ -68,7 +73,7 @@ function getAppData() {
   readTable_(SHEETS.TRACKING).rows.forEach(r => { records[r.id] = recordFromRow_(r); });
   return {
     meta: { source: 'Google Sheets: ' + ss_().getName(), sample: false },
-    topics: loadTopics_(),
+    topics: topics,
     records: records,
     attachments: attachments,
     user: user,
@@ -286,12 +291,27 @@ function ensureSheet_(name) {
 /** ชีตข้อมูลตั้งต้น: ชื่อ SIPOC หรือชีตที่นำเข้าจาก sipoc-seed.csv แล้วยังไม่เปลี่ยนชื่อ (A1 = topicId) */
 function findSipocSheet_() {
   const ss = ss_();
-  const sh = ss.getSheetByName(SHEETS.SIPOC);
-  if (sh) return sh;
-  const imported = ss.getSheets().find(s => s.getLastRow() > 1 &&
-    String(s.getRange(1, 1).getDisplayValue()).trim() === 'topicId');
-  if (imported) imported.setName(SHEETS.SIPOC);
-  return imported || null;
+  const isSeed = s => s.getLastRow() > 1 && headerKey_(s.getRange(1, 1).getDisplayValue()) === 'topicid';
+  const named = ss.getSheetByName(SHEETS.SIPOC);
+  if (named && isSeed(named)) return named;
+  // ใช้ชีตที่นำเข้าจาก sipoc-seed.csv แม้ชื่อไม่ใช่ SIPOC หรือมีชีต SIPOC ว่างอยู่แล้ว
+  const imported = ss.getSheets().find(isSeed);
+  if (imported && !named) imported.setName(SHEETS.SIPOC);
+  return imported || named || null;
+}
+
+/** ตัด BOM/ช่องว่างและไม่สนตัวพิมพ์เล็กใหญ่ ใช้เทียบชื่อหัวคอลัมน์ */
+function headerKey_(h) {
+  return String(h || '').replace(/[\ufeff\u200b]/g, '').trim().toLowerCase();
+}
+
+/** อธิบายชีตทั้งหมดในไฟล์ ใช้ในข้อความแจ้งปัญหา และรันจากหน้า Apps Script เพื่อตรวจข้อมูลได้ */
+function checkData() {
+  const lines = ss_().getSheets().map(s => '- ' + s.getName() + ': ' + Math.max(s.getLastRow() - 1, 0) +
+    ' แถวข้อมูล, A1 = "' + s.getRange(1, 1).getDisplayValue() + '"');
+  const msg = 'สเปรดชีต "' + ss_().getName() + '"\n' + lines.join('\n');
+  Logger.log(msg);
+  return msg;
 }
 
 function sheet_(name) {
@@ -310,7 +330,10 @@ function sheet_(name) {
 function readTable_(name) {
   const sh = sheet_(name);
   const values = sh.getDataRange().getDisplayValues();
-  const headers = (values[0] || []).map(h => String(h).trim());
+  // หัวคอลัมน์ตามชื่อมาตรฐานใน HEADERS ไม่สนตัวพิมพ์/BOM
+  const known = {};
+  Object.keys(HEADERS).forEach(k => HEADERS[k].forEach(h => { known[h.toLowerCase()] = h; }));
+  const headers = (values[0] || []).map(h => known[headerKey_(h)] || String(h).trim());
   const rows = [];
   for (let i = 1; i < values.length; i++) {
     const o = { _row: i + 1 };
