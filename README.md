@@ -1,5 +1,9 @@
 # ระบบติดตามและรายงานผลการดำเนินงานตาม SIPOC
 
+> **ระบบใหม่: [RMIC Workspace](workspace/README.md)** — รวมระบบมอบหมายงาน กบค. + SIPOC + รายงาน SEAM/ทม.13
+> บน Google Cloud Run + Cloudflare โดยใช้ Google Sheets เดิม ดูการออกแบบที่ [workspace/docs/DESIGN.md](workspace/docs/DESIGN.md)
+> ส่วนด้านล่างคือเว็บแอป SIPOC แบบไฟล์เดียว (เก็บข้อมูลในเบราว์เซอร์) ที่ใช้ทดลองรูปแบบงาน
+
 เว็บแอปแบบไฟล์เดียว (HTML/CSS/JavaScript ไม่ต้อง build) สำหรับดูความเชื่อมโยงของกระบวนการ SIPOC
 และติดตามแผน/ผลของแต่ละกิจกรรม ปีงบประมาณ 2570 (ต.ค. 2569 – ก.ย. 2570)
 

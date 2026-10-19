@@ -1,0 +1,10 @@
+name = "rmic-workspace-proxy"
+main = "worker.js"
+compatibility_date = "2024-09-23"
+
+# โดเมนของกองที่ผูกกับ Cloudflare (แก้ให้ตรงกับโดเมนจริง)
+routes = [{ pattern = "rmic.example.go.th", custom_domain = true }]
+
+[vars]
+# URL ของ Cloud Run ที่ได้จาก deploy/deploy.sh
+ORIGIN = "https://rmic-workspace-xxxxxxxxxx-as.a.run.app"
