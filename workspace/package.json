@@ -1,0 +1,28 @@
+{
+  "name": "rmic-workspace",
+  "version": "1.0.0",
+  "private": true,
+  "description": "RMIC Workspace — ระบบมอบหมาย/ติดตามงาน กบค. รวมกับระบบติดตามผล SIPOC และรายงาน SE-AM (Cloud Run + Google Sheets)",
+  "type": "module",
+  "main": "server/index.js",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "DATA_DRIVER=demo SESSION_SECRET=dev-secret node --watch server/index.js",
+    "demo": "DATA_DRIVER=demo SESSION_SECRET=dev-secret node server/index.js",
+    "test": "node --test test/*.test.js",
+    "hash-password": "node tools/hash-password.js"
+  },
+  "dependencies": {
+    "@googleapis/docs": "^14.1.1",
+    "@googleapis/drive": "^26.0.2",
+    "@googleapis/sheets": "^18.1.1",
+    "cookie-parser": "^1.4.7",
+    "express": "^4.22.3",
+    "google-auth-library": "^11.3.1",
+    "jszip": "^3.10.1",
+    "multer": "^2.0.2"
+  }
+}
