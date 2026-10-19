@@ -1,435 +1,499 @@
-<title>Risk Culture Tracker 2570</title>
+<title>RAOT Risk Culture 2570</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anuphan:wght@400;500;600;700&family=IBM+Plex+Sans+Thai:wght@400;500;600&display=swap">
 <style>
-/* Layout: glass sidebar 256px + content (max 1240px); ≤900px → bottom nav (mobile "งานของฉัน") */
+/* Layout: white sidebar 264px with RAOT logo + canvas of 12-col bento tiles (gap 24px); ≤960px → bottom nav */
 :root{
   color-scheme:light;
-  --brand-600:#0F7A4A; --brand-700:#0B6B41; --brand-800:#0B5C37;
-  --brand-50:#E3F4EA;  --brand-25:#E8F6EE;
-  --text:#0F2A1F; --text-2:#2E4A3D; --text-muted:#3F5A4D;
-  --bg:#F4FAF6;
-  --glass-bg:rgba(255,255,255,.64); --glass-border:rgba(255,255,255,.8);
-  --glass-blur:blur(18px) saturate(150%);
-  --line:rgba(15,42,31,.10); --field-border:rgba(15,42,31,.16);
-  --field-bg:rgba(255,255,255,.85);
-  --done-bg:#DDF1E6; --done-fg:#0B5C37; --done-c:#0B6B41;
-  --ok-bg:#E8F6EE;   --ok-fg:#14653F;   --ok-c:#74C99B;
-  --late-bg:#FDECC8; --late-fg:#7A4100; --late-c:#E0912A; --late-ring:#C26A00;
-  --risk-bg:#FDE3D6; --risk-fg:#9A2B06; --risk-c:#C2410C;
-  --na-bg:#ECF0EE;   --na-fg:#3F5A4D;   --na-c:#CDD8D2;
-  --info-bg:#E7EEF9; --info-fg:#1E4A85;
-  --error:#B42318; --error-bg:#FFF1EC;
-  --disabled:#A9C9B8; --white:#FFFFFF;
-  --r-sm:10px; --r-md:12px; --r-lg:16px; --r-full:999px;
-  --shadow:0 1px 2px rgba(12,64,40,.05),0 10px 30px rgba(12,64,40,.07);
-  --shadow-cta:0 6px 16px rgba(15,122,74,.25);
-  --font:'IBM Plex Sans Thai',"Leelawadee UI","Noto Sans Thai",Tahoma,sans-serif;
+  /* brand (sampled from RAOT logo) */
+  --g-950:#002A16; --g-900:#003D20; --g-800:#01522C; --g-700:#016837; --g-600:#0B7A44;
+  --g-200:#CFE6D9; --g-100:#E4F1EA; --g-50:#F2F8F5;
+  --gold:#E49F22; --gold-700:#8A5300; --gold-50:#FDF3DF;
+  /* neutrals, biased to brand green */
+  --ink:#0B1F15; --ink-2:#34493E; --muted:#5A6E63; --hair:#E2E9E5; --hair-2:#EEF3F0;
+  --canvas:#F4F7F5; --surface:#FFFFFF; --field:#FBFCFB;
+  /* status */
+  --done:#016837; --done-bg:#E4F1EA; --done-fg:#01522C;
+  --ok:#62B98A;   --ok-bg:#EAF6EF;   --ok-fg:#13633B;
+  --late:#E49F22; --late-bg:#FDF3DF; --late-fg:#7A4A00; --late-ring:#C27C0E;
+  --risk:#C2410C; --risk-bg:#FCE8DF; --risk-fg:#9A2B06;
+  --na:#C9D4CE;   --na-bg:#EEF2F0;   --na-fg:#4A5E53;
+  --info-bg:#E8EEF8; --info-fg:#1E4A85;
+  --error:#B42318; --error-bg:#FEF1EE;
+  --disabled:#B5CABE; --white:#FFFFFF;
+  /* shape */
+  --r-tile:22px; --r-md:14px; --r-sm:10px; --r-full:999px;
+  --shadow:0 1px 2px rgba(0,42,22,.04),0 12px 32px -16px rgba(0,42,22,.16);
+  --shadow-lift:0 2px 4px rgba(0,42,22,.05),0 18px 40px -18px rgba(0,42,22,.24);
+  --gap:24px;
+  /* type */
+  --display:'Anuphan','IBM Plex Sans Thai','Leelawadee UI',Tahoma,sans-serif;
+  --body:'IBM Plex Sans Thai','Anuphan','Leelawadee UI',Tahoma,sans-serif;
 }
 *{box-sizing:border-box}
-html,body{min-height:100%}
-body{
-  margin:0;font-family:var(--font);font-size:15px;line-height:1.65;color:var(--text);
-  background:
-    radial-gradient(1100px 620px at 8% -10%,#CDEEDB 0%,transparent 60%),
-    radial-gradient(900px 560px at 100% 10%,#DFF3E8 0%,transparent 60%),
-    radial-gradient(800px 600px at 60% 110%,#D3EEDF 0%,transparent 60%),
-    var(--bg);
-  background-attachment:fixed;
-}
+[hidden]{display:none!important}
+body{margin:0;font-family:var(--body);font-size:15px;line-height:1.65;color:var(--ink);background:var(--canvas)}
 button,input,select,textarea{font:inherit;color:inherit}
-.num{font-variant-numeric:tabular-nums}
-.glass{background:var(--glass-bg);backdrop-filter:var(--glass-blur);-webkit-backdrop-filter:var(--glass-blur);
-  border:1px solid var(--glass-border);box-shadow:var(--shadow);border-radius:var(--r-lg)}
-@supports not (backdrop-filter:blur(1px)){.glass{background:rgba(255,255,255,.92)}}
-:focus-visible{outline:2px solid var(--brand-600);outline-offset:2px}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;letter-spacing:-.005em}
+.num{font-family:var(--display);font-variant-numeric:tabular-nums}
+:focus-visible{outline:2px solid var(--g-700);outline-offset:2px}
 svg.i{width:18px;height:18px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 
-/* mock banner */
-.mockbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;justify-content:space-between;
-  padding-block:6px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
-  background:var(--brand-800);color:var(--white);font-size:13px}
-.mockbar b{font-weight:600}
-.mockbar label{display:flex;align-items:center;gap:8px}
-.mockbar select{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.35);color:var(--white);border-radius:8px;padding:2px 8px;min-height:28px}
-.mockbar select option{color:var(--text);background:var(--white)}
+/* mock strip */
+.mockbar{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:center;justify-content:space-between;background:var(--g-950);color:rgba(255,255,255,.86);font-size:12.5px;
+  padding-block:6px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.mockbar b{color:var(--gold);font-weight:600;letter-spacing:.04em}
+.rolesw{display:flex;gap:4px;padding:3px;border-radius:var(--r-full);background:rgba(255,255,255,.1)}
+.rolesw button{border:0;background:none;color:rgba(255,255,255,.8);padding:3px 12px;border-radius:var(--r-full);cursor:pointer;font-size:12.5px;min-height:26px}
+.rolesw button[aria-pressed="true"]{background:var(--white);color:var(--g-800);font-weight:600}
 
 /* shell */
-.app{display:flex;gap:20px;align-items:flex-start;padding-block:20px;
-  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
-.side{width:256px;flex:none;position:sticky;top:20px;padding:18px 14px;display:flex;flex-direction:column;gap:18px}
-.brand{display:flex;gap:10px;align-items:center;padding:0 6px}
-.brand-mark{width:38px;height:38px;border-radius:11px;background:var(--brand-600);color:var(--white);display:grid;place-items:center;box-shadow:var(--shadow-cta)}
-.brand-mark svg.i{width:22px;height:22px}
-.brand b{display:block;font-size:14px;line-height:1.3}
-.brand span{font-size:12px;color:var(--text-muted)}
-.nav{display:flex;flex-direction:column;gap:2px}
-.nav button{display:flex;align-items:center;gap:10px;width:100%;min-height:40px;padding:8px 12px;border:0;border-radius:var(--r-sm);background:transparent;cursor:pointer;text-align:left;color:var(--text-2);font-weight:500;transition:background .15s ease-out}
-.nav button:hover{background:rgba(255,255,255,.7)}
-.nav button[aria-current="page"]{background:var(--white);color:var(--brand-700);box-shadow:0 1px 2px rgba(12,64,40,.08)}
+.shell{display:grid;grid-template-columns:264px minmax(0,1fr);min-height:calc(100vh - 38px);background:linear-gradient(90deg,var(--surface) 263px,var(--hair) 263px 264px,transparent 264px)}
+.side{position:sticky;top:0;height:100vh;display:flex;flex-direction:column;padding:28px 18px 20px;gap:28px}
+.side .logo{display:block;width:176px;height:auto;margin:0 8px}
+.side .sys{margin:-14px 8px 0;padding-top:14px;border-top:1px solid var(--hair-2);font-size:12px;color:var(--muted);line-height:1.5}
+.side .sys b{display:block;color:var(--ink);font-family:var(--display);font-size:14px;font-weight:600}
+.nav{display:flex;flex-direction:column;gap:4px}
+.nav-label{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);padding:0 12px 6px;font-weight:600}
+.nav button{display:flex;align-items:center;gap:12px;width:100%;min-height:44px;padding:10px 12px;border:0;border-radius:12px;background:none;cursor:pointer;text-align:left;color:var(--ink-2);font-weight:500;transition:background .15s ease-out,color .15s ease-out}
+.nav button:hover{background:var(--g-50);color:var(--g-800)}
+.nav button[aria-current="page"]{background:var(--g-700);color:var(--white);box-shadow:0 8px 18px -10px rgba(1,104,55,.7)}
 .nav .badge{margin-left:auto}
-.nav-label{font-size:12px;letter-spacing:.04em;color:var(--text-muted);padding:0 12px;margin-bottom:4px}
-.me{margin-top:auto;display:flex;gap:10px;align-items:center;padding:10px;border-radius:var(--r-md);background:rgba(255,255,255,.6)}
-.avatar{width:36px;height:36px;border-radius:50%;background:var(--brand-50);color:var(--brand-800);display:grid;place-items:center;font-weight:600;flex:none}
-.me b{display:block;font-size:13px;line-height:1.35}
-.me span{font-size:12px;color:var(--text-muted)}
-main{flex:1;min-width:0;max-width:1240px;display:flex;flex-direction:column;gap:20px}
-.bottomnav{display:none}
-.mtop{display:none}
+.me{margin-top:auto;display:flex;gap:12px;align-items:center;padding:12px;border-radius:var(--r-md);background:var(--g-50);border:1px solid var(--hair-2)}
+.avatar{width:38px;height:38px;border-radius:50%;background:var(--g-700);color:var(--white);display:grid;place-items:center;font-weight:600;font-family:var(--display);flex:none}
+.me b{display:block;font-size:13.5px;line-height:1.35}
+.me span{font-size:12px;color:var(--muted)}
+main{min-width:0;padding-block:36px 40px;padding-left:max(40px,env(safe-area-inset-left,0px));padding-right:max(40px,env(safe-area-inset-right,0px))}
+.wrap{max-width:1280px;margin:0 auto;display:flex;flex-direction:column;gap:var(--gap);width:100%}
+.mtop,.bottomnav{display:none}
 
 /* page header */
-.ph{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:flex-end;justify-content:space-between}
-.ph h1{font-size:28px;line-height:1.3;margin:0;text-wrap:balance;font-weight:700}
-.ph p{margin:4px 0 0;color:var(--text-muted);font-size:14px}
-.ph-actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
-.crumb{display:inline-flex;align-items:center;gap:6px;font-size:14px;color:var(--brand-700);background:none;border:0;padding:0;cursor:pointer;font-weight:500;min-height:24px}
+.ph{display:flex;flex-wrap:wrap;gap:16px 24px;align-items:flex-end;justify-content:space-between;padding-bottom:4px}
+.eyebrow{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--g-700);font-weight:600;margin:0 0 6px}
+.ph h1{font-size:32px;line-height:1.25;margin:0;font-weight:700}
+.ph p.sub{margin:6px 0 0;color:var(--muted);font-size:14px;max-width:70ch}
+.ph-actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.crumb{display:inline-flex;align-items:center;gap:6px;font-size:14px;color:var(--g-700);background:none;border:0;padding:4px 0;cursor:pointer;font-weight:600;align-self:flex-start}
 
-/* buttons & fields */
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:40px;padding:8px 16px;border-radius:var(--r-sm);border:1px solid var(--field-border);background:rgba(255,255,255,.7);cursor:pointer;font-weight:500;white-space:nowrap;transition:background .15s ease-out,box-shadow .15s ease-out,transform .15s ease-out}
-.btn:hover{background:var(--white)}
+/* controls */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:42px;padding:9px 18px;border-radius:12px;border:1px solid var(--hair);background:var(--surface);cursor:pointer;font-weight:600;font-size:14.5px;white-space:nowrap;transition:background .15s ease-out,border-color .15s ease-out,box-shadow .15s ease-out,transform .15s ease-out}
+.btn:hover{border-color:var(--g-200);background:var(--g-50)}
 .btn:active{transform:translateY(1px)}
-.btn.primary{background:var(--brand-600);border-color:var(--brand-600);color:var(--white);box-shadow:var(--shadow-cta)}
-.btn.primary:hover{background:var(--brand-700)}
-.btn.danger{color:var(--risk-fg);border-color:rgba(194,65,12,.35)}
-.btn[aria-disabled="true"],.btn:disabled{background:var(--disabled);border-color:var(--disabled);color:var(--white);box-shadow:none;cursor:not-allowed}
-.btn.sm{min-height:32px;padding:4px 12px;font-size:14px}
-.field{display:flex;flex-direction:column;gap:6px;min-width:0}
+.btn.primary{background:var(--g-700);border-color:var(--g-700);color:var(--white);box-shadow:0 10px 20px -12px rgba(1,104,55,.8)}
+.btn.primary:hover{background:var(--g-800);border-color:var(--g-800)}
+.btn.danger{color:var(--risk-fg);border-color:#F2C9B8}
+.btn.danger:hover{background:var(--risk-bg)}
+.btn[aria-disabled="true"]{background:var(--disabled);border-color:var(--disabled);color:var(--white);box-shadow:none;cursor:not-allowed}
+.field{display:flex;flex-direction:column;gap:8px;min-width:0}
 .field>label,.field>.lbl{font-weight:600;font-size:14px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .req{font-size:12px;font-weight:500;color:var(--error)}
-.opt{font-size:12px;font-weight:400;color:var(--text-muted)}
-.hint{font-size:13px;color:var(--text-muted)}
-.input,select.input,textarea.input{width:100%;min-height:44px;padding:9px 12px;border-radius:var(--r-sm);border:1px solid var(--field-border);background:var(--field-bg);transition:border-color .15s ease-out}
-textarea.input{min-height:96px;resize:vertical;line-height:1.6}
-.input:hover{border-color:rgba(15,42,31,.3)}
-.input[readonly]{background:rgba(236,240,238,.7)}
+.opt{font-size:12px;font-weight:400;color:var(--muted)}
+.hint{font-size:13px;color:var(--muted)}
+.input{width:100%;min-height:46px;padding:10px 14px;border-radius:12px;border:1px solid var(--hair);background:var(--field);transition:border-color .15s ease-out,box-shadow .15s ease-out}
+textarea.input{min-height:104px;resize:vertical;line-height:1.6}
+.input:hover{border-color:#C8D6CE}
+.input:focus{border-color:var(--g-700);box-shadow:0 0 0 4px var(--g-100);outline:none}
+.input[readonly]{background:var(--hair-2);color:var(--ink-2)}
 .input[aria-invalid="true"]{border-color:var(--error);background:var(--error-bg)}
 .ferr{display:flex;gap:6px;align-items:flex-start;color:var(--error);font-size:13px;font-weight:500}
 .ferr svg.i{width:16px;height:16px;margin-top:3px}
-.suffix{display:flex;align-items:stretch}
-.suffix .input{border-radius:var(--r-sm) 0 0 var(--r-sm)}
-.suffix span{display:flex;align-items:center;padding:0 12px;border:1px solid var(--field-border);border-left:0;border-radius:0 var(--r-sm) var(--r-sm) 0;background:rgba(236,240,238,.8);font-size:14px;color:var(--text-2);white-space:nowrap}
+.suffix{display:flex}
+.suffix .input{border-radius:12px 0 0 12px}
+.suffix span{display:flex;align-items:center;padding:0 14px;border:1px solid var(--hair);border-left:0;border-radius:0 12px 12px 0;background:var(--hair-2);font-size:14px;color:var(--ink-2);white-space:nowrap}
 
 /* chips */
-.chip{display:inline-flex;align-items:center;gap:6px;padding:2px 10px;border-radius:var(--r-full);font-size:13px;font-weight:500;white-space:nowrap;line-height:1.7}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:3px 11px;border-radius:var(--r-full);font-size:12.5px;font-weight:600;white-space:nowrap;line-height:1.6}
 .st-DONE{background:var(--done-bg);color:var(--done-fg)}
 .st-ON_TRACK{background:var(--ok-bg);color:var(--ok-fg)}
 .st-LATE{background:var(--late-bg);color:var(--late-fg)}
 .st-BELOW_TARGET{background:var(--risk-bg);color:var(--risk-fg)}
 .st-NOT_DUE{background:var(--na-bg);color:var(--na-fg)}
 .wf-DRAFT{background:var(--na-bg);color:var(--na-fg)}
-.wf-SUBMITTED,.wf-REVIEWED{background:var(--info-bg);color:var(--info-fg)}
+.wf-SUBMITTED{background:var(--info-bg);color:var(--info-fg)}
 .wf-APPROVED{background:var(--done-bg);color:var(--done-fg)}
 .wf-RETURNED,.wf-NONE{background:var(--late-bg);color:var(--late-fg)}
-.badge{display:inline-grid;place-items:center;min-width:22px;height:22px;padding:0 6px;border-radius:var(--r-full);background:var(--late-c);color:var(--white);font-size:12px;font-weight:600}
-.vbadge{display:inline-grid;place-items:center;width:30px;height:30px;border-radius:9px;background:var(--brand-600);color:var(--white);font-weight:700;font-size:15px;flex:none}
+.badge{display:inline-grid;place-items:center;min-width:22px;height:22px;padding:0 7px;border-radius:var(--r-full);background:var(--gold);color:var(--g-950);font-size:12px;font-weight:700;font-family:var(--display)}
+.c-DONE{background:var(--done)}.c-ON_TRACK{background:var(--ok)}.c-LATE{background:var(--late)}.c-BELOW_TARGET{background:var(--risk)}.c-NOT_DUE{background:var(--na)}
 
-/* cards */
-.card{padding:20px}
-.card h2{font-size:18px;margin:0 0 4px;line-height:1.4}
-.card-head{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:baseline;justify-content:space-between;margin-bottom:14px}
-.card-head p{margin:0;font-size:13px;color:var(--text-muted)}
-.grid{display:grid;gap:16px}
-.kpis{grid-template-columns:repeat(auto-fit,minmax(210px,1fr))}
-.kpi{padding:18px 20px;display:flex;flex-direction:column;gap:2px}
-.kpi .k{font-size:13px;color:var(--text-muted);font-weight:500}
-.kpi .v{font-size:36px;font-weight:700;line-height:1.25;letter-spacing:-.01em}
-.kpi .v small{font-size:18px;font-weight:500;color:var(--text-muted)}
-.kpi .s{font-size:13px;color:var(--text-2)}
-.bar{height:8px;border-radius:var(--r-full);background:var(--na-bg);overflow:hidden;margin-top:6px}
-.bar>i{display:block;height:100%;background:var(--brand-600);border-radius:inherit}
-.row2{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:16px}
+/* tiles & bento */
+.tile{background:var(--surface);border:1px solid var(--hair);border-radius:var(--r-tile);box-shadow:var(--shadow);padding:28px;min-width:0}
+.tile-head{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:baseline;justify-content:space-between;margin-bottom:20px}
+.tile-head h2{font-size:19px;margin:0;font-weight:600}
+.tile-head p{margin:0;font-size:13px;color:var(--muted)}
+.bento{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:var(--gap)}
+.s12{grid-column:span 12}.s7{grid-column:span 7}.s5{grid-column:span 5}.s4{grid-column:span 4}.s8{grid-column:span 8}
 
-/* stacked status bar */
-.stack{display:flex;height:22px;border-radius:var(--r-full);overflow:hidden;gap:2px;background:rgba(255,255,255,.6)}
-.stack i{display:block;height:100%}
-.legend{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:12px;font-size:13px;color:var(--text-2)}
-.legend span{display:inline-flex;align-items:center;gap:6px}
-.legend b{font-weight:600;color:var(--text)}
-.sw{width:10px;height:10px;border-radius:3px;display:inline-block}
-.c-DONE{background:var(--done-c)}.c-ON_TRACK{background:var(--ok-c)}.c-LATE{background:var(--late-c)}.c-BELOW_TARGET{background:var(--risk-c)}.c-NOT_DUE{background:var(--na-c)}
+.hero{position:relative;overflow:hidden;color:var(--white);border:0;padding:32px;display:flex;flex-direction:column;gap:28px;justify-content:space-between;
+  background:radial-gradient(520px 300px at 100% 0%,rgba(228,159,34,.20),transparent 60%),radial-gradient(700px 420px at -10% 120%,rgba(98,185,138,.28),transparent 60%),linear-gradient(150deg,var(--g-700),var(--g-900) 70%)}
+.hero::after{content:"";position:absolute;right:-60px;top:-60px;width:260px;height:260px;border-radius:50%;border:38px solid rgba(255,255,255,.05);pointer-events:none}
+.hero .eyebrow{color:var(--gold)}
+.hero h2{margin:0;font-size:24px;line-height:1.35;font-weight:600;max-width:26ch}
+.hero-main{display:flex;gap:36px;align-items:center;flex-wrap:wrap}
+.ring{position:relative;width:148px;height:148px;flex:none}
+.ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring .v{position:absolute;inset:0;display:grid;place-content:center;text-align:center;line-height:1.1}
+.ring .v b{font-size:38px;font-weight:700}
+.ring .v span{font-size:12px;opacity:.8;margin-top:4px}
+.hero-facts{display:grid;grid-template-columns:repeat(2,minmax(0,auto));gap:16px 40px}
+.hero-facts div{display:flex;flex-direction:column}
+.hero-facts b{font-size:28px;font-weight:600;line-height:1.2}
+.hero-facts span{font-size:13px;color:rgba(255,255,255,.75)}
+.stack{display:flex;height:12px;border-radius:var(--r-full);overflow:hidden;gap:3px}
+.stack i{display:block;height:100%;border-radius:3px}
+.hero .stack{background:rgba(255,255,255,.1)}
+.hero .c-ON_TRACK{background:#8FD3AE}.hero .c-DONE{background:var(--white)}.hero .c-NOT_DUE{background:rgba(255,255,255,.28)}
+.legend{display:flex;flex-wrap:wrap;gap:8px 20px;margin-top:12px;font-size:13px}
+.legend span{display:inline-flex;align-items:center;gap:7px}
+.legend b{font-family:var(--display);font-weight:600}
+.hero .legend{color:rgba(255,255,255,.85)}
+.hero .legend b{color:var(--white)}
+.sw{width:10px;height:10px;border-radius:3px;display:inline-block;flex:none}
 
-/* RUBBER cards */
-.values{grid-template-columns:repeat(auto-fill,minmax(230px,1fr))}
-.vcard{text-align:left;cursor:pointer;padding:16px;display:flex;flex-direction:column;gap:8px;border-radius:var(--r-md);border:1px solid var(--line);background:rgba(255,255,255,.55);transition:background .15s ease-out,box-shadow .15s ease-out}
-.vcard:hover{background:var(--white);box-shadow:var(--shadow)}
-.vcard-top{display:flex;align-items:center;gap:10px}
-.vletter{font-size:30px;font-weight:700;line-height:1;color:var(--brand-700);width:34px}
-.vcard b{display:block;font-size:15px;line-height:1.35}
-.vcard .dim{font-size:12px;color:var(--text-muted)}
-.mini{display:flex;gap:3px}
-.mini i{flex:1;height:8px;border-radius:3px}
-.vcard p{margin:0;font-size:13px;color:var(--text-2)}
+.kpis{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--gap)}
+.kpi{display:flex;flex-direction:column;gap:6px;padding:24px}
+.kpi .k{display:flex;align-items:center;gap:10px;font-size:13.5px;color:var(--muted);font-weight:500}
+.kpi .ico{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:var(--g-50);color:var(--g-700);flex:none}
+.kpi .ico.warn{background:var(--late-bg);color:var(--late-fg)}
+.kpi .v{font-family:var(--display);font-size:40px;font-weight:700;line-height:1.1;margin-top:12px}
+.kpi .v small{font-size:20px;font-weight:500;color:var(--muted)}
+.kpi .s{font-size:13px;color:var(--ink-2)}
+.bar{height:8px;border-radius:var(--r-full);background:var(--hair-2);overflow:hidden}
+.bar>i{display:block;height:100%;background:var(--g-700);border-radius:inherit}
 
-/* follow list */
-.follow{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
-.follow li+li{border-top:1px solid var(--line)}
-.follow button{width:100%;display:flex;gap:12px;align-items:center;padding:12px 4px;background:none;border:0;cursor:pointer;text-align:left;border-radius:8px}
-.follow button:hover{background:rgba(255,255,255,.6)}
-.follow .t{flex:1;min-width:0}
-.follow .t b{display:block;font-weight:500;font-size:14px;line-height:1.45}
-.follow .t span{font-size:12px;color:var(--text-muted)}
-.idtag{font-weight:600;font-size:13px;color:var(--brand-700);width:30px;flex:none}
+/* RUBBER */
+.values{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:16px}
+.vcard{text-align:left;cursor:pointer;padding:20px 18px;display:flex;flex-direction:column;gap:12px;border-radius:18px;border:1px solid var(--hair);background:linear-gradient(180deg,var(--g-50),var(--surface) 70%);transition:transform .2s ease-out,box-shadow .2s ease-out,border-color .2s ease-out}
+.vcard:hover{transform:translateY(-2px);box-shadow:var(--shadow-lift);border-color:var(--g-200)}
+.vletter{font-family:var(--display);font-size:44px;font-weight:700;line-height:1;color:var(--g-700)}
+.vcard b{display:block;font-size:15px;line-height:1.35;font-family:var(--display);font-weight:600}
+.vcard .dim{font-size:12px;color:var(--muted)}
+.mini{display:flex;gap:4px}
+.mini i{flex:1;height:6px;border-radius:3px}
+.vcard p{margin:0;font-size:12.5px;color:var(--ink-2);margin-top:auto}
+
+/* lists */
+.list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.list li+li{border-top:1px solid var(--hair-2)}
+.list button{width:100%;display:flex;gap:14px;align-items:center;padding:14px 8px;background:none;border:0;cursor:pointer;text-align:left;border-radius:12px;transition:background .15s ease-out}
+.list button:hover{background:var(--g-50)}
+.list .t{flex:1;min-width:0}
+.list .t b{display:block;font-weight:500;font-size:14.5px;line-height:1.45}
+.list .t span{font-size:12.5px;color:var(--muted)}
+.idtag{font-family:var(--display);font-weight:700;font-size:14px;color:var(--g-700);width:40px;height:40px;border-radius:12px;background:var(--g-50);display:grid;place-items:center;flex:none}
+.list svg.i{color:var(--muted)}
 
 /* month chart */
-.mchart{display:grid;grid-template-columns:repeat(12,1fr);gap:6px;align-items:end;height:150px;padding-top:6px}
-.mcol{display:flex;flex-direction:column;align-items:center;gap:4px;height:100%;justify-content:flex-end;min-width:0}
-.mbars{display:flex;gap:2px;align-items:flex-end;height:110px;width:100%;justify-content:center}
-.mbars i{width:min(12px,40%);border-radius:3px 3px 0 0;display:block}
-.mbars .due{background:var(--na-c)}
-.mbars .ontime{background:var(--brand-600)}
-.mcol small{font-size:11px;color:var(--text-muted)}
-.mcol.cur small{color:var(--brand-700);font-weight:600}
-.nextbar{display:flex;gap:10px;align-items:center;margin-top:14px;padding:10px 12px;border-radius:var(--r-sm);background:var(--brand-25);color:var(--brand-800);font-size:14px}
+.mchart{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:6px;align-items:end}
+.mcol{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0}
+.mbars{position:relative;height:140px;width:100%;display:flex;justify-content:center;align-items:flex-end}
+.mbars .due{position:absolute;bottom:0;width:min(22px,70%);border-radius:7px 7px 3px 3px;background:var(--hair-2);border:1px dashed #C8D6CE}
+.mbars .ontime{position:relative;width:min(22px,70%);border-radius:7px 7px 3px 3px;background:var(--g-700)}
+.mcol .lab{font-size:11px;color:var(--muted)}
+.mcol .val{font-size:11px;color:var(--ink-2);font-family:var(--display);height:16px}
+.mcol.cur .lab{color:var(--gold-700);font-weight:700}
+.mcol.cur .due{border-color:var(--gold);border-style:solid;background:var(--gold-50)}
+.nextbar{display:flex;gap:12px;align-items:center;margin-top:22px;padding:14px 16px;border-radius:var(--r-md);background:var(--gold-50);color:var(--gold-700);font-size:14px}
 
-/* filters */
-.filters{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;padding:16px}
+/* filters + table */
+.filters{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end}
 .filters .field{flex:1 1 200px}
-.filters .search{flex:2 1 280px;position:relative}
-.filters .search svg.i{position:absolute;left:12px;bottom:13px;color:var(--text-muted)}
-.filters .search .input{padding-left:38px}
+.filters .search{flex:2 1 300px;position:relative}
+.filters .search svg.i{position:absolute;left:14px;bottom:14px;color:var(--muted)}
+.filters .search .input{padding-left:42px}
 .chips{display:flex;flex-wrap:wrap;gap:8px;flex-basis:100%}
-.fchip{min-height:34px;padding:4px 14px;border-radius:var(--r-full);border:1px solid var(--field-border);background:rgba(255,255,255,.7);cursor:pointer;font-size:14px;font-weight:500;display:inline-flex;gap:6px;align-items:center}
-.fchip[aria-pressed="true"]{background:var(--brand-600);border-color:var(--brand-600);color:var(--white)}
-
-/* activities table */
-.tablewrap{overflow-x:auto;border-radius:var(--r-lg)}
-table.acts{width:100%;border-collapse:collapse;min-width:1080px;font-size:14px}
-.acts th{font-size:12px;font-weight:600;color:var(--text-muted);text-align:left;padding:12px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
-.acts td{padding:12px 10px;border-bottom:1px solid var(--line);vertical-align:top}
-.acts tr.grp td{background:rgba(227,244,234,.6);padding:10px;font-weight:600;color:var(--brand-800)}
-.acts tr.grp td span{font-weight:400;color:var(--text-2);margin-left:6px}
-.acts tbody tr.arow{cursor:pointer;transition:background .15s ease-out}
-.acts tbody tr.arow:hover{background:rgba(255,255,255,.7)}
-.acts .nm a{font-weight:600;color:var(--text);text-decoration:none}
-.acts .nm a:hover{text-decoration:underline}
-.acts .sub{font-size:12px;color:var(--text-muted);margin-top:2px}
-.acts .kpi-t{color:var(--text-2);max-width:240px}
-.prog{min-width:120px}
-.prog .bar{height:6px;margin-top:4px}
-.cal{display:grid;grid-template-columns:repeat(12,16px);gap:3px}
-.cal-h{display:grid;grid-template-columns:repeat(12,16px);gap:3px;font-size:10px;color:var(--text-muted);text-align:center;font-weight:500}
-.cal i{width:16px;height:16px;border-radius:4px;display:block;position:relative}
-.cal .sent{background:var(--done-c)}
+.fchip{min-height:36px;padding:5px 16px;border-radius:var(--r-full);border:1px solid var(--hair);background:var(--surface);cursor:pointer;font-size:14px;font-weight:500;display:inline-flex;gap:8px;align-items:center;transition:background .15s ease-out}
+.fchip:hover{background:var(--g-50)}
+.fchip[aria-pressed="true"]{background:var(--g-700);border-color:var(--g-700);color:var(--white)}
+.fchip .L{font-family:var(--display);font-weight:700}
+.tablewrap{overflow-x:auto}
+table.acts{width:100%;border-collapse:collapse;min-width:1100px;font-size:14px}
+.acts th{font-size:11.5px;letter-spacing:.06em;font-weight:600;color:var(--muted);text-align:left;padding:0 12px 14px;border-bottom:1px solid var(--hair);white-space:nowrap}
+.acts td{padding:16px 12px;border-bottom:1px solid var(--hair-2);vertical-align:top}
+.acts tr.grp td{padding:22px 12px 10px;border-bottom:1px solid var(--hair)}
+.grp-h{display:flex;gap:12px;align-items:center}
+.grp-h .L{width:32px;height:32px;border-radius:10px;background:var(--g-700);color:var(--white);display:grid;place-items:center;font-family:var(--display);font-weight:700}
+.grp-h b{font-family:var(--display);font-weight:600;font-size:15px}
+.grp-h span{color:var(--muted);font-size:13px}
+.acts tr.arow{cursor:pointer;transition:background .15s ease-out}
+.acts tr.arow:hover{background:var(--g-50)}
+.acts .no{font-family:var(--display);font-weight:700;color:var(--g-700)}
+.acts .nm a{font-weight:600;color:var(--ink);text-decoration:none}
+.acts .nm a:hover{color:var(--g-700);text-decoration:underline}
+.acts .sub{font-size:12px;color:var(--muted);margin-top:3px}
+.acts .kpi-t{color:var(--ink-2);max-width:250px}
+.prog{min-width:130px}
+.prog .bar{height:6px;margin-top:6px}
+.cal,.cal-h{display:grid;grid-template-columns:repeat(12,16px);gap:4px}
+.cal-h{font-size:10px;color:var(--muted);text-align:center;font-weight:500;letter-spacing:0}
+.cal i{width:16px;height:16px;border-radius:5px;display:block;position:relative}
+.cal .sent{background:var(--g-700)}
 .cal .due{background:var(--late-bg);border:2px solid var(--late-ring)}
-.cal .future{border:1.5px solid var(--ok-c);background:rgba(255,255,255,.5)}
-.cal .none::after{content:"";position:absolute;left:3px;right:3px;top:7px;height:2px;border-radius:2px;background:var(--na-c)}
-.cal .cur{outline:2px solid var(--brand-800);outline-offset:1px}
-.callegend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12px;color:var(--text-2);padding:12px 16px}
-.callegend span{display:inline-flex;gap:6px;align-items:center}
-.callegend .cal i{flex:none}
-.empty{padding:48px 20px;text-align:center;display:flex;flex-direction:column;gap:10px;align-items:center;color:var(--text-2)}
-.empty b{font-size:18px;color:var(--text)}
+.cal .future{border:1.5px solid var(--ok);background:var(--surface)}
+.cal .none::after{content:"";position:absolute;left:4px;right:4px;top:7px;height:2px;border-radius:2px;background:var(--na)}
+.cal .cur{outline:2px solid var(--gold);outline-offset:1px}
+.callegend{display:flex;flex-wrap:wrap;gap:8px 20px;font-size:12.5px;color:var(--ink-2);padding-top:18px}
+.callegend span{display:inline-flex;gap:8px;align-items:center}
+.empty{padding:56px 20px;text-align:center;display:flex;flex-direction:column;gap:10px;align-items:center;color:var(--ink-2)}
+.empty b{font-family:var(--display);font-size:18px;color:var(--ink)}
+.empty svg.i{width:28px;height:28px;color:var(--g-700)}
 
-/* report page */
-.rhead{padding:20px;display:flex;flex-direction:column;gap:14px}
-.rhead-top{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center}
-.rhead h1{margin:0;font-size:24px;line-height:1.4;text-wrap:balance}
-.rhead .meta{font-size:14px;color:var(--text-muted)}
-.sum3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
-.sum3>div{padding:12px 14px;border-radius:var(--r-md);background:rgba(255,255,255,.6);border:1px solid var(--line)}
-.sum3 span{display:block;font-size:12px;color:var(--text-muted)}
-.sum3 b{font-size:22px;font-weight:700}
-.sum3 small{font-size:13px;color:var(--text-muted);font-weight:500}
-.rlayout{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:16px;align-items:start}
-.form{padding:22px;display:flex;flex-direction:column;gap:20px}
-.form h2{font-size:18px;margin:0}
-.two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
-.radios{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;border:0;padding:0;margin:0}
-.radios legend{font-weight:600;font-size:14px;margin-bottom:6px;padding:0;display:flex;gap:8px;align-items:center}
-.rcard{position:relative;display:flex;gap:10px;align-items:flex-start;padding:12px;border-radius:var(--r-md);border:1px solid var(--field-border);background:var(--field-bg);cursor:pointer;min-height:44px}
-.rcard input{margin:4px 0 0;accent-color:var(--brand-600);width:16px;height:16px;flex:none}
+/* report */
+.rhead{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:24px;align-items:end}
+.rhead-top{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;margin-bottom:10px}
+.vbadge{display:inline-grid;place-items:center;width:34px;height:34px;border-radius:10px;background:var(--g-700);color:var(--white);font-weight:700;font-family:var(--display)}
+.rhead h1{margin:0 0 8px;font-size:26px;line-height:1.35}
+.rhead .meta{font-size:14px;color:var(--muted)}
+.sum3{display:grid;grid-template-columns:repeat(3,minmax(120px,1fr));gap:12px}
+.sum3>div{padding:14px 16px;border-radius:var(--r-md);background:var(--g-50);border:1px solid var(--hair-2)}
+.sum3 span{display:block;font-size:12px;color:var(--muted)}
+.sum3 b{font-family:var(--display);font-size:26px;font-weight:700}
+.sum3 small{font-size:13px;color:var(--muted);font-weight:500}
+.sum3 .bar{margin-top:6px;height:6px}
+.rlayout{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:var(--gap);align-items:start}
+.form{display:flex;flex-direction:column;gap:24px}
+.form h2{font-size:20px;margin:0;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
+.radios{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;border:0;padding:0;margin:0}
+.radios legend{font-weight:600;font-size:14px;margin-bottom:8px;padding:0;display:flex;gap:8px;align-items:center}
+.rcard{display:flex;gap:12px;align-items:flex-start;padding:14px;border-radius:var(--r-md);border:1px solid var(--hair);background:var(--field);cursor:pointer;min-height:44px;transition:border-color .15s ease-out,background .15s ease-out}
+.rcard:hover{border-color:var(--g-200)}
+.rcard input{margin:4px 0 0;accent-color:var(--g-700);width:17px;height:17px;flex:none}
 .rcard b{display:block;font-size:14px;line-height:1.4}
-.rcard span{font-size:12px;color:var(--text-muted)}
-.rcard:has(input:checked){border-color:var(--brand-600);background:var(--brand-25);box-shadow:inset 0 0 0 1px var(--brand-600)}
-.rcard:has(input:focus-visible){outline:2px solid var(--brand-600);outline-offset:2px}
-.counter{font-size:12px;color:var(--text-muted);text-align:right}
+.rcard span{font-size:12px;color:var(--muted)}
+.rcard:has(input:checked){border-color:var(--g-700);background:var(--g-50);box-shadow:inset 0 0 0 1px var(--g-700)}
+.rcard:has(input:focus-visible){outline:2px solid var(--g-700);outline-offset:2px}
+.counter{font-size:12px;color:var(--muted);white-space:nowrap}
 .counter.over{color:var(--error);font-weight:600}
-.errsum{border:1px solid rgba(180,35,24,.35);background:var(--error-bg);border-radius:var(--r-md);padding:14px 16px;color:var(--error)}
+.errsum{border:1px solid #F4C7BE;background:var(--error-bg);border-radius:var(--r-md);padding:16px 18px;color:var(--error)}
 .errsum b{display:flex;gap:8px;align-items:center}
 .errsum ul{margin:6px 0 0;padding-left:22px}
 .errsum a{color:var(--error);font-weight:500}
-.drop{display:flex;flex-direction:column;align-items:center;gap:6px;padding:20px;border:1.5px dashed rgba(15,122,74,.45);border-radius:var(--r-md);background:rgba(232,246,238,.5);text-align:center;cursor:pointer;color:var(--text-2);font-size:14px}
-.drop:hover,.drop.over{background:var(--brand-25);border-color:var(--brand-600)}
-.drop b{color:var(--brand-700)}
-.drop:has(input:focus-visible){outline:2px solid var(--brand-600);outline-offset:2px}
-.linkrow{display:flex;gap:8px}
+.drop{display:flex;flex-direction:column;align-items:center;gap:8px;padding:24px;border:1.5px dashed #B6D3C3;border-radius:var(--r-md);background:var(--g-50);text-align:center;cursor:pointer;color:var(--ink-2);font-size:14px;transition:background .15s ease-out,border-color .15s ease-out}
+.drop:hover,.drop.over{background:var(--g-100);border-color:var(--g-700)}
+.drop .ico{width:44px;height:44px;border-radius:50%;background:var(--surface);display:grid;place-items:center;color:var(--g-700);box-shadow:var(--shadow)}
+.drop b{color:var(--g-700)}
+.drop:has(input:focus-visible){outline:2px solid var(--g-700);outline-offset:2px}
+.linkrow{display:flex;gap:10px}
 .linkrow .input{flex:1;min-width:0}
-.files{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
-.files li{display:flex;gap:10px;align-items:center;padding:8px 10px;border-radius:var(--r-sm);background:rgba(255,255,255,.7);border:1px solid var(--line);font-size:14px}
+.files{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.files li{display:flex;gap:10px;align-items:center;padding:10px 12px;border-radius:12px;background:var(--surface);border:1px solid var(--hair);font-size:14px}
+.files li>svg.i{color:var(--g-700)}
 .files .fn{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.files .fs{font-size:12px;color:var(--text-muted);white-space:nowrap}
+.files .fs{font-size:12px;color:var(--muted);white-space:nowrap}
 .files .ok{color:var(--done-fg);font-size:12px;display:inline-flex;gap:4px;align-items:center;white-space:nowrap}
+.files .ok svg.i{width:14px;height:14px}
 .files .up{color:var(--info-fg);font-size:12px;white-space:nowrap}
-.iconbtn{width:32px;height:32px;display:grid;place-items:center;border-radius:8px;border:0;background:none;cursor:pointer;color:var(--text-muted);flex:none}
-.iconbtn:hover{background:var(--na-bg);color:var(--text)}
-.actions{display:flex;flex-wrap:wrap;gap:10px;justify-content:flex-end;align-items:center;padding-top:6px;border-top:1px solid var(--line)}
-.actions .note{margin-right:auto;font-size:13px;color:var(--text-muted)}
-.ro{display:grid;grid-template-columns:160px minmax(0,1fr);gap:10px 16px;margin:0;font-size:14px}
-.ro dt{color:var(--text-muted)}
+.iconbtn{width:34px;height:34px;display:grid;place-items:center;border-radius:10px;border:0;background:none;cursor:pointer;color:var(--muted);flex:none}
+.iconbtn:hover{background:var(--hair-2);color:var(--ink)}
+.actions{display:flex;flex-wrap:wrap;gap:10px;justify-content:flex-end;align-items:center;padding-top:20px;border-top:1px solid var(--hair-2)}
+.actions .note{margin-right:auto;font-size:13px;color:var(--muted)}
+.ro{display:grid;grid-template-columns:170px minmax(0,1fr);gap:14px 20px;margin:0;font-size:14.5px}
+.ro dt{color:var(--muted)}
 .ro dd{margin:0;white-space:pre-line}
-.decision{padding:16px;border-radius:var(--r-md);background:var(--info-bg);display:flex;flex-direction:column;gap:12px}
-.decision b{color:var(--info-fg)}
-.aside{display:flex;flex-direction:column;gap:16px}
-.aside .card{padding:18px}
-.aside h3{margin:0 0 12px;font-size:15px}
+.decision{padding:20px;border-radius:var(--r-md);background:var(--g-50);border:1px solid var(--g-200);display:flex;flex-direction:column;gap:14px}
+.decision>b{font-family:var(--display);font-size:16px;color:var(--g-800)}
+.aside{display:flex;flex-direction:column;gap:var(--gap)}
+.aside .tile{padding:24px}
+.aside h3{margin:0 0 16px;font-size:16px;font-weight:600}
 .steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
-.steps li{display:grid;grid-template-columns:28px 1fr;gap:10px;position:relative;padding-bottom:16px}
+.steps li{display:grid;grid-template-columns:32px 1fr;gap:12px;position:relative;padding-bottom:20px}
 .steps li:last-child{padding-bottom:0}
-.steps li:not(:last-child)::before{content:"";position:absolute;left:13px;top:28px;bottom:2px;width:2px;background:var(--line)}
-.steps li.done:not(:last-child)::before{background:var(--done-c)}
-.dot{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:600;background:var(--na-bg);color:var(--na-fg);border:2px solid transparent}
-.steps .done .dot{background:var(--done-c);color:var(--white)}
-.steps .cur .dot{background:var(--white);border-color:var(--brand-600);color:var(--brand-700)}
+.steps li:not(:last-child)::before{content:"";position:absolute;left:15px;top:34px;bottom:4px;width:2px;background:var(--hair)}
+.steps li.done:not(:last-child)::before{background:var(--g-700)}
+.dot{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:700;font-family:var(--display);background:var(--hair-2);color:var(--muted);border:2px solid transparent}
+.dot svg.i{width:16px;height:16px}
+.steps .done .dot{background:var(--g-700);color:var(--white)}
+.steps .cur .dot{background:var(--surface);border-color:var(--g-700);color:var(--g-700)}
 .steps .ret .dot{background:var(--late-bg);color:var(--late-fg);border-color:var(--late-ring)}
 .steps b{display:block;font-size:14px;line-height:1.4}
-.steps span{font-size:12px;color:var(--text-muted)}
+.steps span{font-size:12.5px;color:var(--muted)}
 .hist{list-style:none;margin:0;padding:0}
-.hist li+li{border-top:1px solid var(--line)}
-.hist button{width:100%;display:flex;gap:10px;align-items:center;padding:9px 4px;border:0;background:none;cursor:pointer;text-align:left;font-size:14px;border-radius:6px}
-.hist button:hover{background:rgba(255,255,255,.6)}
-.hist button[aria-current="true"]{font-weight:600;background:var(--brand-25)}
-.hist .m{width:78px;flex:none}
-.hist .v{margin-left:auto;font-size:13px;color:var(--text-2)}
-.comment{margin-top:12px;padding:10px 12px;border-radius:var(--r-sm);background:var(--late-bg);color:var(--late-fg);font-size:13px}
+.hist li+li{border-top:1px solid var(--hair-2)}
+.hist button{width:100%;display:flex;gap:10px;align-items:center;padding:10px 8px;border:0;background:none;cursor:pointer;text-align:left;font-size:14px;border-radius:10px}
+.hist button:hover{background:var(--g-50)}
+.hist button[aria-current="true"]{font-weight:600;background:var(--g-50);box-shadow:inset 3px 0 0 var(--g-700)}
+.hist .m{width:82px;flex:none}
+.hist .v{margin-left:auto;font-size:13px;color:var(--ink-2)}
+.comment{margin-top:14px;padding:12px 14px;border-radius:12px;background:var(--late-bg);color:var(--late-fg);font-size:13.5px}
 .comment.info{background:var(--info-bg);color:var(--info-fg)}
-details.dd{border-top:1px solid var(--line)}
+details.dd{border-top:1px solid var(--hair-2)}
 details.dd:first-of-type{border-top:0}
-details.dd summary{cursor:pointer;padding:10px 0;font-weight:600;font-size:14px;list-style-position:outside}
-details.dd .lists{display:flex;flex-direction:column;gap:8px;padding-bottom:12px;font-size:13px}
-.dolist{margin:0;padding:8px 12px 8px 30px;border-radius:var(--r-sm)}
+details.dd summary{cursor:pointer;padding:12px 0;font-weight:600;font-size:14px}
+details.dd .lists{display:flex;flex-direction:column;gap:8px;padding-bottom:14px;font-size:13px}
+.dolist{margin:0;padding:10px 14px 10px 32px;border-radius:12px}
 .dolist.do{background:var(--done-bg);color:var(--done-fg)}
 .dolist.dont{background:var(--risk-bg);color:var(--risk-fg)}
 .dohead{font-weight:600;display:flex;gap:6px;align-items:center;font-size:13px}
 
 /* my tasks */
-.hello{padding:20px;display:flex;flex-direction:column;gap:10px;background:linear-gradient(135deg,var(--brand-600),var(--brand-800));color:var(--white);border-radius:var(--r-lg);box-shadow:var(--shadow-cta)}
-.hello span{font-size:13px;opacity:.9}
-.hello b{font-size:22px}
-.hello .bar{background:rgba(255,255,255,.25)}
-.hello .bar>i{background:var(--white)}
-.seg{display:flex;padding:4px;border-radius:var(--r-md);background:rgba(255,255,255,.6);border:1px solid var(--line);gap:4px}
-.seg button{flex:1;min-height:40px;border:0;border-radius:9px;background:none;cursor:pointer;font-weight:500;color:var(--text-2);display:inline-flex;gap:6px;align-items:center;justify-content:center}
-.seg button[aria-pressed="true"]{background:var(--white);color:var(--brand-700);box-shadow:0 1px 3px rgba(12,64,40,.12)}
-.tasks{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(300px,1fr))}
-.task{padding:16px;display:flex;flex-direction:column;gap:10px}
+.hello{color:var(--white);border:0;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:20px 32px;align-items:center;
+  background:radial-gradient(400px 220px at 100% 0%,rgba(228,159,34,.22),transparent 60%),linear-gradient(140deg,var(--g-700),var(--g-900))}
+.hello .eyebrow{color:var(--gold);margin:0}
+.hello h2{margin:4px 0 4px;font-size:24px;font-weight:600}
+.hello p{margin:0;font-size:14px;color:rgba(255,255,255,.8)}
+.hello .big{text-align:right}
+.hello .big b{font-family:var(--display);font-size:44px;font-weight:700;line-height:1}
+.hello .big span{display:block;font-size:13px;color:rgba(255,255,255,.75)}
+.hello .bar{grid-column:1/-1;background:rgba(255,255,255,.18)}
+.hello .bar>i{background:var(--gold)}
+.seg{display:flex;padding:5px;border-radius:16px;background:var(--surface);border:1px solid var(--hair);gap:4px;box-shadow:var(--shadow)}
+.seg button{flex:1;min-height:42px;border:0;border-radius:12px;background:none;cursor:pointer;font-weight:600;color:var(--ink-2);display:inline-flex;gap:6px;align-items:center;justify-content:center;font-size:14px}
+.seg button[aria-pressed="true"]{background:var(--g-700);color:var(--white)}
+.tasks{display:grid;gap:var(--gap);grid-template-columns:repeat(auto-fill,minmax(320px,1fr))}
+.task{display:flex;flex-direction:column;gap:12px;padding:24px}
 .task-top{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap}
-.task-id{font-weight:600;font-size:14px;color:var(--brand-700)}
-.task h3{margin:0;font-size:15px;line-height:1.45;font-weight:600}
-.task .meta{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:13px;color:var(--text-2)}
-.task .meta span{display:inline-flex;gap:5px;align-items:center}
-.task .meta svg.i{width:15px;height:15px}
-.task .btn{min-height:44px;width:100%}
-.overdue{color:var(--late-fg);font-weight:600}
+.task-id{display:flex;gap:10px;align-items:center;font-weight:600;font-size:13px;color:var(--muted)}
+.task-id .idtag{width:36px;height:36px;font-size:13px}
+.task h3{margin:0;font-size:16px;line-height:1.45;font-weight:600}
+.task .meta{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--ink-2)}
+.task .meta span{display:inline-flex;gap:8px;align-items:center}
+.task .meta svg.i{width:15px;height:15px;color:var(--muted)}
+.task .btn{min-height:46px;width:100%;margin-top:auto}
+.overdue{color:var(--late-fg)!important;font-weight:600}
 
-/* do & don't page */
-.ddgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
-.ddcol{padding:18px}
-.ddcol h3{margin:0 0 10px;font-size:16px;display:flex;gap:8px;align-items:center}
-.ddcol ol{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:8px}
+/* do & don't */
+.ddgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--gap)}
+.ddcol h3{margin:0 0 14px;font-size:18px;display:flex;gap:10px;align-items:center}
+.ddcol ol{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:10px}
 .ddcol.do h3{color:var(--done-fg)}
 .ddcol.dont h3{color:var(--risk-fg)}
-.ddcol.do{border-top:3px solid var(--done-c)}
-.ddcol.dont{border-top:3px solid var(--risk-c)}
+.ddcol .ico{width:36px;height:36px;border-radius:10px;display:grid;place-items:center}
+.ddcol.do .ico{background:var(--done-bg)}
+.ddcol.dont .ico{background:var(--risk-bg)}
+
+/* settings */
+.utable{width:100%;border-collapse:collapse;font-size:14px;min-width:520px}
+.utable th{font-size:11.5px;letter-spacing:.06em;color:var(--muted);text-align:left;padding:0 12px 10px;border-bottom:1px solid var(--hair);font-weight:600}
+.utable td{padding:14px 12px;border-bottom:1px solid var(--hair-2)}
+.ucell{display:flex;gap:10px;align-items:center}
+.ucell .avatar{width:34px;height:34px;font-size:12px}
+.role{font-size:12px;font-weight:600;padding:3px 10px;border-radius:var(--r-full);white-space:nowrap}
+.role.ADMIN{background:var(--gold-50);color:var(--gold-700)}
+.role.REPORTER{background:var(--g-50);color:var(--g-800)}
+.kv{display:grid;grid-template-columns:minmax(0,1fr) auto;margin:0}
+.kv dt,.kv dd{padding:12px 0;border-bottom:1px solid var(--hair-2);margin:0;font-size:14px}
+.kv dt{color:var(--ink-2)}
+.kv dd{font-family:var(--display);font-weight:600;text-align:right;padding-left:12px}
 
 /* toast */
-.toasts{position:fixed;right:max(20px,env(safe-area-inset-right,0px));bottom:calc(20px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:8px;z-index:50;pointer-events:none}
-.toast{pointer-events:auto;display:flex;gap:10px;align-items:center;padding:12px 16px;border-radius:var(--r-md);background:var(--text);color:var(--white);box-shadow:var(--shadow);font-size:14px;max-width:360px;animation:tin .2s ease-out}
-.toast svg.i{color:var(--ok-c)}
+.toasts{position:fixed;right:max(24px,env(safe-area-inset-right,0px));bottom:calc(24px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:8px;z-index:60;pointer-events:none}
+.toast{pointer-events:auto;display:flex;gap:10px;align-items:center;padding:13px 18px;border-radius:14px;background:var(--g-950);color:var(--white);box-shadow:var(--shadow-lift);font-size:14px;max-width:380px;animation:tin .2s ease-out}
+.toast svg.i{color:var(--gold)}
 @keyframes tin{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-.foot{font-size:12px;color:var(--text-muted);padding:4px 4px 0}
+.foot{font-size:12px;color:var(--muted);display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;justify-content:space-between;padding-top:12px;border-top:1px solid var(--hair)}
+.foot img{height:26px;width:auto}
 
-@media (max-width:1100px){
-  .row2,.rlayout{grid-template-columns:minmax(0,1fr)}
+@media (max-width:1280px){.values{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:1180px){
+  .s7,.s5,.s4,.s8{grid-column:span 12}
+  .kpis{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .rlayout{grid-template-columns:minmax(0,1fr)}
+  .rhead{grid-template-columns:minmax(0,1fr)}
 }
-@media (max-width:900px){
+@media (max-width:960px){
+  :root{--gap:16px}
+  .shell{grid-template-columns:minmax(0,1fr);background:none}
   .side{display:none}
-  .app{padding-block:12px 96px}
-  .mtop{display:flex;align-items:center;gap:12px}
-  .mtop .brand-mark{width:34px;height:34px}
-  .mtop b{font-size:15px;line-height:1.3;flex:1}
-  .mtop .iconbtn{width:44px;height:44px;background:rgba(255,255,255,.7);border:1px solid var(--line);position:relative}
-  .mtop .iconbtn .badge{position:absolute;top:-4px;right:-4px;min-width:18px;height:18px;font-size:11px}
-  .bottomnav{display:grid;grid-template-columns:repeat(4,1fr);position:fixed;left:0;right:0;bottom:0;z-index:40;
-    padding:6px max(8px,env(safe-area-inset-right,0px)) calc(6px + env(safe-area-inset-bottom,0px)) max(8px,env(safe-area-inset-left,0px));
-    background:rgba(255,255,255,.88);backdrop-filter:var(--glass-blur);-webkit-backdrop-filter:var(--glass-blur);border-top:1px solid var(--line)}
-  .bottomnav button{display:flex;flex-direction:column;align-items:center;gap:2px;min-height:52px;justify-content:center;border:0;background:none;font-size:12px;color:var(--text-muted);cursor:pointer;border-radius:10px;font-weight:500}
+  main{padding-block:16px 112px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+  .mtop{display:flex;align-items:center;gap:12px;padding-bottom:4px}
+  .mtop img{width:42px;height:42px}
+  .mtop .hi{flex:1;line-height:1.3}
+  .mtop .hi b{display:block;font-family:var(--display);font-size:16px}
+  .mtop .hi span{font-size:12px;color:var(--muted)}
+  .mtop .iconbtn{width:44px;height:44px;background:var(--surface);border:1px solid var(--hair);border-radius:14px;position:relative}
+  .mtop .iconbtn .badge{position:absolute;top:-6px;right:-6px;min-width:20px;height:20px;font-size:11px}
+  .bottomnav{display:grid;grid-template-columns:repeat(4,1fr);position:fixed;left:0;right:0;bottom:0;z-index:50;gap:4px;
+    padding:8px max(10px,env(safe-area-inset-right,0px)) calc(8px + env(safe-area-inset-bottom,0px)) max(10px,env(safe-area-inset-left,0px));
+    background:rgba(255,255,255,.94);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-top:1px solid var(--hair)}
+  .bottomnav button{display:flex;flex-direction:column;align-items:center;gap:3px;min-height:54px;justify-content:center;border:0;background:none;font-size:11.5px;color:var(--muted);cursor:pointer;border-radius:14px;font-weight:600;position:relative}
   .bottomnav button svg.i{width:22px;height:22px}
-  .bottomnav button[aria-current="page"]{color:var(--brand-700);background:var(--brand-25)}
-  .toasts{bottom:calc(84px + env(safe-area-inset-bottom,0px));left:16px;right:16px}
+  .bottomnav button[aria-current="page"]{color:var(--g-700);background:var(--g-50)}
+  .bottomnav .badge{position:absolute;top:4px;right:calc(50% - 26px);min-width:18px;height:18px;font-size:10.5px}
+  .toasts{bottom:calc(92px + env(safe-area-inset-bottom,0px));left:16px;right:16px}
   .toast{max-width:none}
-  .ph h1{font-size:24px}
+  .ph h1{font-size:26px}
+  .tile{padding:20px}
+  .hero{padding:24px}
 }
 @media (max-width:640px){
-  .two,.radios{grid-template-columns:minmax(0,1fr)}
-  .sum3 b{font-size:18px}
-  .sum3>div{padding:10px}
-  .ro{grid-template-columns:minmax(0,1fr);gap:2px}
-  .ro dd{margin-bottom:10px}
-  .ddgrid{grid-template-columns:minmax(0,1fr)}
-  .actions .btn{flex:1 1 auto;min-height:44px}
-  .actions .note{flex-basis:100%}
+  .kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .kpi{padding:18px}
   .kpi .v{font-size:30px}
+  .values{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+  .two,.radios,.ddgrid{grid-template-columns:minmax(0,1fr)}
+  .sum3{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+  .sum3>div{padding:10px}
+  .sum3 b{font-size:19px}
+  .ro{grid-template-columns:minmax(0,1fr);gap:2px}
+  .ro dd{margin-bottom:12px}
+  .actions .btn{flex:1 1 auto;min-height:46px}
+  .actions .note{flex-basis:100%}
   .ph-actions{width:100%}
-  .ph-actions .btn{flex:1}
-  .mchart{gap:3px}
-  .card,.form{padding:16px}
+  .ph-actions .btn,.ph-actions select{flex:1}
+  .ring{width:120px;height:120px}
+  .ring .v b{font-size:30px}
+  .hero-main{gap:20px}
+  .hello{grid-template-columns:minmax(0,1fr)}
+  .hello .big{text-align:left}
   .tasks{grid-template-columns:minmax(0,1fr)}
+  .list button>svg.i:last-child{display:none}
+  .list button{gap:10px;padding:12px 4px}
+  .mchart{gap:3px}
 }
 </style>
 
 <div class="mockbar" role="note">
-  <span><b>Mockup</b> · ข้อมูลผลเป็นตัวอย่าง (จำลองวันที่ 10 เม.ย. 2570) · แผน/เป้าหมายจาก Sheet1</span>
-  <label for="roleSel">ดูในบทบาท
-    <select id="roleSel">
-      <option value="STAFF">ผู้รายงาน (STAFF)</option>
-      <option value="GROUP_HEAD">หัวหน้ากลุ่มงาน (GROUP_HEAD)</option>
-      <option value="DIRECTOR">ผู้อำนวยการ (DIRECTOR)</option>
-      <option value="EXEC_VIEWER">ผู้บริหาร (EXEC_VIEWER)</option>
-    </select>
-  </label>
+  <span><b>MOCKUP</b> · ผลรายงานเป็นข้อมูลตัวอย่าง (จำลองวันที่ 10 เม.ย. 2570) · แผนและค่าเป้าหมายจาก Sheet1</span>
+  <div class="rolesw" role="group" aria-label="ดูในบทบาท">
+    <button type="button" data-role="REPORTER">ผู้รายงาน</button>
+    <button type="button" data-role="ADMIN">ผู้ดูแลระบบ</button>
+  </div>
 </div>
 
-<div class="app">
-  <aside class="side glass" aria-label="เมนูหลัก">
-    <div class="brand">
-      <div class="brand-mark" aria-hidden="true" data-icon="sprout"></div>
-      <div><b>Risk Culture Tracker</b><span>กยท. · ปีงบประมาณ 2570</span></div>
-    </div>
-    <nav class="nav" id="sideNav">
+<div class="shell">
+  <aside class="side" aria-label="เมนูหลัก">
+    <img class="logo" src="logo-raot.webp" alt="การยางแห่งประเทศไทย (RAOT)" width="640" height="331">
+    <div class="sys"><b>Risk Culture Tracker</b>ระบบติดตามแผนเสริมสร้างค่านิยมและวัฒนธรรมความเสี่ยง · ปี 2570</div>
+    <nav class="nav">
       <div class="nav-label">เมนู</div>
       <button data-page="dashboard"><span data-icon="dashboard"></span>ภาพรวม</button>
       <button data-page="activities"><span data-icon="list"></span>แผนและกิจกรรม</button>
-      <button data-page="mytasks"><span data-icon="clipboard"></span>งานของฉัน<span class="badge" id="navTaskBadge"></span></button>
-      <button data-page="approvals"><span data-icon="inbox"></span>รออนุมัติ<span class="badge" id="navApprBadge"></span></button>
+      <button data-page="mytasks" data-only="REPORTER"><span data-icon="clipboard"></span>งานของฉัน<span class="badge" id="navTaskBadge"></span></button>
+      <button data-page="approvals" data-only="ADMIN"><span data-icon="inbox"></span>ตรวจและอนุมัติ<span class="badge" id="navApprBadge"></span></button>
       <button data-page="dodont"><span data-icon="book"></span>แนวทาง Do &amp; Don't</button>
+      <button data-page="settings" data-only="ADMIN"><span data-icon="settings"></span>ผู้ใช้และการตั้งค่า</button>
     </nav>
     <div class="me"><div class="avatar" id="meAvatar"></div><div><b id="meName"></b><span id="meRole"></span></div></div>
   </aside>
 
-  <main id="main">
-    <div class="mtop">
-      <div class="brand-mark" aria-hidden="true" data-icon="sprout"></div>
-      <b id="mHello"></b>
-      <button class="iconbtn" type="button" aria-label="การแจ้งเตือน" id="bellBtn"><span data-icon="bell"></span><span class="badge" id="bellBadge"></span></button>
+  <main>
+    <div class="wrap">
+      <div class="mtop">
+        <img src="logo-mark.webp" alt="RAOT" width="160" height="160">
+        <div class="hi"><b id="mHello"></b><span>Risk Culture Tracker · ปี 2570</span></div>
+        <button class="iconbtn" type="button" aria-label="การแจ้งเตือน" id="bellBtn"><span data-icon="bell"></span><span class="badge" id="bellBadge"></span></button>
+      </div>
+      <div id="view" class="wrap" tabindex="-1"></div>
+      <footer class="foot"><img src="logo-raot.webp" alt="" width="640" height="331"><span>Mockup ตาม SPEC v0.1 · ปุ่มทั้งหมดทำงานในหน้านี้เท่านั้น ไม่บันทึกลง Google Sheet</span></footer>
     </div>
-    <div id="view" tabindex="-1"></div>
-    <p class="foot">Mockup ตาม SPEC v0.1 (19 ต.ค. 2569) · ปุ่มทุกปุ่มทำงานในหน้านี้เท่านั้น ไม่บันทึกลง Google Sheet</p>
   </main>
 </div>
 
-<nav class="bottomnav" id="bottomNav" aria-label="เมนูหลัก (มือถือ)">
+<nav class="bottomnav" aria-label="เมนูหลัก (มือถือ)">
   <button data-page="dashboard"><span data-icon="dashboard"></span>ภาพรวม</button>
-  <button data-page="mytasks"><span data-icon="clipboard"></span>งานของฉัน</button>
+  <button data-page="mytasks" data-only="REPORTER"><span data-icon="clipboard"></span>งานของฉัน<span class="badge" id="bnTask"></span></button>
+  <button data-page="approvals" data-only="ADMIN"><span data-icon="inbox"></span>ตรวจอนุมัติ<span class="badge" id="bnAppr"></span></button>
   <button data-page="activities"><span data-icon="list"></span>กิจกรรม</button>
   <button data-page="dodont"><span data-icon="book"></span>Do &amp; Don't</button>
 </nav>
 
 <div class="toasts" id="toasts" aria-live="polite" role="status"></div>
 
+<script src="data.js"></script>
 <script>
 "use strict";
 /* ---------- icons (Lucide, stroke 1.8) ---------- */
@@ -439,6 +503,7 @@ const ICONS={
   clipboard:'<rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="m9 14 2 2 4-4"/>',
   inbox:'<path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>',
   book:'<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>',
+  settings:'<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>',
   bell:'<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>',
   download:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/>',
   pen:'<path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/>',
@@ -457,15 +522,18 @@ const ICONS={
   shield:'<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/>',
   target:'<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>',
   save:'<path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/>',
-  sprout:'<path d="M7 20h10"/><path d="M10 20c5.5-2.5.8-6.4 3-10"/><path d="M9.5 9.4c1.1.8 1.8 2.2 2.3 3.7-2 .4-3.5.4-4.8-.3-1.2-.6-2.3-1.9-3-4.2 2.8-.5 4.4 0 5.5.8z"/><path d="M14.1 6a7 7 0 0 0-1.1 4c1.9-.1 3.3-.6 4.3-1.4 1-1 1.6-2.3 1.7-4.6-2.7.1-4 1-4.9 2z"/>',
   thumbup:'<path d="M7 10v12"/><path d="M15 5.88 14 10h5.83a2 2 0 0 1 1.92 2.56l-2.33 8A2 2 0 0 1 17.5 22H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2h2.76a2 2 0 0 0 1.79-1.11L12 2a3.13 3.13 0 0 1 3 3.88Z"/>',
-  ban:'<circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/>'
+  ban:'<circle cx="12" cy="12" r="10"/><path d="m4.9 4.9 14.2 14.2"/>',
+  layers:'<path d="m12 2 10 5-10 5L2 7z"/><path d="m2 17 10 5 10-5M2 12l10 5 10-5"/>',
+  flag:'<path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><path d="M4 22v-7"/>',
+  clock:'<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>',
+  unlock:'<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/>'
 };
-const ic=(n)=>`<svg class="i" viewBox="0 0 24 24" aria-hidden="true">${ICONS[n]||''}</svg>`;
-const esc=(s)=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-function hydrateIcons(root){root.querySelectorAll('[data-icon]').forEach(el=>{if(el.tagName==='SPAN'&&!el.className)el.outerHTML=ic(el.dataset.icon);else el.innerHTML=ic(el.dataset.icon)})}
+const ic=n=>`<svg class="i" viewBox="0 0 24 24" aria-hidden="true">${ICONS[n]||''}</svg>`;
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+document.querySelectorAll('[data-icon]').forEach(el=>{el.outerHTML=ic(el.dataset.icon)});
 
-/* ---------- calendar helpers (ปีงบ ต.ค.–ก.ย., แสดง พ.ศ.) ---------- */
+/* ---------- calendar (ปีงบ ต.ค.–ก.ย., แสดง พ.ศ.) ---------- */
 const FY=2570, NOW=new Date(2027,3,10,9,30), CUR=7, DUE_DAY=5;
 const MON=['ต.ค.','พ.ย.','ธ.ค.','ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.'];
 const fmtD=new Intl.DateTimeFormat('th-TH-u-ca-buddhist',{day:'numeric',month:'short',year:'numeric'});
@@ -477,157 +545,33 @@ const fd=d=>d?fmtD.format(d):'–';
 const fdt=d=>d?`${fmtD.format(d)} · ${fmtT.format(d)} น.`:'–';
 const addDays=(d,n)=>new Date(d.getTime()+n*864e5);
 
-/* ---------- master data (Sheet1) ---------- */
-const GROUPS=[
-  {n:1,code:'R',name:'Rules',dim:'Risk awareness'},
-  {n:2,code:'U',name:'Unity',dim:'Understand impact'},
-  {n:3,code:'B',name:'Be Innovative',dim:'Be proactive'},
-  {n:4,code:'B',name:'Beyond Service',dim:'Build accountability'},
-  {n:5,code:'E',name:'Expertise',dim:'Embed in process'},
-  {n:6,code:'R',name:'Responsibility',dim:'Review & Improve'}
-];
-const A=[
- {no:'1.1',name:'การสื่อสารด้านธรรมาภิบาล การบริหารความเสี่ยง และการกำกับการปฏิบัติตามกฎเกณฑ์ (GRC)',tg:'บุคลากร กยท. ทุกระดับ',kpi:"ระดับการรับรู้สารสำคัญด้านความเสี่ยงและ Do & Don't",target:85,unit:'ร้อยละ',type:'PERCENT_LATEST',plan:'111111111111',owner:'ฝยศ./กบค.',outcome:'บุคลากรรู้และเข้าใจพฤติกรรมที่ควร/ไม่ควรปฏิบัติ',
-  d:`คณะกรรมการ: รับทราบและเข้าใจความเสี่ยงที่สำคัญที่สุดขององค์กรอย่างถ่องแท้
-ผู้บริหารระดับสูง: สื่อสารเรื่องความเสี่ยงให้ทุกสายงานรับทราบอย่างสม่ำเสมอ
-ผู้บริหารระดับกลาง: อธิบายให้ทีมงานเข้าใจเหตุผลที่ต้องเฝ้าระวังความเสี่ยง
-พนักงาน: รู้และเข้าใจว่างานที่ตนเองทำอยู่มีจุดเสี่ยงอะไรบ้าง`,
-  x:`คณะกรรมการ: มองว่าความเสี่ยงเป็นเรื่องไกลตัวหรือเป็นหน้าที่ของฝ่ายปฏิบัติการเท่านั้น
-ผู้บริหารระดับสูง: สื่อสารเรื่องความเสี่ยงเฉพาะตอนที่เกิดปัญหาขึ้นแล้วเท่านั้น
-ผู้บริหารระดับกลาง: คิดว่าการจัดการความเสี่ยงเป็นหน้าที่ของฝ่ายบริหารความเสี่ยงเท่านั้น
-พนักงาน: ทำงานตามความเคยชินโดยไม่สนใจคู่มือหรือระเบียบปฏิบัติ`},
- {no:'1.2',name:'การเรียนรู้ผ่านสื่อออนไลน์ E-learning ด้านการบริหารความเสี่ยงและการควบคุมภายใน',tg:'พนักงานและลูกจ้าง',kpi:'ผู้เรียนผ่านเกณฑ์ทดสอบหลังเรียน',target:80,unit:'ร้อยละ',type:'PERCENT_LATEST',plan:'011100000000',owner:'ฝยศ./กบค. ร่วม ฝทม.',outcome:'มีความรู้ด้านการบริหารความเสี่ยงและควบคุมภายใน',
-  d:`พนักงาน: ศึกษากฎระเบียบและคู่มือการทำงานอย่างละเอียด / เข้ารับการอบรมเรื่องความเสี่ยงและการทำงานอย่างถูกต้องด้วยความตั้งใจ`,
-  x:`พนักงาน: ทำงานตามความเคยชินโดยไม่สนใจคู่มือหรือระเบียบปฏิบัติ / ไม่ยอมศึกษาหาความรู้เพิ่มเติมเกี่ยวกับสายงานของตนเอง`},
- {no:'1.3',name:'ผู้บริหารสื่อสารความเสี่ยงและสร้างแบบอย่างจากผู้นำ',tg:'คณะกรรมการและผู้บริหารระดับสูง/กลาง',kpi:'จำนวนรอบการสื่อสารความเสี่ยงโดยผู้นำ',target:4,unit:'ครั้ง/ปี',type:'COUNT_CUMULATIVE',plan:'001001001001',owner:'ฝยศ./กบค.',outcome:'ผู้นำสื่อสารความเสี่ยงสม่ำเสมอและเป็นแบบอย่าง',
-  d:`คณะกรรมการ: สอบถามและเปิดประเด็นถึงความเสี่ยงใหม่ ๆ ในการประชุมเสมอ
-ผู้บริหารระดับสูง: สื่อสารเรื่องความเสี่ยงให้ทุกสายงานรับทราบอย่างสม่ำเสมอ
-ผู้บริหารระดับกลาง: นำเรื่องความเสี่ยงมาเป็นหัวข้อพูดคุยในการประชุมทีมเสมอ`,
-  x:`คณะกรรมการ: ให้เวลาไม่เพียงพอในการหารือวาระที่เกี่ยวข้องกับความเสี่ยง
-ผู้บริหารระดับสูง: สื่อสารเรื่องความเสี่ยงเฉพาะตอนที่เกิดปัญหาขึ้นแล้วเท่านั้น
-ผู้บริหารระดับกลาง: ไม่ยอมรับฟังเมื่อผู้ใต้บังคับบัญชามาเตือนเรื่องความเสี่ยง`},
- {no:'2.1',name:'การประชุมเชิงปฏิบัติการด้านการบริหารความเสี่ยงและควบคุมภายใน',tg:'Risk Owner และผู้บริหารระดับกลาง',kpi:'ร้อยละผู้เข้าร่วมที่ผ่านเกณฑ์การประเมินความรู้ความเข้าใจ',target:80,unit:'ร้อยละ',type:'PERCENT_LATEST',plan:'000110000000',owner:'ฝยศ./กบค.',outcome:'วิเคราะห์ทางเลือก 4T และวิเคราะห์ต้นทุนและผลประโยชน์ (Cost Benefit Analysis)',
-  d:`ผู้บริหารระดับกลาง: ประเมินความเสียหายต่อปริมาณงานและเวลาหากเกิดข้อผิดพลาด / จัดลำดับความสำคัญของปัญหาว่าเรื่องใดส่งผลกระทบรุนแรงกว่ากัน`,
-  x:`ผู้บริหารระดับกลาง: สุ่มจัดการปัญหาโดยไม่จัดลำดับความสำคัญของผลกระทบ / สั่งงานโดยไม่บอกผู้ปฏิบัติงานว่าหากทำพลาดจะเกิดผลเสียอย่างไร`},
- {no:'2.2',name:'การรวบรวมข้อมูลและวิเคราะห์ผลกระทบด้านความเสี่ยง',tg:'ทุกส่วนงาน / Risk Owner',kpi:'รายงานผลการบริหารความเสี่ยงที่นำเสนอเพื่อใช้ตัดสินใจ',target:4,unit:'ครั้ง/ปี',type:'COUNT_CUMULATIVE',plan:'001001001001',owner:'ฝยศ./กบค. ร่วมทุกส่วนงาน',outcome:'ใช้ข้อมูลจริงในการประเมินความรุนแรงและจัดลำดับความเสี่ยง',
-  d:`ผู้บริหารระดับสูง: ใช้ข้อมูลสถิติหรือข้อเท็จจริงมาช่วยประเมินความรุนแรง
-ผู้บริหารระดับกลาง: รวบรวมข้อมูลความเสียหายที่เคยเกิดขึ้นจริงเพื่อเป็นกรณีศึกษา
-พนักงาน: รู้ว่าหากตนเองทำงานพลาด จะสร้างความเดือดร้อนถึงใครบ้าง`,
-  x:`ผู้บริหารระดับสูง: ปกปิดหรือบิดเบือนตัวเลขความเสียหายที่แท้จริง
-ผู้บริหารระดับกลาง: ไม่บันทึกประวัติความเสียหายหรือข้อผิดพลาดไว้เป็นหลักฐาน
-พนักงาน: ไม่สนใจว่างานที่ส่งต่อจะทำให้เพื่อนร่วมงานทำงานลำบากขึ้น`},
- {no:'2.3',name:'จัดทำแผน BCP สร้างความตระหนักและการซ้อมแผนความต่อเนื่องทางธุรกิจ เชื่อมโยงการวิเคราะห์ผลกระทบทางธุรกิจ (BIA)',tg:'บุคลากร กยท. ทุกระดับ',kpi:'รายงานการซ้อมแผนความต่อเนื่องทางธุรกิจ (BCP)',target:1,unit:'ฉบับ',type:'COUNT_CUMULATIVE',plan:'000000011100',owner:'ฝยศ./กบค. ร่วมหน่วยงานที่เกี่ยวข้อง',outcome:'เข้าใจผลกระทบและบทบาทเมื่อเกิดเหตุหยุดชะงัก',
-  d:`ผู้บริหารระดับสูง: วางแผนฉุกเฉินเพื่อรองรับสถานการณ์ที่เลวร้ายที่สุด
-ผู้บริหารระดับกลาง: ประเมินความเสียหายต่อปริมาณงานและเวลาหากเกิดข้อผิดพลาด
-พนักงาน: คิดถึงความปลอดภัยของตนเองและเพื่อนร่วมงานเสมอ`,
-  x:`ผู้บริหารระดับสูง: ตัดสินใจแก้ปัญหาเฉพาะหน้าโดยไม่มองผลกระทบระยะยาว
-ผู้บริหารระดับกลาง: ปล่อยให้ปัญหาลุกลามจนส่งผลกระทบต่อหน่วยงานข้างเคียง
-พนักงาน: ละเลยเรื่องความปลอดภัยจนอาจส่งผลเสียต่อร่างกายและชีวิต`},
- {no:'3.1',name:'ทบทวนและปรับปรุงแผนจัดการความเสี่ยง และมาตรการปรับปรุงการควบคุมภายใน',tg:'คณะกรรมการ/ผู้บริหาร/Risk Owner',kpi:'รายงานปรับปรุงแผนจัดการความเสี่ยงและมาตรการปรับปรุงการควบคุมภายใน',target:2,unit:'ครั้ง/ปี',type:'COUNT_CUMULATIVE',plan:'010000010000',owner:'ฝยศ./กบค.',outcome:'มองความเสี่ยงล่วงหน้าและปรับแผนก่อนเกิดผลกระทบ',
-  d:`คณะกรรมการ: กำหนดวิสัยทัศน์ให้องค์กรมองข้ามช็อตเพื่อรับมือการเปลี่ยนแปลง
-ผู้บริหารระดับสูง: สั่งการปรับแผนงานทันทีเมื่อเห็นสัญญาณเตือนถึงความเสี่ยง
-ผู้บริหารระดับกลาง: เฝ้าระวังตัวเลขหรือสัญญาณเตือนที่บ่งบอกว่างานกำลังจะมีปัญหา`,
-  x:`คณะกรรมการ: สนใจแก้ไขแต่อดีต ไม่ตั้งคำถามถึงความเสี่ยงในอนาคต
-ผู้บริหารระดับสูง: บริหารงานแบบตั้งรับ รอให้ปัญหาเกิดก่อนแล้วค่อยหาทางแก้
-ผู้บริหารระดับกลาง: เห็นสัญญาณเตือนแล้วแต่ปล่อยผ่าน คิดว่าเดี๋ยวสถานการณ์ก็ดีขึ้นเอง`},
- {no:'3.2',name:'ระบบเตือนภัยล่วงหน้า Early Warning System (EWS)',tg:'บุคลากร กยท. ทุกระดับ',kpi:'รายงานผลการเตือนภัยล่วงหน้า Early Warning System (EWS)',target:12,unit:'ครั้ง/ปี',type:'COUNT_CUMULATIVE',plan:'111111111111',owner:'ทุกส่วนงาน / ฝยศ./กบค.',outcome:'รายงานสัญญาณเตือนและแก้ก่อนเกิดความเสียหาย',
-  d:`คณะกรรมการ: เสนอแนะแนวทางการป้องกันวิกฤตตั้งแต่ปัญหายังไม่เกิด
-ผู้บริหารระดับสูง: นำระบบฐานข้อมูลมาช่วยเตือนภัยล่วงหน้า
-ผู้บริหารระดับกลาง: รีบรายงานผู้บังคับบัญชาทันทีเมื่อพบเห็นแนวโน้มความเสี่ยง
-พนักงาน: กล้ารายงานเหตุการณ์ที่เกือบจะเกิดความเสียหาย (Near Miss) เพื่อหาทางป้องกัน`,
-  x:`คณะกรรมการ: รอมติที่ประชุมจนดำเนินการแก้ปัญหาหรือป้องกันไม่ทันการณ์
-ผู้บริหารระดับสูง: บริหารงานแบบตั้งรับ รอให้ปัญหาเกิดก่อนแล้วค่อยหาทางแก้
-ผู้บริหารระดับกลาง: รอให้ปัญหากลายเป็นเรื่องใหญ่ก่อนจึงค่อยรายงานผู้ใหญ่
-พนักงาน: ปกปิดเรื่องที่เกือบทำพลาดเพราะกลัวจะโดนตำหนิหรือถูกหักคะแนน`},
- {no:'3.3',name:'ประกวดนวัตกรรมเพื่อลดความเสี่ยง',tg:'บุคลากร กยท. ทุกระดับ',kpi:'จำนวนแนวคิดลดความเสี่ยงที่นำไปทดลอง/ใช้จริง',target:1,unit:'ผลงาน',type:'COUNT_CUMULATIVE',plan:'000011111100',owner:'ฝยศ./กบค. ร่วม ฝทม./กพน.',outcome:'เกิดนวัตกรรมเชิงป้องกันและลดความเสี่ยง',
-  d:`คณะกรรมการ: สนับสนุนงบประมาณสำหรับเครื่องมือป้องกันความเสี่ยงอย่างเหมาะสม
-ผู้บริหารระดับสูง: ส่งเสริมให้ใช้วิธีการหรือเทคโนโลยีใหม่ ๆ มาป้องกันความเสี่ยง
-ผู้บริหารระดับกลาง: กระตุ้นให้ลูกน้องเสนอไอเดียใหม่ ๆ ในการป้องกันข้อผิดพลาด
-พนักงาน: นำเสนอวิธีการทำงานที่รวดเร็ว ปลอดภัย และสร้างสรรค์กว่าเดิม`,
-  x:`คณะกรรมการ: ตัดลดงบประมาณด้านความปลอดภัยโดยไม่ประเมินความเสี่ยง
-ผู้บริหารระดับสูง: ยึดติดกับวิธีการทำงานแบบเดิม ๆ แม้สถานการณ์ภายนอกจะเปลี่ยนไป
-ผู้บริหารระดับกลาง: ปิดกั้นความคิดเห็นของลูกน้องที่เสนอวิธีทำงานแบบใหม่
-พนักงาน: รีบเร่งทำงานโดยไม่ตรวจเช็กความเรียบร้อยก่อนลงมือ`},
- {no:'4.1',name:'การจัดทำตารางกำหนดเจ้าของความเสี่ยงและผู้รับผิดชอบ',tg:'ทุกส่วนงาน / ผู้บริหารระดับกลาง',kpi:'ร้อยละความเสี่ยงสำคัญที่ระบุ Risk Owner และผู้รับผิดชอบ Action ชัดเจน',target:100,unit:'ร้อยละ',type:'PERCENT_LATEST',plan:'110000000000',owner:'ฝยศ./กบค.',outcome:'ความเสี่ยงทุกเรื่องมีเจ้าภาพและไม่เกิดงานลอย',
-  d:`ผู้บริหารระดับกลาง: แบ่งงานและระบุตัวบุคคลผู้รับผิดชอบความเสี่ยงในทีมอย่างชัดเจน
-พนักงาน: รับผิดชอบงานที่ได้รับมอบหมายให้สำเร็จ ถูกต้อง และปลอดภัย`,
-  x:`ผู้บริหารระดับกลาง: สั่งงานแบบลอย ๆ ไม่มีผู้รับผิดชอบหลัก (ไม่มีเจ้าภาพ)
-พนักงาน: เกี่ยงงานหรือปัดความรับผิดชอบเมื่อเห็นว่าเป็นงานที่ยุ่งยาก`},
- {no:'4.2',name:'โครงการพัฒนาศักยภาพเจ้าของความเสี่ยงและการให้คำปรึกษารายไตรมาส',tg:'Risk Owner กยท.เขต 7 เขต และ สนญ.',kpi:'ร้อยละ Risk Owner ที่ส่งรายงาน/ติดตามผลตามแผนตรงเวลา',target:90,unit:'ร้อยละ',type:'PERCENT_LATEST',plan:'001111001001',owner:'ฝยศ./กบค.',outcome:'เจ้าของความเสี่ยงรับผิดชอบผลลัพธ์และติดตามมาตรการต่อเนื่อง',
-  d:`ผู้บริหารระดับกลาง: แบ่งงานและระบุตัวบุคคลผู้รับผิดชอบความเสี่ยงในทีมอย่างชัดเจน / ตรวจสอบคุณภาพและมาตรฐานงานของทีมอย่างสม่ำเสมอ`,
-  x:`ผู้บริหารระดับกลาง: สั่งงานแบบลอย ๆ ไม่มีผู้รับผิดชอบหลัก (ไม่มีเจ้าภาพ) / ปล่อยปละละเลย ไม่ตรวจทานความถูกต้องของงานก่อนส่งต่อให้หน่วยอื่น`},
- {no:'4.3',name:'บริการให้คำปรึกษาและสนับสนุนด้าน GRC',tg:'ทุกส่วนงาน',kpi:'ร้อยละข้อหารือที่ตอบ/สนับสนุนภายใน SLA',target:90,unit:'ร้อยละ',type:'PERCENT_LATEST',plan:'111111111111',owner:'ฝยศ./กบค.',outcome:'หน่วยงานแก้ปัญหาได้เร็วและรับผิดชอบ Risk ของตนเอง',
-  d:`ผู้บริหารระดับกลาง: เป็นที่ปรึกษาคอยช่วยเหลือเมื่อลูกน้องเจอปัญหาอุปสรรคในงาน
-พนักงาน: รับผิดชอบงานที่ได้รับมอบหมายให้สำเร็จ ถูกต้อง และปลอดภัย / ช่วยเหลือเพื่อนร่วมงานเมื่อเห็นว่ามีปัญหาหรือรับภาระงานที่เสี่ยงเกินไป`,
-  x:`ผู้บริหารระดับกลาง: ทิ้งให้ผู้ปฏิบัติงานเผชิญปัญหาและแก้ไขสถานการณ์ตามลำพัง
-พนักงาน: เกี่ยงงานหรือปัดความรับผิดชอบเมื่อเห็นว่าเป็นงานที่ยุ่งยาก / นิ่งเฉยและปล่อยผ่านเมื่อเห็นเพื่อนร่วมงานกำลังทำผิดขั้นตอน`},
- {no:'5.1',name:'การสำรวจทัศนคติและวัฒนธรรมความเสี่ยง พร้อมแผนปรับปรุง',tg:'บุคลากร กยท. ทุกระดับ',kpi:'ผลสำรวจทัศนคติและพฤติกรรมด้าน RM/IC มากกว่าปีที่ผ่านมา ไม่น้อยกว่า',target:10,unit:'ร้อยละ',type:'PERCENT_LATEST',plan:'000000000011',owner:'ฝยศ./กบค.',outcome:'องค์กรเห็นช่องว่างพฤติกรรมและกำหนดแผนพัฒนาจากข้อมูลจริง',
-  d:`คณะกรรมการ: ประเมินผลงานของคณะกรรมการเองเพื่อหาจุดอ่อนและพัฒนาการทำงาน
-ผู้บริหารระดับสูง: นำข้อคิดเห็นของพนักงานระดับปฏิบัติการมาปรับปรุงระบบโครงสร้างการทำงาน
-ผู้บริหารระดับกลาง: ติดตามว่ามาตรการแก้ไขปรับปรุงที่สั่งการไปนั้นได้ผลลัพธ์ที่ดีขึ้นจริงหรือไม่
-พนักงาน: นำคำติชมของผู้บังคับบัญชาหรือผู้รับบริการมาปรับปรุงตนเองด้วยใจที่เปิดกว้าง`,
-  x:`คณะกรรมการ: ไม่ยอมรับข้อบกพร่องของตนเองในระดับคณะกรรมการ
-ผู้บริหารระดับสูง: เพิกเฉยต่อช่องทางรับฟังความคิดเห็นหรือเสียงสะท้อนจากผู้ปฏิบัติงาน
-ผู้บริหารระดับกลาง: แก้ปัญหาลุล่วงเฉพาะหน้าแล้วจบไป ไม่มีการติดตามผลลัพธ์ในระยะยาว
-พนักงาน: แสดงอาการไม่พอใจเมื่อได้รับคำติชม แนะนำ หรือข้อเสนอแนะเพื่อการพัฒนา`},
- {no:'5.2',name:'การสำรวจประเมินประสิทธิผลของการทบทวนและปรับปรุงผลการบริหารความเสี่ยง',tg:'บุคลากร กยท. ทุกระดับ',kpi:'รายงานผลการประเมินประสิทธิผลฯ เพื่อใช้ปรับปรุงกระบวนการบริหารความเสี่ยงในปีถัดไป',target:1,unit:'ฉบับ',type:'COUNT_CUMULATIVE',plan:'001001001001',owner:'ทุกส่วนงาน / ฝยศ./กบค.',outcome:'ส่วนงานทบทวนประสิทธิผลการบริหารความเสี่ยงเพื่อลดความผิดพลาดและป้องกันการเกิดซ้ำ',
-  d:`ผู้บริหารระดับกลาง: ทบทวนเพื่อค้นหาสาเหตุที่แท้จริง (Root Cause) ทุกครั้งเมื่อเกิดเหตุขัดข้อง
-พนักงาน: นำข้อผิดพลาดในการทำงานของตนเองมาเป็นบทเรียนเพื่อไม่ให้ทำผิดซ้ำอีก`,
-  x:`ผู้บริหารระดับกลาง: มุ่งหาตัวคนผิดมาลงโทษมากกว่าหาสาเหตุของปัญหาเพื่อทำการแก้ไขระบบ
-พนักงาน: ทำงานผิดพลาดซ้ำซากในเรื่องเดิม ๆ โดยไม่มีการปรับปรุงแก้ไขพฤติกรรม`},
- {no:'5.3',name:'การประเมินผลการบริหารความเสี่ยงและการควบคุมภายในระดับส่วนงาน พร้อมทบทวนรายไตรมาส',tg:'ทุกส่วนงาน',kpi:'ร้อยละส่วนงานที่ผ่านเกณฑ์หรือมีผลดีขึ้นจากรอบก่อน',target:80,unit:'ร้อยละ',type:'PERCENT_LATEST',plan:'001001001001',owner:'ฝยศ./กบค.',outcome:'มีการติดตาม ปรับปรุง และรับผิดชอบต่อผลการจัดการความเสี่ยงต่อเนื่อง',
-  d:`ผู้บริหารระดับสูง: สั่งการให้ทบทวนแผนงานทันทีเมื่อผลลัพธ์การจัดการความเสี่ยงไม่เป็นไปตามเป้า
-ผู้บริหารระดับกลาง: ติดตามว่ามาตรการแก้ไขปรับปรุงที่สั่งการไปนั้นได้ผลลัพธ์ที่ดีขึ้นจริงหรือไม่
-พนักงาน: เสนอแนะวิธีการปรับปรุงการทำงานที่ตนเองรับผิดชอบต่อหัวหน้างานอยู่เสมอ`,
-  x:`ผู้บริหารระดับสูง: ดันทุรังใช้แผนงานเดิมทั้งที่ทราบจากผลประเมินแล้วว่าไม่ได้ผล
-ผู้บริหารระดับกลาง: แก้ปัญหาลุล่วงเฉพาะหน้าแล้วจบไป ไม่มีการติดตามผลลัพธ์ในระยะยาว
-พนักงาน: บ่นถึงปัญหาในการทำงานแต่ไม่เคยพยายามหาทางออกหรือเสนอวิธีแก้ไข`},
- {no:'6.1',name:'เชื่อมโยงแผนบริหารความเสี่ยงและแผนควบคุมภายในกับแผนปฏิบัติการและงบประมาณ',tg:'ทุกส่วนงาน / เจ้าของโครงการสำคัญ',kpi:'ร้อยละส่วนงาน/โครงการสำคัญที่เชื่อม Action Plan ขององค์กรกับแผนการบริหารความเสี่ยง',target:100,unit:'ร้อยละ',type:'PERCENT_LATEST',plan:'111000000000',owner:'ฝยศ./กบค. ร่วมทุกส่วนงาน',outcome:'การประเมินความเสี่ยงเป็นส่วนหนึ่งของการวางแผนและตัดสินใจ',
-  d:`ผู้บริหารระดับสูง: กำหนดเงื่อนไขให้ทุกโครงการต้องระบุมาตรการลดความเสี่ยงพร้อมงบรองรับ
-ผู้บริหารระดับกลาง: ประเมินความเสี่ยงและเตรียมมาตรการก่อนเริ่มลงมือทำโครงการทุกครั้ง / นำมาตรการป้องกันความเสี่ยงไปใส่ไว้ในขั้นตอนการทำงานประจำวัน`,
-  x:`ผู้บริหารระดับสูง: แยกแผนบริหารความเสี่ยงไว้บนหิ้ง ไม่นำมาหลอมรวมกับแผนปฏิบัติการจริง
-ผู้บริหารระดับกลาง: เริ่มงานทันทีโดยไม่ประเมินสถานการณ์และมาตรการควบคุมล่วงหน้า / เก็บมาตรการป้องกันความเสี่ยงไว้ในแฟ้มประเมิน ไม่นำมาบังคับใช้จริง`},
- {no:'6.2',name:'แบบคำขอตั้งงบประมาณ ฝยศ.1 (การประเมินความเสี่ยงสำหรับโครงการ)',tg:'เจ้าของโครงการ/ผู้เกี่ยวข้องจัดซื้อจัดจ้าง',kpi:'แบบคำขอถูกต้องครบถ้วน',target:100,unit:'ร้อยละ',type:'PERCENT_LATEST',plan:'000111111111',owner:'หน่วยงานเจ้าของกระบวนการ ร่วม ฝยศ./กบค.',outcome:'คิดเรื่องความเสี่ยงก่อนอนุมัติ/เริ่มดำเนินงาน',
-  d:`ผู้บริหารระดับกลาง: ประเมินความเสี่ยงและเตรียมมาตรการก่อนเริ่มลงมือทำโครงการทุกครั้ง
-พนักงาน: ตรวจสอบความถูกต้องตามแบบฟอร์ม (Checklist) ก่อนส่งมอบงาน`,
-  x:`ผู้บริหารระดับกลาง: เริ่มงานทันทีโดยไม่ประเมินสถานการณ์และมาตรการควบคุมล่วงหน้า
-พนักงาน: กรอกแบบฟอร์มตรวจสอบ (Checklist) แบบขอไปที หรือกรอกข้อมูลเท็จ`},
- {no:'6.3',name:'การบูรณาการจุดควบคุมในขั้นตอนการปฏิบัติงานมาตรฐานและระบบดิจิทัล',tg:'Process Owner / ฝทส. / ทุกส่วนงาน',kpi:'ร้อยละกระบวนการสำคัญที่ระบุ Control Point และผู้รับผิดชอบชัดเจน',target:80,unit:'ร้อยละ',type:'PERCENT_LATEST',plan:'000111111000',owner:'ทุกส่วนงาน ร่วม ฝทส. และ ฝยศ./กบค.',outcome:'มาตรการควบคุมถูกฝังในขั้นตอนงานและระบบจริง',
-  d:`ผู้บริหารระดับสูง: นำกระบวนการด้านความเสี่ยงขึ้นระบบออนไลน์เพื่อให้เข้าถึงและใช้งานง่าย
-ผู้บริหารระดับกลาง: นำมาตรการป้องกันความเสี่ยงไปใส่ไว้ในขั้นตอนการทำงานประจำวัน
-พนักงาน: ใช้โปรแกรมหรือระบบที่องค์กรเตรียมไว้ให้เพื่อลดข้อผิดพลาดจากบุคคล`,
-  x:`ผู้บริหารระดับสูง: สร้างกระบวนการควบคุมที่ซับซ้อนยุ่งยากจนพนักงานหาทางหลบเลี่ยง
-ผู้บริหารระดับกลาง: เก็บมาตรการป้องกันความเสี่ยงไว้ในแฟ้มประเมิน ไม่นำมาบังคับใช้จริง
-พนักงาน: หลีกเลี่ยงการใช้งานระบบควบคุมที่องค์กรกำหนดเพราะมองว่ายุ่งยาก`}
-];
-A.forEach(a=>{a.group=+a.no.split('.')[0];a.planned=[...a.plan].map((c,i)=>c==='1'?i+1:0).filter(Boolean)});
-const actById=Object.fromEntries(A.map(a=>[a.no,a]));
-
-/* ---------- people (ตัวอย่าง) ---------- */
+/* ---------- users: 2 roles (ตัวอย่าง) ---------- */
 const PEOPLE={
-  STAFF:{name:'ปิยะนุช แก้วมณี',short:'ปน',title:'ผู้รายงาน · กบค.',greet:'ปิยะนุช'},
-  GROUP_HEAD:{name:'สมชาย รัตนพงศ์',short:'สช',title:'หัวหน้ากลุ่มงาน · กบค.',greet:'สมชาย'},
-  DIRECTOR:{name:'วรรณา ศรีสวัสดิ์',short:'วว',title:'ผู้อำนวยการ กบค.',greet:'วรรณา'},
-  EXEC_VIEWER:{name:'ผู้บริหาร ฝยศ.',short:'ผบ',title:'ดูภาพรวมเท่านั้น',greet:'ผู้บริหาร'}
+  REPORTER:{name:'ปิยะนุช แก้วมณี',short:'ปน',title:'ผู้รายงาน · กบค.',greet:'ปิยะนุช'},
+  ADMIN:{name:'สมชาย รัตนพงศ์',short:'สร',title:'ผู้ดูแลระบบ · กบค.',greet:'สมชาย'}
 };
+const USERS=[
+  {name:'สมชาย รัตนพงศ์',short:'สร',email:'somchai.r@raot.co.th',role:'ADMIN',unit:'ฝยศ./กบค.'},
+  {name:'ปิยะนุช แก้วมณี',short:'ปน',email:'piyanut.k@raot.co.th',role:'REPORTER',unit:'ฝยศ./กบค.'},
+  {name:'ธนกร ศรีวงศ์',short:'ธศ',email:'thanakorn.s@raot.co.th',role:'REPORTER',unit:'ฝทม.'},
+  {name:'อรุณี ทองดี',short:'อท',email:'arunee.t@raot.co.th',role:'REPORTER',unit:'ฝทส.'}
+];
 
 /* ---------- example reports (tx_Reports) ---------- */
 const R={};
 const key=(no,p)=>`${no}-${p}`;
 function seed(no,p,actual,state='APPROVED',x={}){
-  const due=dueDate(p);
-  const sub=x.late?addDays(due,3):addDays(due,-2);
+  const sub=x.late?addDays(dueDate(p),3):addDays(dueDate(p),-2);
   const r={no,p,actual,progress:'ON_PLAN',summary:'',issues:'',fix:'',eta:'',state,evidence:[],version:1,...x};
   if(!r.summary) r.summary=`ดำเนินการตามแผนรอบ ${pLabel(p)} ครบถ้วน แนบหลักฐานประกอบแล้ว`;
-  if(state!=='DRAFT'){r.reporter=PEOPLE.STAFF.name;r.submittedAt=sub}
-  if(['REVIEWED','APPROVED'].includes(state)){r.reviewer=PEOPLE.GROUP_HEAD.name;r.reviewedAt=addDays(sub,1)}
-  if(state==='APPROVED'){r.approver=PEOPLE.DIRECTOR.name;r.approvedAt=addDays(sub,2)}
-  if(!r.evidence.length && state!=='DRAFT') r.evidence=[{kind:'FILE',name:`หลักฐาน_${no}_${MON[p-1]}.pdf`,size:'412 KB'}];
+  if(state!=='DRAFT'){r.reporter=PEOPLE.REPORTER.name;r.submittedAt=sub}
+  if(state==='APPROVED'){r.approver=PEOPLE.ADMIN.name;r.approvedAt=addDays(sub,2)}
+  if(!r.evidence.length&&state!=='DRAFT') r.evidence=[{kind:'FILE',name:`หลักฐาน_${no}_${MON[p-1]}.pdf`,size:'412 KB'}];
   R[key(no,p)]=r;
 }
 [78,80,81,83,84,86].forEach((v,i)=>seed('1.1',i+1,v,'APPROVED',i===2?{late:true}:{}));
 seed('1.2',2,82);seed('1.2',3,84);seed('1.2',4,86);
-seed('1.3',3,1);seed('1.3',6,2,'REVIEWED',{summary:'ผู้ว่าการสื่อสารความเสี่ยงในการประชุมผู้บริหารประจำเดือน มี.ค. 2570 หัวข้อความเสี่ยงราคายางและการทุจริต'});
+seed('1.3',3,1);seed('1.3',6,2,'SUBMITTED',{summary:'ผู้ว่าการสื่อสารความเสี่ยงในการประชุมผู้บริหารประจำเดือน มี.ค. 2570 หัวข้อความเสี่ยงราคายางและการทุจริต'});
 seed('2.1',4,72,'APPROVED',{late:true});seed('2.1',5,76);
 seed('2.2',3,1);
 seed('2.2',6,2,'SUBMITTED',{summary:'จัดทำรายงานผลการบริหารความเสี่ยงไตรมาส 2 เสนอคณะกรรมการบริหารความเสี่ยงเมื่อ 28 มี.ค. 2570 ที่ประชุมใช้ข้อมูลประกอบการตัดสินใจปรับมาตรการความเสี่ยงด้านราคายาง',evidence:[{kind:'FILE',name:'รายงาน_RM_Q2_2570.pdf',size:'1.8 MB'},{kind:'LINK',name:'มติที่ประชุม คกก.บริหารความเสี่ยง (Drive)',size:'ลิงก์'}]});
@@ -644,59 +588,50 @@ seed('5.3',3,75);seed('5.3',6,82);
 seed('6.1',1,60);seed('6.1',2,85,'APPROVED',{late:true});seed('6.1',3,100);
 seed('6.2',4,100);seed('6.2',5,96);seed('6.2',6,100);
 seed('6.3',4,40);seed('6.3',5,55);
-seed('6.3',6,63,'RETURNED',{summary:'ระบุ Control Point ในกระบวนการจัดซื้อจัดจ้างและการรับซื้อยางแล้ว',reviewer:PEOPLE.GROUP_HEAD.name,reviewedAt:new Date(2027,3,7,14,10),reviewComment:'ตัวเลข 63% ไม่ตรงกับตารางกระบวนการที่แนบ (นับได้ 12 จาก 20 = 60%) กรุณาตรวจสอบและแนบรายชื่อกระบวนการที่ใช้คำนวณ'});
+seed('6.3',6,63,'RETURNED',{summary:'ระบุ Control Point ในกระบวนการจัดซื้อจัดจ้างและการรับซื้อยางแล้ว',approver:PEOPLE.ADMIN.name,returnedAt:new Date(2027,3,7,14,10),comment:'ตัวเลข 63% ไม่ตรงกับตารางกระบวนการที่แนบ (นับได้ 12 จาก 20 = 60%) กรุณาตรวจสอบและแนบรายชื่อกระบวนการที่ใช้คำนวณ'});
 
 /* ---------- status rules (SPEC 5.2–5.3) ---------- */
-const SENT=['SUBMITTED','REVIEWED','APPROVED'];
-const STATUS={
-  DONE:{t:'เสร็จสิ้น',s:'✓'},ON_TRACK:{t:'ตามแผน',s:'●'},LATE:{t:'ล่าช้า',s:'!'},
-  BELOW_TARGET:{t:'ต่ำกว่าเป้า',s:'▼'},NOT_DUE:{t:'ยังไม่ถึงกำหนด',s:'○'}
-};
+const SENT=['SUBMITTED','APPROVED'];
+const STATUS={DONE:{t:'เสร็จสิ้น',s:'✓'},ON_TRACK:{t:'ตามแผน',s:'●'},LATE:{t:'ล่าช้า',s:'!'},BELOW_TARGET:{t:'ต่ำกว่าเป้า',s:'▼'},NOT_DUE:{t:'ยังไม่ถึงกำหนด',s:'○'}};
 const ORDER=['DONE','ON_TRACK','LATE','BELOW_TARGET','NOT_DUE'];
-const WF={NONE:'ยังไม่รายงาน',DRAFT:'ร่าง',SUBMITTED:'รอหัวหน้ากลุ่มงานตรวจ',REVIEWED:'รอผู้อำนวยการอนุมัติ',APPROVED:'อนุมัติแล้ว',RETURNED:'ส่งกลับแก้ไข'};
+const WF={NONE:'ยังไม่รายงาน',DRAFT:'ร่าง',SUBMITTED:'รอผู้ดูแลระบบตรวจ',APPROVED:'อนุมัติแล้ว',RETURNED:'ส่งกลับแก้ไข'};
 const reportsOf=no=>Object.values(R).filter(r=>r.no===no).sort((a,b)=>a.p-b.p);
-function latestApproved(no){return reportsOf(no).filter(r=>r.state==='APPROVED').pop()}
+const latestApproved=no=>reportsOf(no).filter(r=>r.state==='APPROVED').pop();
 function compute(a){
-  const reps=reportsOf(a.no), rep=p=>R[key(a.no,p)];
-  const overdue=a.planned.filter(p=>dueDate(p)<NOW && !(rep(p)&&SENT.includes(rep(p).state)));
-  const latestSent=reps.filter(r=>SENT.includes(r.state)).pop();
-  const ap=latestApproved(a.no), val=ap?ap.actual:null;
-  const last=Math.max(...a.planned);
+  const rep=p=>R[key(a.no,p)];
+  const overdue=a.planned.filter(p=>dueDate(p)<NOW&&!(rep(p)&&SENT.includes(rep(p).state)));
+  const latestSent=reportsOf(a.no).filter(r=>SENT.includes(r.state)).pop();
+  const ap=latestApproved(a.no), val=ap?ap.actual:null, last=Math.max(...a.planned);
   const progress=val==null?0:Math.min(val/a.target,1);
   let st;
-  if(overdue.length || (latestSent&&latestSent.progress==='DELAYED')) st='LATE';
-  else if(dueDate(last)<NOW && (val==null||val<a.target)) st='BELOW_TARGET';
-  else if(val!=null && val>=a.target && rep(last)?.state==='APPROVED') st='DONE';
+  if(overdue.length||(latestSent&&latestSent.progress==='DELAYED')) st='LATE';
+  else if(dueDate(last)<NOW&&(val==null||val<a.target)) st='BELOW_TARGET';
+  else if(val!=null&&val>=a.target&&rep(last)?.state==='APPROVED') st='DONE';
   else if(Math.min(...a.planned)>CUR) st='NOT_DUE';
   else st='ON_TRACK';
   return {st,val,progress,overdue,ap};
 }
 const chip=st=>`<span class="chip st-${st}"><span aria-hidden="true">${STATUS[st].s}</span>${STATUS[st].t}</span>`;
 const wfchip=s=>`<span class="chip wf-${s}">${WF[s]}</span>`;
-const fmtVal=(a,v)=>v==null?'–':(a.unit==='ร้อยละ'?`${v}%`:`${v}`);
-const unitShort=a=>a.unit==='ร้อยละ'?'%':a.unit;
+const fmtVal=(a,v)=>v==null||v===''?'–':(a.unit==='ร้อยละ'?`${v}%`:`${v}`);
+const unitTail=a=>a.unit==='ร้อยละ'?'':' '+a.unit;
 
-/* ---------- app state ---------- */
-const S={page:'dashboard',role:'STAFF',f:{q:'',st:'',owner:'',groups:new Set()},rep:{no:'3.2',p:6},taskTab:'todo',dd:{g:1,role:0},touched:{},form:null,dirty:false,lastSave:null};
+/* ---------- state ---------- */
+const S={page:'dashboard',role:'REPORTER',f:{q:'',st:'',owner:'',groups:new Set()},rep:{no:'3.2',p:6},taskTab:'todo',dd:{g:1,role:3},touched:{},form:null,dirty:false,lastSave:null};
 const view=document.getElementById('view');
-
 function go(page,opts={}){
   S.page=page;Object.assign(S,opts);
   if(page==='report'){S.touched={};S.form=null;S.dirty=false}
-  render();
-  window.scrollTo({top:0});
-  view.focus({preventScroll:true});
+  render();window.scrollTo({top:0});view.focus({preventScroll:true});
 }
 function toast(msg,icon='check'){
   const t=document.createElement('div');t.className='toast';t.innerHTML=ic(icon)+`<span>${esc(msg)}</span>`;
   document.getElementById('toasts').appendChild(t);setTimeout(()=>t.remove(),3800);
 }
-
-/* ---------- shared counts ---------- */
 function round(p){
   const due=A.filter(a=>a.plan[p-1]==='1');
   const sent=due.filter(a=>{const r=R[key(a.no,p)];return r&&SENT.includes(r.state)});
-  const ontime=sent.filter(a=>{const r=R[key(a.no,p)];return r.submittedAt<=dueDate(p)});
+  const ontime=sent.filter(a=>R[key(a.no,p)].submittedAt<=dueDate(p));
   return {due,sent,ontime};
 }
 function myTasks(){
@@ -705,155 +640,157 @@ function myTasks(){
     if(p>CUR) return;
     const r=R[key(a.no,p)];
     if(!r||r.state==='DRAFT'||r.state==='RETURNED') todo.push({a,p,r});
-    else if(r.state==='SUBMITTED'||r.state==='REVIEWED') wait.push({a,p,r});
+    else if(r.state==='SUBMITTED') wait.push({a,p,r});
     else if(p>=CUR-1) done.push({a,p,r});
   }));
   todo.sort((x,y)=>x.p-y.p);
   return {todo,wait,done};
 }
-function inbox(role){
-  const want=role==='GROUP_HEAD'?['SUBMITTED']:role==='DIRECTOR'?['REVIEWED']:['SUBMITTED','REVIEWED'];
-  return Object.values(R).filter(r=>want.includes(r.state)).sort((a,b)=>a.submittedAt-b.submittedAt);
-}
+const inbox=()=>Object.values(R).filter(r=>r.state==='SUBMITTED').sort((a,b)=>a.submittedAt-b.submittedAt);
 
-/* ---------- views ---------- */
+/* ---------- dashboard (bento) ---------- */
 function vDashboard(){
   const comp=A.map(a=>({a,...compute(a)}));
   const cnt=Object.fromEntries(ORDER.map(k=>[k,comp.filter(c=>c.st===k).length]));
   const started=A.length-cnt.NOT_DUE, good=cnt.DONE+cnt.ON_TRACK, follow=cnt.LATE+cnt.BELOW_TARGET;
+  const pct=Math.round(good/started*100), C=2*Math.PI*52;
   const r6=round(CUR-1), nxt=round(CUR);
+  let sentAll=0,onAll=0;for(let p=1;p<CUR;p++){const r=round(p);sentAll+=r.sent.length;onAll+=r.ontime.length}
   const followList=comp.filter(c=>c.st==='LATE'||c.st==='BELOW_TARGET')
     .sort((x,y)=>(y.st==='LATE')-(x.st==='LATE')||y.overdue.length-x.overdue.length||(x.overdue[0]||99)-(y.overdue[0]||99));
-  const maxDue=Math.max(...Array.from({length:12},(_,i)=>round(i+1).due.length));
-  const canReport=['STAFF','GROUP_HEAD'].includes(S.role);
+  const maxDue=Math.max(...MON.map((_,i)=>round(i+1).due.length));
+  const cta=S.role==='ADMIN'
+    ?`<button class="btn primary" data-act="nav" data-page="approvals">${ic('inbox')}ตรวจรายงาน (${inbox().length})</button>`
+    :`<button class="btn primary" data-act="report-now">${ic('pen')}รายงานผลรอบนี้</button>`;
   return `
   <header class="ph">
-    <div>
-      <h1>ภาพรวมแผนปฏิบัติการ ปี 2570</h1>
-      <p>แผนเสริมสร้างค่านิยมและวัฒนธรรมความเสี่ยง กยท. · ข้อมูล ณ ${fd(NOW)} · นับเฉพาะรายงานที่อนุมัติแล้ว</p>
-    </div>
+    <div><p class="eyebrow">ภาพรวม · ปีงบประมาณ 2570</p><h1>แผนเสริมสร้างค่านิยมและวัฒนธรรมความเสี่ยง</h1>
+      <p class="sub">ข้อมูล ณ ${fd(NOW)} · ผลที่แสดงนับเฉพาะรายงานที่ผู้ดูแลระบบอนุมัติแล้ว</p></div>
     <div class="ph-actions">
       <label class="sr-only" for="fySel">ปีงบประมาณ</label>
-      <select class="input" id="fySel" style="width:auto;min-height:40px"><option>ปีงบประมาณ 2570</option></select>
-      <button class="btn" data-act="export">${ic('download')}ส่งออกรายงาน</button>
-      ${canReport?`<button class="btn primary" data-act="report-now">${ic('pen')}รายงานผลรอบนี้</button>`:''}
+      <select class="input" id="fySel" style="width:auto;min-height:42px"><option>ปีงบประมาณ 2570</option></select>
+      <button class="btn" data-act="export">${ic('download')}ส่งออกรายงาน</button>${cta}
     </div>
   </header>
 
-  <section class="grid kpis" aria-label="ตัวชี้วัดสรุป">
-    <div class="glass kpi"><span class="k">กิจกรรมทั้งหมด</span><span class="v num">${A.length}</span><span class="s">6 ค่านิยม RUBBER · 18 ตัวชี้วัด</span></div>
-    <div class="glass kpi"><span class="k">เสร็จสิ้น / ตามแผน</span><span class="v num">${good}<small> / ${started}</small></span><span class="s">จากกิจกรรมที่เริ่มแล้ว · เสร็จสิ้น ${cnt.DONE}</span></div>
-    <div class="glass kpi"><span class="k">ต้องติดตาม</span><span class="v num" style="color:var(--late-fg)">${follow}</span><span class="s">ล่าช้า ${cnt.LATE} · ต่ำกว่าเป้า ${cnt.BELOW_TARGET}</span></div>
-    <div class="glass kpi"><span class="k">ส่งรายงานรอบ ${pLabel(CUR-1)}</span><span class="v num">${r6.sent.length}<small> / ${r6.due.length}</small></span>
-      <div class="bar" role="img" aria-label="ส่งแล้วร้อยละ ${Math.round(r6.sent.length/r6.due.length*100)}"><i style="width:${r6.sent.length/r6.due.length*100}%"></i></div></div>
-  </section>
+  <div class="bento">
+    <section class="tile hero s7" aria-label="ความคืบหน้าภาพรวม">
+      <div><p class="eyebrow">ความคืบหน้าทั้งแผน</p><h2>${good} จาก ${started} กิจกรรมที่เริ่มแล้ว เป็นไปตามแผนหรือเสร็จสิ้น</h2></div>
+      <div class="hero-main">
+        <div class="ring" role="img" aria-label="ตามแผนหรือเสร็จสิ้น ร้อยละ ${pct}">
+          <svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="52" fill="none" stroke="rgba(255,255,255,.14)" stroke-width="12"/>
+            <circle cx="60" cy="60" r="52" fill="none" stroke="#E49F22" stroke-width="12" stroke-linecap="round" stroke-dasharray="${C*pct/100} ${C}"/></svg>
+          <div class="v"><b class="num">${pct}%</b><span>ตามแผน/เสร็จสิ้น</span></div>
+        </div>
+        <div class="hero-facts">
+          <div><b class="num">${cnt.DONE}</b><span>เสร็จสิ้นแล้ว</span></div>
+          <div><b class="num">${cnt.ON_TRACK}</b><span>ตามแผน</span></div>
+          <div><b class="num">${follow}</b><span>ต้องติดตาม</span></div>
+          <div><b class="num">${cnt.NOT_DUE}</b><span>ยังไม่ถึงกำหนด</span></div>
+        </div>
+      </div>
+      <div>
+        <div class="stack" role="img" aria-label="${ORDER.map(k=>`${STATUS[k].t} ${cnt[k]}`).join(', ')}">${ORDER.filter(k=>cnt[k]).map(k=>`<i class="c-${k}" style="flex:${cnt[k]}"></i>`).join('')}</div>
+        <div class="legend">${ORDER.map(k=>`<span><i class="sw c-${k}"></i>${STATUS[k].s} ${STATUS[k].t} <b>${cnt[k]}</b></span>`).join('')}</div>
+      </div>
+    </section>
 
-  <section class="glass card">
-    <div class="card-head"><h2>สถานะ ${A.length} กิจกรรม</h2><p>คำนวณจากรายงานที่อนุมัติแล้วและกำหนดส่งวันที่ ${DUE_DAY} ของเดือนถัดไป</p></div>
-    <div class="stack" role="img" aria-label="${ORDER.map(k=>`${STATUS[k].t} ${cnt[k]}`).join(', ')}">
-      ${ORDER.filter(k=>cnt[k]).map(k=>`<i class="c-${k}" style="flex:${cnt[k]}" title="${STATUS[k].t} ${cnt[k]}"></i>`).join('')}
+    <div class="kpis s5">
+      <div class="tile kpi"><span class="k"><span class="ico">${ic('layers')}</span>กิจกรรมทั้งหมด</span><span class="v">${A.length}</span><span class="s">6 ค่านิยม RUBBER</span></div>
+      <div class="tile kpi"><span class="k"><span class="ico warn">${ic('flag')}</span>ต้องติดตาม</span><span class="v" style="color:var(--late-fg)">${follow}</span><span class="s">ล่าช้า ${cnt.LATE} · ต่ำกว่าเป้า ${cnt.BELOW_TARGET}</span></div>
+      <div class="tile kpi"><span class="k"><span class="ico">${ic('send')}</span>ส่งรอบ ${MON[CUR-2]}</span><span class="v">${r6.sent.length}<small> / ${r6.due.length}</small></span>
+        <div class="bar" role="img" aria-label="ส่งแล้วร้อยละ ${Math.round(r6.sent.length/r6.due.length*100)}"><i style="width:${r6.sent.length/r6.due.length*100}%"></i></div></div>
+      <div class="tile kpi"><span class="k"><span class="ico">${ic('clock')}</span>ส่งตรงเวลาสะสม</span><span class="v">${Math.round(onAll/sentAll*100)}<small>%</small></span><span class="s">เป้าระบบ ≥ 90% · ${onAll}/${sentAll} รายงาน</span></div>
     </div>
-    <div class="legend">${ORDER.map(k=>`<span><i class="sw c-${k}"></i>${STATUS[k].s} ${STATUS[k].t} <b class="num">${cnt[k]}</b></span>`).join('')}</div>
-  </section>
 
-  <section class="glass card">
-    <div class="card-head"><h2>ค่านิยม RUBBER × มิติ Risk Culture</h2><p>คลิกการ์ดเพื่อดูกิจกรรมในหมวดนั้น</p></div>
-    <div class="grid values">
-      ${GROUPS.map(g=>{
-        const cs=comp.filter(c=>c.a.group===g.n);
-        const f=cs.filter(c=>c.st==='LATE'||c.st==='BELOW_TARGET');
-        const msg=f.length?`ต้องติดตาม ${f.map(c=>c.a.no).join(', ')}`:cs.every(c=>c.st==='NOT_DUE')?'ยังไม่ถึงรอบรายงาน':`ไม่มีรายการต้องติดตาม · เสร็จสิ้น ${cs.filter(c=>c.st==='DONE').length}`;
+    <section class="tile s12">
+      <div class="tile-head"><h2>ค่านิยม RUBBER × มิติ Risk Culture</h2><p>เลือกการ์ดเพื่อดูกิจกรรมในหมวดนั้น</p></div>
+      <div class="values">${GROUPS.map(g=>{
+        const cs=comp.filter(c=>c.a.group===g.n), f=cs.filter(c=>c.st==='LATE'||c.st==='BELOW_TARGET');
+        const msg=f.length?`ต้องติดตาม ${f.map(c=>c.a.no).join(', ')}`:`เรียบร้อย · เสร็จสิ้น ${cs.filter(c=>c.st==='DONE').length} จาก ${cs.length}`;
         return `<button class="vcard" data-act="filter-group" data-g="${g.n}">
-          <div class="vcard-top"><span class="vletter">${g.code}</span><div><b>${esc(g.name)}</b><span class="dim">${g.code} – ${esc(g.dim)}</span></div></div>
-          <div class="mini" aria-label="${cs.map(c=>`${c.a.no} ${STATUS[c.st].t}`).join(', ')}">${cs.map(c=>`<i class="c-${c.st}" title="${c.a.no} ${STATUS[c.st].t}"></i>`).join('')}</div>
-          <p>${esc(msg)}</p></button>`;
-      }).join('')}
-    </div>
-  </section>
+          <span class="vletter">${g.code}</span>
+          <div><b>${esc(g.name)}</b><span class="dim">${esc(g.dim)}</span></div>
+          <div class="mini" role="img" aria-label="${cs.map(c=>`${c.a.no} ${STATUS[c.st].t}`).join(', ')}">${cs.map(c=>`<i class="c-${c.st}" title="${c.a.no} ${STATUS[c.st].t}"></i>`).join('')}</div>
+          <p${f.length?' class="overdue"':''}>${esc(msg)}</p></button>`}).join('')}</div>
+    </section>
 
-  <div class="row2">
-    <section class="glass card">
-      <div class="card-head"><h2>ต้องติดตาม</h2><p>ล่าช้ามากสุดก่อน</p></div>
-      ${followList.length?`<ul class="follow">${followList.map(c=>{
+    <section class="tile s7">
+      <div class="tile-head"><h2>ต้องติดตาม</h2><p>เรียงจากล่าช้ามากสุด</p></div>
+      ${followList.length?`<ul class="list">${followList.map(c=>{
         const why=c.st==='BELOW_TARGET'?`ผลอนุมัติ ${fmtVal(c.a,c.val)} จากเป้า ${fmtVal(c.a,c.a.target)} · รอบสุดท้ายผ่านแล้ว`
-          :c.overdue.length?`รอบ ${c.overdue.map(pLabel).join(', ')} เลยกำหนด · ${WF[(R[key(c.a.no,c.overdue[0])]||{}).state||'NONE']}`
-          :'รายงานล่าสุดแจ้งล่าช้ากว่าแผน';
+          :c.overdue.length?`รอบ ${c.overdue.map(pLabel).join(', ')} เลยกำหนด · ${WF[(R[key(c.a.no,c.overdue[0])]||{}).state||'NONE']}`:'รายงานล่าสุดแจ้งล่าช้ากว่าแผน';
         return `<li><button data-act="open" data-no="${c.a.no}" data-p="${c.overdue[0]||Math.max(...c.a.planned.filter(p=>p<CUR))}">
           <span class="idtag">${c.a.no}</span><span class="t"><b>${esc(c.a.name)}</b><span>${esc(why)}</span></span>${chip(c.st)}${ic('chevron')}</button></li>`}).join('')}</ul>`
-        :`<div class="empty"><b>ไม่มีกิจกรรมที่ต้องติดตาม</b></div>`}
+        :`<div class="empty">${ic('check')}<b>ไม่มีกิจกรรมที่ต้องติดตาม</b></div>`}
     </section>
-    <section class="glass card">
-      <div class="card-head"><h2>การส่งรายงานรายเดือน</h2><p class="legend" style="margin:0"><span><i class="sw" style="background:var(--brand-600)"></i>ส่งตรงเวลา</span><span><i class="sw c-NOT_DUE"></i>ถึงรอบ</span></p></div>
+
+    <section class="tile s5">
+      <div class="tile-head"><h2>การส่งรายงานรายเดือน</h2>
+        <p class="legend" style="margin:0"><span><i class="sw" style="background:var(--g-700)"></i>ส่งตรงเวลา</span><span><i class="sw" style="background:var(--hair-2);border:1px dashed #C8D6CE"></i>ถึงรอบ</span></p></div>
       <div class="mchart" role="img" aria-label="${Array.from({length:CUR-1},(_,i)=>{const r=round(i+1);return `${MON[i]} ส่งตรงเวลา ${r.ontime.length} จาก ${r.due.length}`}).join(', ')}">
         ${MON.map((m,i)=>{const p=i+1,r=round(p),past=p<CUR;
-          return `<div class="mcol${p===CUR?' cur':''}"><span class="num" style="font-size:11px;color:var(--text-2)">${past?`${r.ontime.length}/${r.due.length}`:''}</span>
-          <div class="mbars"><i class="due" style="height:${r.due.length/maxDue*100}%;opacity:${past?1:.45}"></i>${past?`<i class="ontime" style="height:${r.ontime.length/maxDue*100}%"></i>`:''}</div><small>${m}</small></div>`}).join('')}
+          return `<div class="mcol${p===CUR?' cur':''}"><span class="val">${past?`${r.ontime.length}/${r.due.length}`:''}</span>
+          <div class="mbars"><i class="due" style="height:${r.due.length/maxDue*100}%"></i>${past?`<i class="ontime" style="height:${r.ontime.length/maxDue*100}%"></i>`:''}</div><span class="lab">${m}</span></div>`}).join('')}
       </div>
-      <div class="nextbar">${ic('calendar')}<span>รอบถัดไป <b>${pLabel(CUR)}</b> · กำหนดส่ง ${fd(dueDate(CUR))} · ${nxt.due.length} กิจกรรม</span></div>
+      <div class="nextbar">${ic('calendar')}<span>รอบถัดไป <b>${pLabel(CUR)}</b> · ส่งภายใน ${fd(dueDate(CUR))} · ${nxt.due.length} กิจกรรม</span></div>
     </section>
   </div>`;
 }
 
+/* ---------- activities ---------- */
 function calCell(a,p){
   const r=R[key(a.no,p)];let c,t;
   if(a.plan[p-1]!=='1'){c='none';t='ไม่มีแผน'}
   else if(r&&SENT.includes(r.state)){c='sent';t='ส่งแล้ว'}
   else if(p<CUR){c='due';t='ถึงรอบแต่ยังไม่ส่ง'}
-  else {c='future';t='แผนอนาคต'}
+  else{c='future';t='แผนอนาคต'}
   return `<i class="${c}${p===CUR?' cur':''}" title="${MON[p-1]}: ${t}"><span class="sr-only">${MON[p-1]} ${t}</span></i>`;
 }
+const legendCell=c=>`<span class="cal" style="grid-template-columns:16px"><i class="${c}"></i></span>`;
 function vActivities(){
-  const f=S.f, q=f.q.trim().toLowerCase();
-  const owners=[...new Set(A.map(a=>a.owner))];
-  const rows=A.map(a=>({a,...compute(a)})).filter(c=>
-    (!q||[c.a.no,c.a.name,c.a.kpi,c.a.owner,c.a.tg].join(' ').toLowerCase().includes(q)) &&
-    (!f.st||c.st===f.st)&&(!f.owner||c.a.owner===f.owner)&&(!f.groups.size||f.groups.has(c.a.group)));
+  const f=S.f,q=f.q.trim().toLowerCase(), owners=[...new Set(A.map(a=>a.owner))];
+  const rows=A.map(a=>({a,...compute(a)})).filter(c=>(!q||[c.a.no,c.a.name,c.a.kpi,c.a.owner,c.a.tg].join(' ').toLowerCase().includes(q))
+    &&(!f.st||c.st===f.st)&&(!f.owner||c.a.owner===f.owner)&&(!f.groups.size||f.groups.has(c.a.group)));
   const anyFilter=q||f.st||f.owner||f.groups.size;
   let body='';
-  GROUPS.forEach(g=>{
-    const gr=rows.filter(c=>c.a.group===g.n);if(!gr.length)return;
-    body+=`<tr class="grp"><td colspan="6">${g.code} – ${esc(g.name)}<span>มิติ ${g.code} – ${esc(g.dim)}</span></td></tr>`;
-    gr.forEach(c=>{const a=c.a;
-      body+=`<tr class="arow" data-act="open-row" data-no="${a.no}">
-        <td class="num" style="font-weight:600">${a.no}</td>
-        <td class="nm"><a href="#" data-act="open" data-no="${a.no}">${esc(a.name)}</a><div class="sub">${esc(a.tg)} · ${esc(a.owner)}</div></td>
-        <td class="kpi-t">${esc(a.kpi)}</td>
-        <td class="prog num"><b>${fmtVal(a,c.val)}</b> <span class="sub" style="display:inline">/ ${fmtVal(a,a.target)}${a.unit==='ร้อยละ'?'':' '+esc(a.unit)}</span>
-          <div class="bar"><i style="width:${c.progress*100}%;background:var(--${c.st==='BELOW_TARGET'?'risk-c':c.st==='LATE'?'late-c':'brand-600'})"></i></div></td>
-        <td><div class="cal">${MON.map((_,i)=>calCell(a,i+1)).join('')}</div></td>
-        <td>${chip(c.st)}</td></tr>`});
-  });
+  GROUPS.forEach(g=>{const gr=rows.filter(c=>c.a.group===g.n);if(!gr.length)return;
+    body+=`<tr class="grp"><td colspan="6"><div class="grp-h"><span class="L">${g.code}</span><b>${esc(g.name)}</b><span>มิติ ${esc(g.dim)}</span></div></td></tr>`;
+    gr.forEach(c=>{const a=c.a;body+=`<tr class="arow" data-act="open-row" data-no="${a.no}">
+      <td class="no">${a.no}</td>
+      <td class="nm"><a href="#" data-act="open" data-no="${a.no}">${esc(a.name)}</a><div class="sub">${esc(a.tg)} · ${esc(a.owner)}</div></td>
+      <td class="kpi-t">${esc(a.kpi)}</td>
+      <td class="prog"><b class="num">${fmtVal(a,c.val)}</b> <span class="sub" style="display:inline">/ ${fmtVal(a,a.target)}${esc(unitTail(a))}</span>
+        <div class="bar"><i style="width:${c.progress*100}%;background:var(--${c.st==='BELOW_TARGET'?'risk':c.st==='LATE'?'late':'g-700'})"></i></div></td>
+      <td><div class="cal">${MON.map((_,i)=>calCell(a,i+1)).join('')}</div></td>
+      <td>${chip(c.st)}</td></tr>`})});
   return `
-  <header class="ph"><div><h1>แผนและกิจกรรม</h1><p>18 กิจกรรม ปีงบประมาณ 2570 จัดกลุ่มตามค่านิยม RUBBER</p></div>
+  <header class="ph"><div><p class="eyebrow">แผนปฏิบัติการ 2570</p><h1>แผนและกิจกรรม</h1><p class="sub">18 กิจกรรม จัดกลุ่มตามค่านิยม RUBBER พร้อมปฏิทินรอบรายงาน ต.ค. – ก.ย.</p></div>
     <div class="ph-actions"><button class="btn" data-act="export">${ic('download')}ส่งออก</button></div></header>
-  <section class="glass filters" aria-label="ตัวกรอง">
+  <section class="tile filters" aria-label="ตัวกรอง">
     <div class="field search"><label for="fq">ค้นหา</label>${ic('search')}<input class="input" id="fq" type="search" placeholder="ชื่อกิจกรรม ตัวชี้วัด หรือผู้รับผิดชอบ" value="${esc(f.q)}"></div>
     <div class="field"><label for="fst">สถานะ</label><select class="input" id="fst"><option value="">ทุกสถานะ</option>${ORDER.map(k=>`<option value="${k}"${f.st===k?' selected':''}>${STATUS[k].t}</option>`).join('')}</select></div>
     <div class="field"><label for="fow">ผู้รับผิดชอบ</label><select class="input" id="fow"><option value="">ทั้งหมด</option>${owners.map(o=>`<option${f.owner===o?' selected':''}>${esc(o)}</option>`).join('')}</select></div>
-    <div class="chips" role="group" aria-label="ค่านิยม">${GROUPS.map(g=>`<button class="fchip" data-act="toggle-group" data-g="${g.n}" aria-pressed="${f.groups.has(g.n)}">${g.code} · ${esc(g.name)}</button>`).join('')}
+    <div class="chips" role="group" aria-label="ค่านิยม">${GROUPS.map(g=>`<button class="fchip" data-act="toggle-group" data-g="${g.n}" aria-pressed="${f.groups.has(g.n)}"><span class="L">${g.code}</span>${esc(g.name)}</button>`).join('')}
       ${anyFilter?`<button class="fchip" data-act="clear">${ic('x')}ล้างตัวกรอง</button>`:''}</div>
   </section>
-  <section class="glass" style="padding:0">
+  <section class="tile">
     ${rows.length?`<div class="tablewrap"><table class="acts">
       <thead><tr><th scope="col">ลำดับ</th><th scope="col">โครงการ/กิจกรรม</th><th scope="col">ตัวชี้วัด</th><th scope="col">ผล / เป้า</th>
       <th scope="col"><div class="cal-h">${MON.map(m=>`<span>${m.replace('.','').slice(0,2)}</span>`).join('')}</div></th><th scope="col">สถานะ</th></tr></thead>
       <tbody>${body}</tbody></table></div>
-      <div class="callegend"><span><span class="cal" style="display:inline-grid;grid-template-columns:16px"><i class="sent"></i></span>ส่งแล้ว</span>
-        <span><span class="cal" style="display:inline-grid;grid-template-columns:16px"><i class="due"></i></span>ถึงรอบแต่ยังไม่ส่ง</span>
-        <span><span class="cal" style="display:inline-grid;grid-template-columns:16px"><i class="future"></i></span>แผนอนาคต</span>
-        <span><span class="cal" style="display:inline-grid;grid-template-columns:16px"><i class="none"></i></span>ไม่มีแผน</span>
-        <span><span class="cal" style="display:inline-grid;grid-template-columns:16px"><i class="future cur"></i></span>เดือนปัจจุบัน (${MON[CUR-1]})</span></div>`
+      <div class="callegend"><span>${legendCell('sent')}ส่งแล้ว</span><span>${legendCell('due')}ถึงรอบแต่ยังไม่ส่ง</span><span>${legendCell('future')}แผนอนาคต</span><span>${legendCell('none')}ไม่มีแผน</span><span>${legendCell('future cur')}เดือนปัจจุบัน (${MON[CUR-1]})</span></div>`
     :`<div class="empty">${ic('search')}<b>ไม่พบกิจกรรมที่ตรงกับตัวกรอง</b><span>ลองเปลี่ยนคำค้นหรือสถานะ</span><button class="btn" data-act="clear">ล้างตัวกรองทั้งหมด</button></div>`}
   </section>`;
 }
 
-/* ---------- report page ---------- */
-function canEdit(r){return ['STAFF','GROUP_HEAD'].includes(S.role) && (!r||['DRAFT','RETURNED'].includes(r.state))}
-function formVals(a,r){
+/* ---------- report ---------- */
+const canEdit=r=>!r||['DRAFT','RETURNED'].includes(r.state);
+function formVals(r){
   if(!S.form) S.form={actual:r?.actual??'',progress:r?.progress||'',summary:r?.summary||'',issues:r?.issues||'',fix:r?.fix||'',eta:r?.eta||'',evidence:(r?.evidence||[]).map(e=>({...e,done:true})),link:''};
   return S.form;
 }
-function prevApproved(a,p){return reportsOf(a.no).filter(r=>r.p<p&&r.state==='APPROVED').pop()}
+const prevApproved=(a,p)=>reportsOf(a.no).filter(r=>r.p<p&&r.state==='APPROVED').pop();
 function validate(a,p,v){
   const e={};
   if(v.actual===''||v.actual==null) e.actual='กรอกผลการดำเนินงาน';
@@ -868,39 +805,39 @@ function validate(a,p,v){
   return e;
 }
 const FIELD_LABEL={actual:'ผลการดำเนินงาน',progress:'สถานะการดำเนินงาน',summary:'สรุปผล',issues:'ปัญหา/อุปสรรค',eta:'วันที่คาดว่าเสร็จ'};
-function errHtml(id,e){return e&&S.touched[id]?`<div class="ferr" id="${id}-err">${ic('alert')}<span>${esc(e)}</span></div>`:''}
-function inv(id,e){return e&&S.touched[id]?` aria-invalid="true" aria-describedby="${id}-err"`:''}
+const errHtml=(id,e)=>e&&S.touched[id]?`<div class="ferr" id="${id}-err">${ic('alert')}<span>${esc(e)}</span></div>`:'';
+const inv=(id,e)=>e&&S.touched[id]?` aria-invalid="true" aria-describedby="${id}-err"`:'';
 function etaBE(v){if(!v)return '';const [y,m,d]=v.split('-').map(Number);return fd(new Date(y,m-1,d))}
+const PROG={ON_PLAN:'เป็นไปตามแผน',DELAYED:'ล่าช้ากว่าแผน',NOT_STARTED:'ยังไม่เริ่มดำเนินการ'};
 
 function vReport(){
   const a=actById[S.rep.no], p=S.rep.p, r=R[key(a.no,p)], c=compute(a), g=GROUPS[a.group-1];
-  const editable=canEdit(r), state=r?.state||'NONE';
-  const overdue=dueDate(p)<NOW && !(r&&SENT.includes(r.state));
+  const state=r?.state||'NONE', editable=canEdit(r)&&p<=CUR;
+  const overdue=dueDate(p)<NOW&&!(r&&SENT.includes(r.state));
   let main;
   if(editable){
-    const v=formVals(a,r), e=validate(a,p,v), errs=Object.keys(e).filter(k=>S.touched[k]);
-    const pr=prevApproved(a,p);
+    const v=formVals(r), e=validate(a,p,v), errs=Object.keys(e).filter(k=>S.touched[k]), pr=prevApproved(a,p);
     const needIssues=v.progress==='DELAYED'||v.progress==='NOT_STARTED', needEta=v.progress==='DELAYED';
-    main=`<form class="glass form" id="repForm" novalidate>
-      <h2>รายงานผลรอบ ${pLabel(p)}</h2>
-      ${r?.state==='RETURNED'?`<div class="comment">${ic('undo')} <b>ส่งกลับแก้ไขโดย ${esc(r.reviewer)}</b> · ${fdt(r.reviewedAt)}<br>${esc(r.reviewComment)}</div>`:''}
+    main=`<form class="tile form" id="repForm" novalidate>
+      <h2>รายงานผลรอบ ${pLabel(p)} ${wfchip(state)}</h2>
+      ${r?.state==='RETURNED'?`<div class="comment" style="margin:0">${ic('undo')} <b>ส่งกลับแก้ไขโดย ${esc(r.approver)}</b> · ${fdt(r.returnedAt)}<br>${esc(r.comment)}</div>`:''}
       ${errs.length?`<div class="errsum" role="alert" tabindex="-1" id="errsum"><b>${ic('alert')}ยังส่งไม่ได้ ต้องแก้ไข ${errs.length} รายการ</b><ul>${errs.map(k=>`<li><a href="#f-${k}" data-focus="f-${k}">${FIELD_LABEL[k]}: ${esc(e[k])}</a></li>`).join('')}</ul></div>`:''}
       <div class="two">
         <div class="field"><label for="f-period">รอบรายงาน</label><input class="input" id="f-period" readonly value="${pLabel(p)}">
           <span class="hint${overdue?' overdue':''}">กำหนดส่ง ${fd(dueDate(p))}${overdue?' · เลยกำหนดแล้ว':''}</span></div>
         <div class="field"><label for="f-actual">${a.type==='COUNT_CUMULATIVE'?'ผลสะสมตั้งแต่ต้นปีงบ':'ผลล่าสุดของรอบนี้'} <span class="req">* จำเป็น</span></label>
           <div class="suffix"><input class="input num" id="f-actual" name="actual" type="number" inputmode="decimal" min="0" step="any" value="${esc(v.actual)}"${inv('actual',e.actual)}><span>${esc(a.unit)}</span></div>
-          ${errHtml('actual',e.actual)||`<span class="hint">${pr?`รอบก่อนที่อนุมัติ (${pLabel(pr.p)}): ${fmtVal(a,pr.actual)}${a.unit==='ร้อยละ'?'':' '+a.unit}`:'ยังไม่มีผลที่อนุมัติ'} · เป้า ${fmtVal(a,a.target)}${a.unit==='ร้อยละ'?'':' '+a.unit}</span>`}</div>
+          ${errHtml('actual',e.actual)||`<span class="hint">${pr?`รอบก่อนที่อนุมัติ (${pLabel(pr.p)}): ${fmtVal(a,pr.actual)}${esc(unitTail(a))}`:'ยังไม่มีผลที่อนุมัติ'} · เป้า ${fmtVal(a,a.target)}${esc(unitTail(a))}</span>`}</div>
       </div>
-      <fieldset class="radios" id="f-progress" tabindex="-1"${S.touched.progress&&e.progress?' aria-invalid="true"':''}>
+      <fieldset class="radios" id="f-progress" tabindex="-1">
         <legend>สถานะการดำเนินงาน <span class="req">* จำเป็น</span></legend>
-        ${[['ON_PLAN','เป็นไปตามแผน','ดำเนินการครบตามรอบนี้'],['DELAYED','ล่าช้ากว่าแผน','ต้องระบุปัญหาและวันที่คาดว่าเสร็จ'],['NOT_STARTED','ยังไม่เริ่มดำเนินการ','ต้องระบุปัญหา/อุปสรรค']]
-          .map(([k,t,s])=>`<label class="rcard"><input type="radio" name="progress" value="${k}"${v.progress===k?' checked':''}><div><b>${t}</b><span>${s}</span></div></label>`).join('')}
+        ${[['ON_PLAN','ดำเนินการครบตามรอบนี้'],['DELAYED','ต้องระบุปัญหาและวันที่คาดว่าเสร็จ'],['NOT_STARTED','ต้องระบุปัญหา/อุปสรรค']]
+          .map(([k,s])=>`<label class="rcard"><input type="radio" name="progress" value="${k}"${v.progress===k?' checked':''}><div><b>${PROG[k]}</b><span>${s}</span></div></label>`).join('')}
       </fieldset>
       ${errHtml('progress',e.progress)}
       <div class="field"><label for="f-summary">สรุปผลการดำเนินงาน <span class="req">* จำเป็น</span></label>
         <textarea class="input" id="f-summary" name="summary" rows="4" maxlength="1200"${inv('summary',e.summary)}>${esc(v.summary)}</textarea>
-        <div style="display:flex;gap:8px;justify-content:space-between">${errHtml('summary',e.summary)||'<span class="hint">สิ่งที่ทำในรอบนี้ ผลที่ได้ และกลุ่มเป้าหมายที่เข้าร่วม</span>'}<span class="counter num${v.summary.length>1000?' over':''}" id="sumCount">${v.summary.length.toLocaleString()}/1,000</span></div></div>
+        <div style="display:flex;gap:12px;justify-content:space-between">${errHtml('summary',e.summary)||'<span class="hint">สิ่งที่ทำในรอบนี้ ผลที่ได้ และกลุ่มเป้าหมายที่เข้าร่วม</span>'}<span class="counter num${v.summary.length>1000?' over':''}" id="sumCount">${v.summary.length.toLocaleString()}/1,000</span></div></div>
       <div class="field"><label for="f-issues">ปัญหา/อุปสรรค ${needIssues?'<span class="req">* จำเป็น</span>':'<span class="opt">(ถ้ามี)</span>'}</label>
         <textarea class="input" id="f-issues" name="issues" rows="3"${inv('issues',e.issues)}>${esc(v.issues)}</textarea>${errHtml('issues',e.issues)}</div>
       <div class="two">
@@ -910,7 +847,7 @@ function vReport(){
           ${errHtml('eta',e.eta)||`<span class="hint" id="etaBE">${v.eta?'= '+etaBE(v.eta):'แสดงผลเป็น พ.ศ. หลังเลือกวันที่'}</span>`}</div>
       </div>
       <div class="field"><span class="lbl">หลักฐานประกอบ <span class="opt">PDF, Word, Excel, PowerPoint, JPG, PNG · ไม่เกิน 10 MB ต่อไฟล์</span></span>
-        <label class="drop" id="drop">${ic('upload')}<span><b>เลือกไฟล์</b> หรือลากไฟล์มาวางที่นี่</span>
+        <label class="drop" id="drop"><span class="ico">${ic('upload')}</span><span><b>เลือกไฟล์</b> หรือลากไฟล์มาวางที่นี่</span>
           <input type="file" id="f-file" class="sr-only" multiple accept=".pdf,.docx,.xlsx,.pptx,.jpg,.png"></label>
         <div class="linkrow"><label class="sr-only" for="f-link">ลิงก์ Google Drive</label>
           <input class="input" id="f-link" type="url" placeholder="วางลิงก์ Google Drive" value="${esc(v.link)}"><button class="btn" type="button" data-act="add-link">${ic('link')}เพิ่มลิงก์</button></div>
@@ -922,410 +859,180 @@ function vReport(){
         <span class="note" id="saveNote">${S.lastSave?`บันทึกร่างล่าสุด ${fmtT.format(S.lastSave)} น.`:'บันทึกร่างอัตโนมัติทุก 30 วินาที'}</span>
         <button class="btn" type="button" data-act="cancel">ยกเลิก</button>
         <button class="btn" type="button" data-act="save">${ic('save')}บันทึกร่าง</button>
-        <button class="btn primary" type="submit" aria-disabled="${Object.keys(e).length?'true':'false'}">${ic('send')}ส่งให้หัวหน้ากลุ่มงานตรวจ</button>
+        <button class="btn primary" type="submit" aria-disabled="${Object.keys(e).length?'true':'false'}">${ic('send')}ส่งให้ผู้ดูแลระบบตรวจ</button>
       </div>
     </form>`;
   } else {
-    const dec=(S.role==='GROUP_HEAD'&&state==='SUBMITTED')?'review':(S.role==='DIRECTOR'&&state==='REVIEWED')?'approve':null;
-    main=`<section class="glass form">
+    const canDecide=S.role==='ADMIN'&&state==='SUBMITTED', canReopen=S.role==='ADMIN'&&state==='APPROVED';
+    main=`<section class="tile form">
       <h2>รายงานผลรอบ ${pLabel(p)} ${wfchip(state)}</h2>
       ${r?`<dl class="ro">
         <dt>กำหนดส่ง</dt><dd>${fd(dueDate(p))}${r.submittedAt?` · ส่งเมื่อ ${fdt(r.submittedAt)}`:''}</dd>
-        <dt>${a.type==='COUNT_CUMULATIVE'?'ผลสะสม':'ผลล่าสุด'}</dt><dd class="num"><b>${fmtVal(a,r.actual)}</b>${a.unit==='ร้อยละ'?'':' '+esc(a.unit)}</dd>
-        <dt>สถานะการดำเนินงาน</dt><dd>${{ON_PLAN:'เป็นไปตามแผน',DELAYED:'ล่าช้ากว่าแผน',NOT_STARTED:'ยังไม่เริ่มดำเนินการ'}[r.progress]}</dd>
+        <dt>${a.type==='COUNT_CUMULATIVE'?'ผลสะสม':'ผลล่าสุด'}</dt><dd><b class="num" style="font-size:20px">${fmtVal(a,r.actual)}</b>${esc(unitTail(a))}</dd>
+        <dt>สถานะการดำเนินงาน</dt><dd>${PROG[r.progress]}</dd>
         <dt>สรุปผล</dt><dd>${esc(r.summary)}</dd>
         ${r.issues?`<dt>ปัญหา/อุปสรรค</dt><dd>${esc(r.issues)}</dd>`:''}
         ${r.fix?`<dt>แนวทางแก้ไข</dt><dd>${esc(r.fix)}</dd>`:''}
         ${r.eta?`<dt>คาดว่าจะแล้วเสร็จ</dt><dd>${etaBE(r.eta)}</dd>`:''}
         <dt>หลักฐาน</dt><dd>${r.evidence.length?`<ul class="files">${r.evidence.map(f=>`<li>${ic(f.kind==='LINK'?'link':'file')}<span class="fn">${esc(f.name)}</span><span class="fs">${esc(f.size)}</span></li>`).join('')}</ul>`:'–'}</dd>
-      </dl>`:`<div class="empty"><b>ยังไม่มีรายงานรอบนี้</b><span>${p>CUR?'ยังไม่ถึงรอบรายงาน':S.role==='EXEC_VIEWER'||S.role==='DIRECTOR'?'รอผู้รับผิดชอบส่งรายงาน':''}</span></div>`}
-      ${dec?`<div class="decision"><b>${dec==='review'?'ตรวจรายงานในฐานะหัวหน้ากลุ่มงาน':'พิจารณาอนุมัติในฐานะผู้อำนวยการ'}</b>
-        <div class="field"><label for="f-comment">ความเห็น <span class="opt">(จำเป็นเมื่อส่งกลับแก้ไข)</span></label><textarea class="input" id="f-comment" rows="3"></textarea><div id="cmtErr"></div></div>
-        <div class="actions" style="border:0;padding:0">
-          <button class="btn danger" data-act="return">${ic('undo')}ส่งกลับแก้ไข</button>
-          <button class="btn primary" data-act="${dec}">${ic(dec==='review'?'check':'shield')}${dec==='review'?'ผ่านการตรวจ':'อนุมัติ'}</button></div></div>`
-      :(r&&!editable&&['STAFF'].includes(S.role)&&SENT.includes(state)&&state!=='APPROVED')?`<p class="hint">รายงานอยู่ระหว่างการพิจารณา แก้ไขไม่ได้จนกว่าจะถูกส่งกลับ</p>`
-      :state==='APPROVED'?`<p class="hint">รายงานที่อนุมัติแล้วแก้ไขไม่ได้ ผู้ดูแลระบบเปิดแก้ไขได้พร้อมระบุเหตุผล (บันทึกใน audit log)</p>`:''}
+      </dl>`:`<div class="empty">${ic('calendar')}<b>ยังไม่มีรายงานรอบนี้</b><span>${p>CUR?'ยังไม่ถึงรอบรายงาน':''}</span></div>`}
+      ${canDecide?`<div class="decision"><b>ตรวจและอนุมัติรายงาน</b>
+        <div class="field"><label for="f-comment">ความเห็นถึงผู้รายงาน <span class="opt">(จำเป็นเมื่อส่งกลับแก้ไข)</span></label><textarea class="input" id="f-comment" rows="3"></textarea><div id="cmtErr"></div></div>
+        <div class="actions" style="border:0;padding:0"><button class="btn danger" data-act="return">${ic('undo')}ส่งกลับแก้ไข</button>
+          <button class="btn primary" data-act="approve">${ic('shield')}อนุมัติ</button></div></div>`
+      :canReopen?`<div class="decision"><b>เปิดให้แก้ไขรายงานที่อนุมัติแล้ว</b><p class="hint" style="margin:-6px 0 0">ใช้เมื่อพบข้อผิดพลาดหลังอนุมัติ ระบบบันทึกเหตุผลใน audit log และผลรอบนี้จะไม่ถูกนับจนกว่าจะอนุมัติใหม่</p>
+        <div class="field"><label for="f-comment">เหตุผล <span class="req">* จำเป็น</span></label><textarea class="input" id="f-comment" rows="2"></textarea><div id="cmtErr"></div></div>
+        <div class="actions" style="border:0;padding:0"><button class="btn" data-act="reopen">${ic('unlock')}เปิดให้แก้ไข</button></div></div>`
+      :state==='SUBMITTED'?`<p class="hint">รายงานอยู่ระหว่างรอผู้ดูแลระบบตรวจ แก้ไขไม่ได้จนกว่าจะถูกส่งกลับ</p>`
+      :state==='APPROVED'?`<p class="hint">รายงานที่อนุมัติแล้วแก้ไขไม่ได้ ผู้ดูแลระบบเปิดให้แก้ไขได้พร้อมระบุเหตุผล</p>`:''}
     </section>`;
   }
-
-  // sidebar
-  const steps=[
-    {t:'ส่งรายงาน',who:r?.reporter,when:r?.submittedAt},
-    {t:'ตรวจโดยหัวหน้ากลุ่มงาน',who:r?.reviewer,when:r?.state==='RETURNED'?null:r?.reviewedAt},
-    {t:'อนุมัติโดยผู้อำนวยการ',who:r?.approver,when:r?.approvedAt}];
-  const curIdx={NONE:0,DRAFT:0,RETURNED:0,SUBMITTED:1,REVIEWED:2,APPROVED:3}[state];
-  const lastCmt=reportsOf(a.no).filter(x=>x.reviewComment||x.approveComment).pop();
+  const steps=[{t:'ส่งรายงาน',who:r?.reporter,when:r?.submittedAt},{t:'ตรวจและอนุมัติโดยผู้ดูแลระบบ',who:r?.approver,when:r?.approvedAt}];
+  const curIdx={NONE:0,DRAFT:0,RETURNED:0,SUBMITTED:1,APPROVED:2}[state];
+  const lastCmt=reportsOf(a.no).filter(x=>x.comment&&x!==r).pop();
   const roles={};
   const parse=(txt,k)=>txt.split('\n').forEach(l=>{const i=l.indexOf(':');if(i<0)return;const ro=l.slice(0,i).trim();(roles[ro]=roles[ro]||{do:[],dont:[]})[k].push(...l.slice(i+1).split(' / ').map(s=>s.trim()))});
   parse(a.d,'do');parse(a.x,'dont');
   const aside=`<aside class="aside">
-    <section class="glass card"><h3>ขั้นตอนอนุมัติ</h3><ol class="steps">${steps.map((s,i)=>{
-      const cls=i<curIdx?'done':(i===curIdx&&state!=='APPROVED')?(state==='RETURNED'&&i===0?'ret':'cur'):'';
-      return `<li class="${cls}"><span class="dot">${i<curIdx?ic('check'):i+1}</span><div><b>${s.t}</b><span>${i<curIdx?`${esc(s.who||'')} · ${fdt(s.when)}`:i===curIdx&&state!=='APPROVED'?(state==='RETURNED'?'ถูกส่งกลับ รอแก้ไขและส่งใหม่':'กำลังดำเนินการ'):'รอขั้นตอนก่อนหน้า'}</span></div></li>`}).join('')}</ol>
-      ${r?.state==='RETURNED'?`<div class="comment"><b>ความเห็นผู้ตรวจ:</b> ${esc(r.reviewComment)}</div>`:''}</section>
-    <section class="glass card"><h3>ประวัติรายงานตามรอบ</h3><ul class="hist">${a.planned.map(pp=>{const x=R[key(a.no,pp)];const s=x?.state||(pp<CUR?'NONE':null);
+    <section class="tile"><h3>ขั้นตอนอนุมัติ</h3><ol class="steps">${steps.map((s,i)=>{
+      const cls=i<curIdx?'done':i===curIdx?(state==='RETURNED'?'ret':'cur'):'';
+      const txt=i<curIdx?`${esc(s.who||'')} · ${fdt(s.when)}`:i===curIdx?(state==='RETURNED'?'ถูกส่งกลับ รอแก้ไขและส่งใหม่':'กำลังดำเนินการ'):'รอขั้นตอนก่อนหน้า';
+      return `<li class="${cls}"><span class="dot">${i<curIdx?ic('check'):i+1}</span><div><b>${s.t}</b><span>${txt}</span></div></li>`}).join('')}</ol>
+      ${r?.state==='RETURNED'?`<div class="comment"><b>ความเห็นผู้ดูแลระบบ:</b> ${esc(r.comment)}</div>`:''}</section>
+    <section class="tile"><h3>ประวัติรายงานตามรอบ</h3><ul class="hist">${a.planned.map(pp=>{const x=R[key(a.no,pp)];const s=x?.state||(pp<=CUR?'NONE':null);
       return `<li><button data-act="open" data-no="${a.no}" data-p="${pp}" aria-current="${pp===p}"><span class="m">${pLabel(pp)}</span>${s?wfchip(s):'<span class="hint">ยังไม่ถึงรอบ</span>'}<span class="v num">${x?fmtVal(a,x.actual):''}</span></button></li>`}).join('')}</ul>
-      ${lastCmt&&lastCmt!==r?`<div class="comment info"><b>ความเห็นล่าสุด (${pLabel(lastCmt.p)}):</b> ${esc(lastCmt.reviewComment||lastCmt.approveComment)}</div>`:''}</section>
-    <section class="glass card"><h3>พฤติกรรมที่คาดหวัง</h3><p class="hint" style="margin:-6px 0 8px">${esc(a.outcome)}</p>
+      ${lastCmt?`<div class="comment info"><b>ความเห็นล่าสุด (${pLabel(lastCmt.p)}):</b> ${esc(lastCmt.comment)}</div>`:''}</section>
+    <section class="tile"><h3>พฤติกรรมที่คาดหวัง</h3><p class="hint" style="margin:-8px 0 10px">${esc(a.outcome)}</p>
       ${Object.entries(roles).map(([ro,l],i)=>`<details class="dd"${i===0?' open':''}><summary>${esc(ro)}</summary><div class="lists">
         <span class="dohead" style="color:var(--done-fg)">${ic('thumbup')}ควรทำ (Do)</span><ul class="dolist do">${l.do.map(s=>`<li>${esc(s)}</li>`).join('')}</ul>
         ${l.dont.length?`<span class="dohead" style="color:var(--risk-fg)">${ic('ban')}ไม่ควรทำ (Don't)</span><ul class="dolist dont">${l.dont.map(s=>`<li>${esc(s)}</li>`).join('')}</ul>`:''}</div></details>`).join('')}
     </section></aside>`;
-
   return `
   <button class="crumb" data-act="back">${ic('back')}กลับ</button>
-  <section class="glass rhead">
-    <div class="rhead-top"><span class="vbadge" title="${esc(g.name)}">${g.code}</span><b>กิจกรรม ${a.no}</b><span class="hint">${esc(g.name)} · ${esc(g.dim)}</span>${chip(c.st)}</div>
-    <h1>${esc(a.name)}</h1>
-    <div class="meta">กลุ่มเป้าหมาย: ${esc(a.tg)} · ผู้รับผิดชอบ: ${esc(a.owner)}<br>ตัวชี้วัด: ${esc(a.kpi)}</div>
+  <section class="tile rhead">
+    <div><div class="rhead-top"><span class="vbadge" title="${esc(g.name)}">${g.code}</span><b class="num">กิจกรรม ${a.no}</b><span class="hint">${esc(g.name)} · ${esc(g.dim)}</span>${chip(c.st)}</div>
+      <h1>${esc(a.name)}</h1>
+      <div class="meta">กลุ่มเป้าหมาย: ${esc(a.tg)} · ผู้รับผิดชอบ: ${esc(a.owner)}<br>ตัวชี้วัด: ${esc(a.kpi)}</div></div>
     <div class="sum3">
-      <div><span>ค่าเป้าหมาย</span><b class="num">${a.target}</b> <small>${esc(a.unit)}</small></div>
-      <div><span>ผลที่อนุมัติล่าสุด</span><b class="num">${c.val??'–'}</b> <small>${c.ap?pLabel(c.ap.p):'ยังไม่มี'}</small></div>
-      <div><span>ความคืบหน้า</span><b class="num">${Math.round(c.progress*100)}%</b><div class="bar"><i style="width:${c.progress*100}%"></i></div></div>
+      <div><span>ค่าเป้าหมาย</span><b>${a.target}</b> <small>${esc(a.unit)}</small></div>
+      <div><span>ผลที่อนุมัติล่าสุด</span><b>${c.val??'–'}</b> <small>${c.ap?pLabel(c.ap.p):'ยังไม่มี'}</small></div>
+      <div><span>ความคืบหน้า</span><b>${Math.round(c.progress*100)}%</b><div class="bar"><i style="width:${c.progress*100}%"></i></div></div>
     </div>
   </section>
   <div class="rlayout">${main}${aside}</div>`;
 }
 
+/* ---------- my tasks (reporter) ---------- */
 function vMyTasks(){
-  const t=myTasks(), r6=round(CUR-1), list={todo:t.todo,wait:t.wait,done:t.done}[S.taskTab];
-  const me=PEOPLE[S.role];
+  const t=myTasks(), r6=round(CUR-1), list={todo:t.todo,wait:t.wait,done:t.done}[S.taskTab], me=PEOPLE[S.role];
   return `
-  <header class="ph"><div><h1>งานของฉัน</h1><p>รายงานที่ต้องส่ง รอตรวจ และเสร็จแล้ว · กิจกรรมที่ ${esc(me.name)} เป็นผู้รับผิดชอบ</p></div></header>
-  <section class="hello"><span>สวัสดี คุณ${esc(me.greet)} · รอบรายงาน ${pLabel(CUR-1)} (กำหนดส่ง ${fd(dueDate(CUR-1))})</span>
-    <b class="num">ส่งแล้ว ${r6.sent.length} / ${r6.due.length} กิจกรรม</b>
+  <header class="ph"><div><p class="eyebrow">ผู้รายงาน</p><h1>งานของฉัน</h1><p class="sub">รายงานที่ต้องส่ง รอตรวจ และเสร็จแล้ว ของกิจกรรมที่คุณรับผิดชอบ</p></div></header>
+  <section class="tile hello">
+    <div><p class="eyebrow">รอบรายงาน ${pLabel(CUR-1)}</p><h2>สวัสดี คุณ${esc(me.greet)}</h2><p>กำหนดส่ง ${fd(dueDate(CUR-1))} · รอบถัดไป ${pLabel(CUR)} ส่งภายใน ${fd(dueDate(CUR))}</p></div>
+    <div class="big"><b>${r6.sent.length}<span style="display:inline;font-size:22px"> / ${r6.due.length}</span></b><span>กิจกรรมส่งแล้ว</span></div>
     <div class="bar"><i style="width:${r6.sent.length/r6.due.length*100}%"></i></div>
-    <span>รอบถัดไป ${pLabel(CUR)} · กำหนดส่ง ${fd(dueDate(CUR))}</span></section>
-  <div class="seg" role="group" aria-label="กรองงาน">
-    ${[['todo','ต้องส่ง',t.todo.length],['wait','รอตรวจ',t.wait.length],['done','เสร็จ',t.done.length]].map(([k,l,n])=>`<button data-act="tab" data-k="${k}" aria-pressed="${S.taskTab===k}">${l} <span class="num">(${n})</span></button>`).join('')}
-  </div>
+  </section>
+  <div class="seg" role="group" aria-label="กรองงาน">${[['todo','ต้องส่ง',t.todo.length],['wait','รอตรวจ',t.wait.length],['done','เสร็จ',t.done.length]].map(([k,l,n])=>`<button data-act="tab" data-k="${k}" aria-pressed="${S.taskTab===k}">${l} <span class="num">(${n})</span></button>`).join('')}</div>
   ${list.length?`<div class="tasks">${list.map(({a,p,r})=>{
-    const od=dueDate(p)<NOW&&S.taskTab==='todo', g=GROUPS[a.group-1], st=r?.state||'NONE';
+    const od=dueDate(p)<NOW&&S.taskTab==='todo', g=GROUPS[a.group-1];
     const cta=S.taskTab==='todo'?(r?.state==='RETURNED'?'แก้ไขและส่งใหม่':r?'รายงานต่อ':'เริ่มรายงาน'):'ดูรายงาน';
-    return `<article class="glass task">
-      <div class="task-top"><span class="task-id">${a.no} · ${g.code} ${esc(g.name)}</span>${wfchip(st)}</div>
+    return `<article class="tile task">
+      <div class="task-top"><span class="task-id"><span class="idtag">${a.no}</span>${g.code} · ${esc(g.name)}</span>${wfchip(r?.state||'NONE')}</div>
       <h3>${esc(a.name)}</h3>
-      <div class="meta"><span>${ic('target')}ผล ${fmtVal(a,compute(a).val)} / เป้า ${fmtVal(a,a.target)}${a.unit==='ร้อยละ'?'':' '+esc(a.unit)}</span>
+      <div class="meta"><span>${ic('target')}ผล ${fmtVal(a,compute(a).val)} / เป้า ${fmtVal(a,a.target)}${esc(unitTail(a))}</span>
         <span class="${od?'overdue':''}">${ic('calendar')}รอบ ${pLabel(p)} · ส่งภายใน ${fd(dueDate(p))}${od?' (เลยกำหนด)':''}</span></div>
       <button class="btn ${S.taskTab==='todo'?'primary':''}" data-act="open" data-no="${a.no}" data-p="${p}">${ic(S.taskTab==='todo'?'pen':'chevron')}${cta}</button>
-    </article>`}).join('')}</div>`
-  :`<div class="glass empty"><b>ไม่มีงานในหมวดนี้</b></div>`}`;
+    </article>`}).join('')}</div>`:`<div class="tile empty">${ic('check')}<b>ไม่มีงานในหมวดนี้</b></div>`}`;
 }
 
+/* ---------- approvals (admin) ---------- */
 function vApprovals(){
-  const items=inbox(S.role);
-  const who=S.role==='GROUP_HEAD'?'รายงานที่รอคุณตรวจ':S.role==='DIRECTOR'?'รายงานที่รอคุณอนุมัติ':'รายงานที่อยู่ระหว่างตรวจ/อนุมัติทั้งหมด';
+  const items=inbox(), recent=Object.values(R).filter(r=>r.state==='APPROVED'&&r.p===CUR-1);
   return `
-  <header class="ph"><div><h1>รออนุมัติ</h1><p>${who}${['STAFF','EXEC_VIEWER'].includes(S.role)?' · สลับบทบาทเป็นหัวหน้ากลุ่มงานหรือผู้อำนวยการที่แถบด้านบนเพื่อลองตรวจ/อนุมัติ':''}</p></div></header>
-  ${items.length?`<section class="glass card"><ul class="follow">${items.map(r=>{const a=actById[r.no];
-    return `<li><button data-act="open" data-no="${r.no}" data-p="${r.p}"><span class="idtag">${r.no}</span>
-      <span class="t"><b>${esc(a.name)}</b><span>รอบ ${pLabel(r.p)} · ผล ${fmtVal(a,r.actual)} · ส่งโดย ${esc(r.reporter)} ${fdt(r.submittedAt)}</span></span>${wfchip(r.state)}${ic('chevron')}</button></li>`}).join('')}</ul></section>`
-  :`<div class="glass empty">${ic('check')}<b>ไม่มีรายงานค้างพิจารณา</b></div>`}`;
+  <header class="ph"><div><p class="eyebrow">ผู้ดูแลระบบ</p><h1>ตรวจและอนุมัติ</h1><p class="sub">รายงานที่ผู้รายงานส่งแล้วและรอการตรวจ ผลจะถูกนับในตัวชี้วัดหลังอนุมัติเท่านั้น</p></div></header>
+  <div class="bento">
+    <section class="tile s8"><div class="tile-head"><h2>รอตรวจ</h2><p>${items.length} รายงาน · เก่าสุดก่อน</p></div>
+      ${items.length?`<ul class="list">${items.map(r=>{const a=actById[r.no];
+        return `<li><button data-act="open" data-no="${r.no}" data-p="${r.p}"><span class="idtag">${r.no}</span>
+        <span class="t"><b>${esc(a.name)}</b><span>รอบ ${pLabel(r.p)} · ผล ${fmtVal(a,r.actual)} · ส่งโดย ${esc(r.reporter)} ${fdt(r.submittedAt)}</span></span>${wfchip(r.state)}${ic('chevron')}</button></li>`}).join('')}</ul>`
+      :`<div class="empty">${ic('check')}<b>ไม่มีรายงานค้างตรวจ</b></div>`}</section>
+    <section class="tile s4"><div class="tile-head"><h2>อนุมัติแล้ว รอบ ${MON[CUR-2]}</h2><p>${recent.length} รายงาน</p></div>
+      <ul class="list">${recent.map(r=>`<li><button data-act="open" data-no="${r.no}" data-p="${r.p}"><span class="idtag">${r.no}</span><span class="t"><b>ผล ${fmtVal(actById[r.no],r.actual)}</b><span>อนุมัติ ${fd(r.approvedAt)}</span></span>${ic('chevron')}</button></li>`).join('')}</ul></section>
+  </div>`;
 }
 
-/* Do & Don't (แท็บ "แนวทางการปฏิบัติตน" · 4 บทบาท × 6 มิติ ตามลำดับในแท็บ) */
-const DD_ROLES=['คณะกรรมการ','ผู้บริหารระดับสูง','ผู้บริหารระดับกลาง','พนักงาน'];
-const DD=[
- {dim:'Risk awareness',c:[
-`1. รับทราบและเข้าใจความเสี่ยงที่สำคัญที่สุดขององค์กรอย่างถ่องแท้
-2. ตระหนักถึงเหตุการณ์ที่อาจทำให้องค์กรไม่บรรลุเป้าหมายตามยุทธศาสตร์
-3. ให้ความสำคัญกับการดำเนินงานที่ถูกต้องตามกฎหมายและระเบียบ
-4. สอบถามและเปิดประเด็นถึงความเสี่ยงใหม่ ๆ ในการประชุมเสมอ
-5. สนับสนุนนโยบายที่เน้นความโปร่งใสและตรวจสอบได้`,
-`1. ละเลยรายงานด้านความเสี่ยงที่ฝ่ายบริหารนำเสนอ
-2. มองว่าความเสี่ยงเป็นเรื่องไกลตัวหรือเป็นหน้าที่ของฝ่ายปฏิบัติการเท่านั้น
-3. อนุมัติโครงการโดยไม่ซักถามถึงความเสี่ยงด้านกฎหมายและระเบียบ
-4. ปฏิเสธที่จะรับฟังข้อกังวลจากหน่วยงานตรวจสอบ
-5. ให้เวลาไม่เพียงพอในการหารือวาระที่เกี่ยวข้องกับความเสี่ยง`,
-`1. สื่อสารเรื่องความเสี่ยงให้ทุกสายงานรับทราบอย่างสม่ำเสมอ
-2. เป็นแบบอย่างที่ดีในการปฏิบัติตามกฎระเบียบขององค์กร
-3. กระตุ้นให้ทีมงานมองหาจุดอ่อนและช่องโหว่ในการทำงาน
-4. ติดตามข่าวสารและแนวโน้มภายนอกที่อาจส่งผลกระทบต่อองค์กร
-5. จัดสรรทรัพยากรให้เพียงพอต่อการจัดการความเสี่ยง`,
-`1. มองข้ามความเสี่ยงบางประการเพื่อเร่งสร้างผลงาน
-2. สื่อสารเรื่องความเสี่ยงเฉพาะตอนที่เกิดปัญหาขึ้นแล้วเท่านั้น
-3. ปล่อยปละละเลยเมื่อพบเห็นพนักงานกระทำผิดระเบียบ
-4. ไม่แจ้งเตือนผู้บริหารระดับกลางเมื่อพบสัญญาณอันตราย
-5. คิดว่าระบบงานที่มีอยู่ดีที่สุดแล้วจนขาดความตื่นตัว`,
-`1. ระบุความเสี่ยงที่อาจเกิดขึ้นในหน่วยงานของตนเองได้ครบถ้วน
-2. อธิบายให้ทีมงานเข้าใจเหตุผลที่ต้องเฝ้าระวังความเสี่ยง
-3. ตรวจสอบการทำงานของทีมให้เป็นไปตามระเบียบอย่างสม่ำเสมอ
-4. สังเกตความผิดปกติในกระบวนการทำงานประจำวัน
-5. นำเรื่องความเสี่ยงมาเป็นหัวข้อพูดคุยในการประชุมทีมเสมอ`,
-`1. คิดว่าการจัดการความเสี่ยงเป็นหน้าที่ของฝ่ายบริหารความเสี่ยงเท่านั้น
-2. ปิดบังความเสี่ยงในหน่วยงานเพราะกลัวถูกตำหนิ
-3. อนุญาตให้ลูกน้องลัดขั้นตอนเพื่อความรวดเร็วในการทำงาน
-4. ไม่ยอมรับฟังเมื่อผู้ใต้บังคับบัญชามาเตือนเรื่องความเสี่ยง
-5. ละเลยการทำแบบประเมินความเสี่ยงประจำปีตามที่องค์กรกำหนด`,
-`1. รู้และเข้าใจว่างานที่ตนเองทำอยู่มีจุดเสี่ยงอะไรบ้าง
-2. ศึกษากฎระเบียบและคู่มือการทำงานอย่างละเอียด
-3. หมั่นสังเกตสิ่งผิดปกติรอบตัวในสถานที่ทำงาน
-4. ตั้งคำถามกับหัวหน้างานเมื่อไม่แน่ใจว่าสิ่งที่ทำอยู่ปลอดภัยหรือไม่
-5. เข้ารับการอบรมเรื่องความเสี่ยงและการทำงานอย่างถูกต้องด้วยความตั้งใจ`,
-`1. ทำงานตามความเคยชินโดยไม่สนใจคู่มือหรือระเบียบปฏิบัติ
-2. คิดว่า "ไม่เป็นไรหรอก" เมื่อเห็นจุดเสี่ยงเล็ก ๆ น้อย ๆ
-3. เพิกเฉยต่อป้ายเตือนหรือข้อบังคับในพื้นที่ทำงาน
-4. ทำผิดระเบียบเพียงเพราะเห็นว่าเพื่อนร่วมงานคนอื่นก็ทำ
-5. ไม่ยอมศึกษาหาความรู้เพิ่มเติมเกี่ยวกับสายงานของตนเอง`]},
- {dim:'Understand impact',c:[
-`1. ประเมินผลเสียและโอกาสอย่างรอบด้านก่อนตัดสินใจเชิงนโยบาย
-2. มองผลกระทบในระยะยาว ไม่ใช่เพียงแค่ผลลัพธ์ในระยะสั้น
-3. พิจารณาผลกระทบต่อภาพลักษณ์และชื่อเสียงขององค์กร
-4. สอบถามถึงผลกระทบที่จะเกิดกับผู้มีส่วนได้ส่วนเสียทุกกลุ่ม
-5. ทำความเข้าใจห่วงโซ่ผลกระทบหากโครงการสำคัญล้มเหลว`,
-`1. มองโลกในแง่ดีเกินไปจนลืมพิจารณาแผนสำรอง
-2. ตัดสินใจจากสัญชาตญาณโดยไม่ดูข้อมูลผลวิเคราะห์ความเสียหาย
-3. สนใจแต่ผลลัพธ์ทางการเงิน โดยละทิ้งผลกระทบทางสังคมและสิ่งแวดล้อม
-4. ประเมินความเสียหายระดับองค์กรต่ำกว่าความเป็นจริง
-5. มองข้ามความเดือดร้อนที่อาจเกิดกับเกษตรกรหรือชุมชนรอบข้าง`,
-`1. วิเคราะห์ว่าความเสี่ยงใดจะทำให้องค์กรไปไม่ถึงเป้าหมาย
-2. ใช้ข้อมูลสถิติหรือข้อเท็จจริงมาช่วยประเมินความรุนแรง
-3. วางแผนฉุกเฉินเพื่อรองรับสถานการณ์ที่เลวร้ายที่สุด
-4. ประเมินผลกระทบที่อาจลุกลามข้ามสายงานเป็นโดมิโน
-5. อธิบายให้คณะกรรมการเห็นภาพรวมของผลกระทบได้อย่างชัดเจน`,
-`1. ปกปิดหรือบิดเบือนตัวเลขความเสียหายที่แท้จริง
-2. ประเมินผลกระทบแบบผิวเผิน ไม่ลงลึกถึงรากฐานของปัญหา
-3. ไม่เตรียมงบประมาณส่วนกลางเผื่อไว้สำหรับกรณีฉุกเฉิน
-4. ผลักภาระความเสียหายหรือผลกระทบไปให้สายงานอื่นรับผิดชอบ
-5. ตัดสินใจแก้ปัญหาเฉพาะหน้าโดยไม่มองผลกระทบระยะยาว`,
-`1. ประเมินความเสียหายต่อปริมาณงานและเวลาหากเกิดข้อผิดพลาด
-2. จัดลำดับความสำคัญของปัญหาว่าเรื่องใดส่งผลกระทบรุนแรงกว่ากัน
-3. อธิบายให้ทีมงานเห็นผลเสียที่ชัดเจนหากปฏิบัติงานผิดพลาด
-4. รวบรวมข้อมูลความเสียหายที่เคยเกิดขึ้นจริงเพื่อเป็นกรณีศึกษา
-5. ประเมินผลกระทบต่อขวัญและกำลังใจของบุคลากรในทีม`,
-`1. สุ่มจัดการปัญหาโดยไม่จัดลำดับความสำคัญของผลกระทบ
-2. สั่งงานโดยไม่บอกผู้ปฏิบัติงานว่าหากทำพลาดจะเกิดผลเสียอย่างไร
-3. ประเมินความรุนแรงของปัญหาต่ำกว่าจริงเพื่อหลีกเลี่ยงความผิด
-4. ไม่บันทึกประวัติความเสียหายหรือข้อผิดพลาดไว้เป็นหลักฐาน
-5. ปล่อยให้ปัญหาลุกลามจนส่งผลกระทบต่อหน่วยงานข้างเคียง`,
-`1. รู้ว่าหากตนเองทำงานพลาด จะสร้างความเดือดร้อนถึงใครบ้าง
-2. เข้าใจผลเสียของการไม่ปฏิบัติตามขั้นตอนการควบคุมความเสี่ยง
-3. คิดถึงความปลอดภัยของตนเองและเพื่อนร่วมงานเสมอ
-4. ประเมินทรัพยากร (เวลา/วัสดุ) ที่ต้องสูญเสียหากต้องรื้องานทำใหม่
-5. ตระหนักถึงความพึงพอใจของเกษตรกรและผู้มารับบริการ`,
-`1. คิดว่าทำงานพลาดก็แค่แก้ไขใหม่ ไม่ได้สร้างความเสียหายอะไร
-2. โยนความผิดให้ระบบหรืออุปกรณ์เมื่อเกิดผลกระทบจากการทำงาน
-3. ไม่สนใจว่างานที่ส่งต่อจะทำให้เพื่อนร่วมงานทำงานลำบากขึ้น
-4. ละเลยเรื่องความปลอดภัยจนอาจส่งผลเสียต่อร่างกายและชีวิต
-5. ให้บริการโดยไม่คำนึงถึงความรู้สึกและผลกระทบต่อผู้รับบริการ`]},
- {dim:'Be proactive',c:[
-`1. เสนอแนะแนวทางการป้องกันวิกฤตตั้งแต่ปัญหายังไม่เกิด
-2. สนับสนุนงบประมาณสำหรับเครื่องมือป้องกันความเสี่ยงอย่างเหมาะสม
-3. ผลักดันให้มีการเตรียมพร้อมและจำลองสถานการณ์ฉุกเฉินระดับองค์กร
-4. กำหนดวิสัยทัศน์ให้องค์กรมองข้ามช็อตเพื่อรับมือการเปลี่ยนแปลง
-5. ชื่นชมและสนับสนุนนโยบายที่เน้นการป้องกันมากกว่าการตามแก้ปัญหา`,
-`1. รอมติที่ประชุมจนดำเนินการแก้ปัญหาหรือป้องกันไม่ทันการณ์
-2. ตัดลดงบประมาณด้านความปลอดภัยโดยไม่ประเมินความเสี่ยง
-3. มองว่าการเตรียมความพร้อมหรือการซ้อมแผนเป็นเรื่องสิ้นเปลือง
-4. สนใจแก้ไขแต่อดีต ไม่ตั้งคำถามถึงความเสี่ยงในอนาคต
-5. ตำหนิเพียงอย่างเดียวเมื่อเกิดปัญหา โดยไม่เคยเสนอแนะทางป้องกัน`,
-`1. สั่งการปรับแผนงานทันทีเมื่อเห็นสัญญาณเตือนถึงความเสี่ยง
-2. ส่งเสริมให้ใช้วิธีการหรือเทคโนโลยีใหม่ ๆ มาป้องกันความเสี่ยง
-3. นำระบบฐานข้อมูลมาช่วยเตือนภัยล่วงหน้า
-4. จัดซ้อมแผนฉุกเฉินหรือแผนความต่อเนื่องทางธุรกิจ (BCP) อย่างจริงจัง
-5. ลงพื้นที่ตรวจเยี่ยมหน้างานเพื่อค้นหาจุดเสี่ยงด้วยตนเอง`,
-`1. บริหารงานแบบตั้งรับ รอให้ปัญหาเกิดก่อนแล้วค่อยหาทางแก้
-2. เพิกเฉยต่อข้อเสนอแนะด้านความปลอดภัยจากหน่วยงานปฏิบัติการ
-3. ยึดติดกับวิธีการทำงานแบบเดิม ๆ แม้สถานการณ์ภายนอกจะเปลี่ยนไป
-4. จัดซ้อมแผนฉุกเฉินเพียงแค่ในกระดาษเพื่อให้ผ่านเกณฑ์ประเมิน
-5. นั่งทำงานแต่ในสำนักงาน ไม่รับรู้สภาพความเป็นจริงของพื้นที่`,
-`1. เฝ้าระวังตัวเลขหรือสัญญาณเตือนที่บ่งบอกว่างานกำลังจะมีปัญหา
-2. รีบรายงานผู้บังคับบัญชาทันทีเมื่อพบเห็นแนวโน้มความเสี่ยง
-3. วางแผนสำรอง (Plan B) ไว้ล่วงหน้าสำหรับงานสำคัญเสมอ
-4. กระตุ้นให้ลูกน้องเสนอไอเดียใหม่ ๆ ในการป้องกันข้อผิดพลาด
-5. ตรวจเช็กสภาพเครื่องมือ ระบบ และอุปกรณ์ให้พร้อมใช้งานอยู่เสมอ`,
-`1. เห็นสัญญาณเตือนแล้วแต่ปล่อยผ่าน คิดว่าเดี๋ยวสถานการณ์ก็ดีขึ้นเอง
-2. รอให้ปัญหากลายเป็นเรื่องใหญ่ก่อนจึงค่อยรายงานผู้ใหญ่
-3. ไม่มีแผนรองรับเมื่อสถานการณ์หน้างานไม่เป็นไปตามที่คิดไว้
-4. ปิดกั้นความคิดเห็นของลูกน้องที่เสนอวิธีทำงานแบบใหม่
-5. ละเลยการบำรุงรักษาอุปกรณ์ รอให้พังก่อนแล้วค่อยแจ้งซ่อม`,
-`1. รีบแจ้งหัวหน้างานทันทีที่พบความผิดปกติในกระบวนการทำงาน
-2. กล้ารายงานเหตุการณ์ที่เกือบจะเกิดความเสียหาย (Near Miss) เพื่อหาทางป้องกัน
-3. ตรวจสอบความพร้อมของข้อมูลหรืออุปกรณ์ก่อนเริ่มงานทุกครั้ง
-4. นำเสนอวิธีการทำงานที่รวดเร็ว ปลอดภัย และสร้างสรรค์กว่าเดิม
-5. ช่วยสอดส่องดูแลสภาพแวดล้อมในที่ทำงานให้ปลอดภัย`,
-`1. ปล่อยสิ่งของชำรุดทิ้งไว้โดยไม่แจ้งผู้เกี่ยวข้องให้รับทราบ
-2. ปกปิดเรื่องที่เกือบทำพลาดเพราะกลัวจะโดนตำหนิหรือถูกหักคะแนน
-3. รีบเร่งทำงานโดยไม่ตรวจเช็กความเรียบร้อยก่อนลงมือ
-4. เห็นเพื่อนร่วมงานทำพฤติกรรมเสี่ยงแต่ไม่เตือนหรือห้ามปราม
-5. นิ่งเฉยเมื่อเห็นบุคคลภายนอกเข้ามาในพื้นที่ปฏิบัติงานโดยไม่ได้รับอนุญาต`]},
- {dim:'Build accountability',c:[
-`1. กำหนดให้มีผู้รับผิดชอบด้านความเสี่ยงในระดับนโยบายอย่างชัดเจน
-2. ติดตามความคืบหน้าและการแก้ปัญหาจากผู้รับผิดชอบโดยตรง
-3. แสดงความรับผิดชอบร่วมกันในฐานะผู้นำเมื่อองค์กรเผชิญวิกฤต
-4. กำหนดเป้าหมายการทำงานขององค์กรที่โปร่งใสและตรวจสอบได้
-5. ประเมินผลงานผู้บริหารโดยนำเรื่องการจัดการความเสี่ยงมาเป็นเกณฑ์`,
-`1. โยนความผิดให้ผู้บริหารระดับสูงเมื่อนโยบายเกิดความผิดพลาด
-2. แต่งตั้งผู้รับผิดชอบด้านความเสี่ยงแต่ไม่มอบอำนาจในการตัดสินใจ
-3. หลีกเลี่ยงการตอบคำถามต่อสาธารณชนเมื่อองค์กรเกิดข้อผิดพลาดใหญ่
-4. บริหารงานแบบไม่โปร่งใส ขาดการตรวจสอบถ่วงดุล
-5. ประเมินผลงานโดยดูเฉพาะผลกำไร ไม่สนใจความเสี่ยงที่ซ่อนอยู่`,
-`1. มอบหมายหน้าที่การจัดการความเสี่ยงให้หัวหน้าสายงานอย่างไม่ซ้ำซ้อน
-2. ติดตามผลการจัดการความเสี่ยงตามรอบเวลาอย่างจริงจัง
-3. ยืดอกรับผิดชอบแทนผู้ใต้บังคับบัญชาเมื่อเกิดเหตุสุดวิสัยระดับโครงสร้าง
-4. ให้รางวัลหรือคำชมแก่พนักงานที่ช่วยองค์กรลดความเสียหาย
-5. สร้างบรรยากาศการทำงานที่ไว้เนื้อเชื่อใจและการทำงานเป็นทีม`,
-`1. โยนความผิดให้ระดับปฏิบัติการเมื่อเกิดข้อผิดพลาดระดับองค์กร
-2. สั่งงานซ้ำซ้อนจนหน่วยงานต่าง ๆ เกี่ยงกันรับผิดชอบ
-3. สั่งงานแล้วไม่ติดตามผล ปล่อยให้ระบบเดินไปเองตามยถากรรม
-4. นำความดีความชอบของผู้ใต้บังคับบัญชามาเป็นของตนเองคนเดียว
-5. สร้างความหวาดระแวงในองค์กรด้วยวัฒนธรรมการจับผิด`,
-`1. แบ่งงานและระบุตัวบุคคลผู้รับผิดชอบความเสี่ยงในทีมอย่างชัดเจน
-2. ตรวจสอบคุณภาพและมาตรฐานงานของทีมอย่างสม่ำเสมอ
-3. รับผิดชอบและร่วมแก้ปัญหาต่อความผิดพลาดของทีมงานในความดูแล
-4. อธิบายเหตุผลให้ทีมเข้าใจความสำคัญของการทำตามความคาดหวัง
-5. เป็นที่ปรึกษาคอยช่วยเหลือเมื่อลูกน้องเจอปัญหาอุปสรรคในงาน`,
-`1. สั่งงานแบบลอย ๆ ไม่มีผู้รับผิดชอบหลัก (ไม่มีเจ้าภาพ)
-2. ปล่อยปละละเลย ไม่ตรวจทานความถูกต้องของงานก่อนส่งต่อให้หน่วยอื่น
-3. ตำหนิและโยนความผิดให้ลูกน้องเป็นรายบุคคลต่อหน้าผู้บริหารระดับสูง
-4. ใช้ระบบความสนิทสนมส่วนตัวในการแบ่งความรับผิดชอบงาน
-5. ทิ้งให้ผู้ปฏิบัติงานเผชิญปัญหาและแก้ไขสถานการณ์ตามลำพัง`,
-`1. รับผิดชอบงานที่ได้รับมอบหมายให้สำเร็จ ถูกต้อง และปลอดภัย
-2. ปฏิบัติตามกฎระเบียบอย่างเคร่งครัดแม้ในเวลาที่ไม่มีใครคอยควบคุม
-3. กล้ายอมรับผิดและลงมือแก้ไขทันทีเมื่อตนเองทำพลาด
-4. ช่วยเหลือเพื่อนร่วมงานเมื่อเห็นว่ามีปัญหาหรือรับภาระงานที่เสี่ยงเกินไป
-5. ดูแลรักษาเครื่องมือและทรัพย์สินขององค์กรเสมือนเป็นของตนเอง`,
-`1. เกี่ยงงานหรือปัดความรับผิดชอบเมื่อเห็นว่าเป็นงานที่ยุ่งยาก
-2. แอบลัดขั้นตอนหรือละเมิดระเบียบเมื่อหัวหน้าไม่อยู่ในพื้นที่
-3. โกหก ซ่อนเร้น หรือทำลายหลักฐานเมื่อตนเองทำงานผิดพลาด
-4. นิ่งเฉยและปล่อยผ่านเมื่อเห็นเพื่อนร่วมงานกำลังทำผิดขั้นตอน
-5. ใช้ทรัพย์สินขององค์กรในเรื่องส่วนตัวจนเกิดความเสียหายหรือสูญหาย`]},
- {dim:'Review & Improve',c:[
-`1. ทบทวนนโยบายความเสี่ยงอย่างน้อยปีละครั้งให้ทันต่อเหตุการณ์เศรษฐกิจโลก
-2. ส่งเสริมและให้ทุนสำหรับการวิจัยพัฒนานวัตกรรมเพื่อลดความเสี่ยงองค์กร
-3. เปิดใจรับฟังข้อเสนอแนะจากผู้ตรวจสอบภายนอกเพื่อนำมาปรับปรุง
-4. ประเมินผลงานของคณะกรรมการเองเพื่อหาจุดอ่อนและพัฒนาการทำงาน
-5. สั่งการให้มีการถอดบทเรียน (Lessons Learned) จากวิกฤตการณ์ที่ผ่านมา`,
-`1. ใช้นโยบายความเสี่ยงฉบับเดิมติดต่อกันหลายปีโดยไม่มีการปรับปรุงให้ทันสมัย
-2. มองว่านวัตกรรมและการพัฒนาสิ่งใหม่เป็นเรื่องไกลตัวและไม่สนับสนุนงบประมาณ
-3. มองผู้ประเมินภายนอกหรือผู้ตรวจสอบเป็นศัตรู และไม่ยอมรับฟังข้อเสนอแนะ
-4. ไม่ยอมรับข้อบกพร่องของตนเองในระดับคณะกรรมการ
-5. ปล่อยให้วิกฤตผ่านพ้นไปโดยไม่ได้เรียนรู้หรือสร้างมาตรการป้องกันระยะยาว`,
-`1. สั่งการให้ทบทวนแผนงานทันทีเมื่อผลลัพธ์การจัดการความเสี่ยงไม่เป็นไปตามเป้า
-2. นำบทเรียนจากข้อผิดพลาดในอดีตมาเป็นกรณีศึกษาสำหรับผู้บริหารรุ่นถัดไป
-3. ปรับปรุงคู่มือการปฏิบัติงานระดับองค์กรให้รัดกุมและสอดคล้องกับปัจจุบัน
-4. นำข้อคิดเห็นของพนักงานระดับปฏิบัติการมาปรับปรุงระบบโครงสร้างการทำงาน
-5. ศึกษาดูงานหรือรับเอาแนวปฏิบัติที่เป็นเลิศ (Best Practices) จากภายนอกมาใช้`,
-`1. ดันทุรังใช้แผนงานเดิมทั้งที่ทราบจากผลประเมินแล้วว่าไม่ได้ผล
-2. สั่งห้ามพูดถึงความผิดพลาดในอดีตเพื่อรักษาภาพลักษณ์ของสายงาน
-3. ปล่อยให้คู่มือทำงานล้าสมัยและไม่ตรงกับสภาพการทำงานหน้างานจริง
-4. เพิกเฉยต่อช่องทางรับฟังความคิดเห็นหรือเสียงสะท้อนจากผู้ปฏิบัติงาน
-5. ปิดกั้นการเรียนรู้จากภายนอก คิดว่าองค์กรของตนมีระบบที่ดีที่สุดแล้ว`,
-`1. ทบทวนเพื่อค้นหาสาเหตุที่แท้จริง (Root Cause) ทุกครั้งเมื่อเกิดเหตุขัดข้อง
-2. ปรับปรุงขั้นตอนการทำงานในหน่วยงานให้มีความสะดวกรวดเร็วและปลอดภัยขึ้น
-3. แลกเปลี่ยนเรียนรู้วิธีการแก้ปัญหาระหว่างแผนกเพื่อให้เกิดการพัฒนาข้ามสายงาน
-4. ติดตามว่ามาตรการแก้ไขปรับปรุงที่สั่งการไปนั้นได้ผลลัพธ์ที่ดีขึ้นจริงหรือไม่
-5. กระตุ้นหรือจัดกิจกรรมให้พนักงานในทีมเสนอแนวคิดในการปรับปรุงกระบวนการทำงาน`,
-`1. มุ่งหาตัวคนผิดมาลงโทษมากกว่าหาสาเหตุของปัญหาเพื่อทำการแก้ไขระบบ
-2. ยึดติดกับคำพูดที่ว่า "เมื่อก่อนก็ทำมาแบบนี้ ไม่เห็นเป็นอะไร" จนไม่เกิดการพัฒนา
-3. แข่งขันชิงดีชิงเด่นกับแผนกอื่นจนไม่ยอมแบ่งปันข้อมูลที่เป็นประโยชน์ในการทำงาน
-4. แก้ปัญหาลุล่วงเฉพาะหน้าแล้วจบไป ไม่มีการติดตามผลลัพธ์ในระยะยาว
-5. นำไอเดียของลูกน้องไปแอบอ้าง หรือไม่สนับสนุนเมื่อลูกน้องคิดค้นวิธีการทำงานใหม่`,
-`1. นำข้อผิดพลาดในการทำงานของตนเองมาเป็นบทเรียนเพื่อไม่ให้ทำผิดซ้ำอีก
-2. เสนอแนะวิธีการปรับปรุงการทำงานที่ตนเองรับผิดชอบต่อหัวหน้างานอยู่เสมอ
-3. หมั่นขวนขวายเรียนรู้ทักษะใหม่ ๆ เพื่อพัฒนาศักยภาพในการทำงานของตนเอง
-4. อัปเดตความรู้เกี่ยวกับเครื่องมือ เทคโนโลยี หรือกฎเกณฑ์ใหม่ ๆ อย่างสม่ำเสมอ
-5. นำคำติชมของผู้บังคับบัญชาหรือผู้รับบริการมาปรับปรุงตนเองด้วยใจที่เปิดกว้าง`,
-`1. ทำงานผิดพลาดซ้ำซากในเรื่องเดิม ๆ โดยไม่มีการปรับปรุงแก้ไขพฤติกรรม
-2. บ่นถึงปัญหาในการทำงานแต่ไม่เคยพยายามหาทางออกหรือเสนอวิธีแก้ไข
-3. ต่อต้านการเปลี่ยนแปลง การเรียนรู้สิ่งใหม่ หรือการนำเทคโนโลยีมาใช้แทนระบบเดิม
-4. ทำงานด้วยความรู้เดิมที่มีอยู่ ไม่ยอมศึกษาหรืออัปเดตวิธีปฏิบัติงานใหม่ ๆ
-5. แสดงอาการไม่พอใจเมื่อได้รับคำติชม แนะนำ หรือข้อเสนอแนะเพื่อการพัฒนา`]},
- {dim:'Embed in process',c:[
-`1. กำหนดให้นำเรื่องความเสี่ยงเป็นวาระประจำในการประชุมคณะกรรมการ
-2. กำหนดให้ต้องมีการวิเคราะห์ความเสี่ยงประกอบการขออนุมัติงบประมาณทุกครั้ง
-3. ผนวกการบริหารความเสี่ยงเข้ากับการกำหนดทิศทางและยุทธศาสตร์องค์กร
-4. ผลักดันให้มีคู่มือการกำกับดูแลกิจการที่ดีเป็นมาตรฐานการทำงาน
-5. สนับสนุนให้ใช้ระบบเทคโนโลยีเข้ามาช่วยควบคุมกระบวนการทำงานให้รัดกุม`,
-`1. หยิบยกเรื่องความเสี่ยงมาพิจารณาเป็นวาระสุดท้ายที่เร่งรีบจนขาดความรอบคอบ
-2. อนุมัติแผนงานใหญ่โดยไม่มีเอกสารการประเมินความเสี่ยงแนบมาด้วย
-3. แยกการพิจารณาความเสี่ยงออกจากการจัดทำแผนวิสาหกิจหรือแผนกลยุทธ์
-4. ปล่อยให้องค์กรดำเนินงานโดยไม่มีคู่มือหรือมาตรฐานที่อัปเดต
-5. ปฏิเสธการลงทุนในระบบควบคุมอัตโนมัติเพราะมองว่ามีราคาแพงเกินไป`,
-`1. กำหนดเงื่อนไขให้ทุกโครงการต้องระบุมาตรการลดความเสี่ยงพร้อมงบรองรับ
-2. นำผลประเมินการจัดการความเสี่ยงไปเชื่อมโยงกับการพิจารณาผลงาน (KPI)
-3. ออกแบบและสร้างมาตรฐานการทำงานที่ช่วยปิดช่องโหว่การทุจริต
-4. กำหนดให้มีการรายงานความคืบหน้าด้านมาตรการควบคุมความเสี่ยงทุกไตรมาส
-5. นำกระบวนการด้านความเสี่ยงขึ้นระบบออนไลน์เพื่อให้เข้าถึงและใช้งานง่าย`,
-`1. แยกแผนบริหารความเสี่ยงไว้บนหิ้ง ไม่นำมาหลอมรวมกับแผนปฏิบัติการจริง
-2. ประเมินผลงานพนักงานโดยดูแค่ตัวเลขความสำเร็จ ไม่สนว่าละเมิดกฎหรือไม่
-3. ปล่อยให้มีขั้นตอนการทำงานที่คลุมเครือและเอื้อต่อการหาผลประโยชน์
-4. สั่งให้ทำรายงานความเสี่ยงเพียงปีละครั้งเพื่อจัดส่งตามเกณฑ์เท่านั้น
-5. สร้างกระบวนการควบคุมที่ซับซ้อนยุ่งยากจนพนักงานหาทางหลบเลี่ยง`,
-`1. ประเมินความเสี่ยงและเตรียมมาตรการก่อนเริ่มลงมือทำโครงการทุกครั้ง
-2. นำมาตรการป้องกันความเสี่ยงไปใส่ไว้ในขั้นตอนการทำงานประจำวัน
-3. สุ่มตรวจการทำงานของลูกน้องว่าได้ทำตามขั้นตอนการควบคุมหรือไม่
-4. สอดแทรกเรื่องการระมัดระวังความเสี่ยงในระหว่างการสอนงาน (Coaching)
-5. จัดเตรียมอุปกรณ์ป้องกันหรือเครื่องมือควบคุมให้พร้อมอยู่ในพื้นที่ทำงาน`,
-`1. เริ่มงานทันทีโดยไม่ประเมินสถานการณ์และมาตรการควบคุมล่วงหน้า
-2. เก็บมาตรการป้องกันความเสี่ยงไว้ในแฟ้มประเมิน ไม่นำมาบังคับใช้จริง
-3. ไม่เคยเดินตรวจหน้างาน ปล่อยให้พนักงานทำงานกันเองโดยไม่มีการควบคุม
-4. สอนงานเฉพาะวิธีทำให้เสร็จ แต่ไม่สอนวิธีทำให้ปลอดภัยหรือถูกต้องตามเกณฑ์
-5. ปล่อยให้พื้นที่ทำงานขาดความเป็นระเบียบและไม่มีอุปกรณ์ควบคุมที่จำเป็น`,
-`1. ปฏิบัติงานตามคู่มือ ขั้นตอน หรือแนวทางปฏิบัติที่กำหนดไว้อย่างสม่ำเสมอ
-2. นึกถึงข้อควรระวังและความเสี่ยงที่อาจเกิดขึ้นก่อนลงมือปฏิบัติงานทุกครั้ง
-3. ตรวจสอบความถูกต้องตามแบบฟอร์ม (Checklist) ก่อนส่งมอบงาน
-4. ใช้โปรแกรมหรือระบบที่องค์กรเตรียมไว้ให้เพื่อลดข้อผิดพลาดจากบุคคล
-5. ปฏิบัติตามมาตรฐานความปลอดภัย อาชีวอนามัย และการควบคุมภายในอย่างเคร่งครัด`,
-`1. ข้ามขั้นตอนในคู่มือปฏิบัติงานเพราะคิดว่าตนเองเชี่ยวชาญแล้ว
-2. ทำงานด้วยความเร่งรีบโดยไม่หยุดคิดถึงผลกระทบหากเกิดข้อผิดพลาด
-3. กรอกแบบฟอร์มตรวจสอบ (Checklist) แบบขอไปที หรือกรอกข้อมูลเท็จ
-4. หลีกเลี่ยงการใช้งานระบบควบคุมที่องค์กรกำหนดเพราะมองว่ายุ่งยาก
-5. ถอดอุปกรณ์ความปลอดภัยออกขณะทำงานเพื่อความสะดวกสบายส่วนตัว`]}
-];
+/* ---------- settings (admin) ---------- */
+function vSettings(){
+  return `
+  <header class="ph"><div><p class="eyebrow">ผู้ดูแลระบบ</p><h1>ผู้ใช้และการตั้งค่า</h1><p class="sub">ระบบมี 2 บทบาท: ผู้ดูแลระบบ (ตรวจ อนุมัติ เปิดแก้ไข และตั้งค่า) และผู้รายงาน (รายงานผลกิจกรรมที่ตนรับผิดชอบ)</p></div>
+    <div class="ph-actions"><button class="btn primary" data-act="mock">${ic('pen')}เพิ่มผู้ใช้</button></div></header>
+  <div class="bento">
+    <section class="tile s8"><div class="tile-head"><h2>ผู้ใช้งาน</h2><p>cfg_Users · ข้อมูลตัวอย่าง</p></div>
+      <div class="tablewrap"><table class="utable"><thead><tr><th scope="col">ชื่อ</th><th scope="col">บทบาท</th><th scope="col">หน่วยงาน</th></tr></thead><tbody>
+      ${USERS.map(u=>`<tr><td><div class="ucell"><span class="avatar">${esc(u.short)}</span><div><b style="font-weight:600">${esc(u.name)}</b><div class="hint">${esc(u.email)}</div></div></div></td>
+        <td><span class="role ${u.role}">${u.role==='ADMIN'?'ผู้ดูแลระบบ':'ผู้รายงาน'}</span></td><td>${esc(u.unit)}</td></tr>`).join('')}</tbody></table></div></section>
+    <section class="tile s4"><div class="tile-head"><h2>การตั้งค่าระบบ</h2><p>cfg_Settings</p></div>
+      <dl class="kv"><dt>ปีงบประมาณปัจจุบัน</dt><dd>2570</dd><dt>กำหนดส่ง (วันที่ของเดือนถัดไป)</dt><dd>${DUE_DAY}</dd><dt>ขนาดไฟล์สูงสุด</dt><dd>10 MB</dd><dt>นามสกุลที่อนุญาต</dt><dd style="font-size:12.5px">pdf docx xlsx pptx jpg png</dd><dt>ขั้นตอนอนุมัติ</dt><dd>1 ขั้น</dd></dl></section>
+  </div>`;
+}
+
+/* ---------- Do & Don't ---------- */
 function vDoDont(){
   const d=DD[S.dd.g-1], ri=S.dd.role, items=s=>s.split('\n').map(l=>l.replace(/^\d+\.\s*/,''));
   const linked=A.filter(a=>GROUPS[a.group-1].dim===d.dim);
   return `
-  <header class="ph"><div><h1>แนวทางการปฏิบัติตน Do &amp; Don't</h1><p>บุคลากร กยท. 4 บทบาท × 6 มิติ Risk Culture · จากแท็บ "แนวทางการปฏิบัติตน"</p></div></header>
-  <section class="glass filters" aria-label="เลือกมิติและบทบาท" style="flex-direction:column;align-items:stretch">
-    <div class="chips" role="group" aria-label="มิติ Risk Culture">${DD.map((x,i)=>`<button class="fchip" data-act="dd-g" data-g="${i+1}" aria-pressed="${S.dd.g===i+1}">${x.dim[0]} · ${esc(x.dim)}</button>`).join('')}</div>
-    <div class="seg" role="group" aria-label="บทบาท">${DD_ROLES.map((r,i)=>`<button data-act="dd-r" data-r="${i}" aria-pressed="${ri===i}">${r}</button>`).join('')}</div>
+  <header class="ph"><div><p class="eyebrow">แนวทางการปฏิบัติตน</p><h1>Do &amp; Don't ของบุคลากร กยท.</h1><p class="sub">4 บทบาท × 6 มิติ Risk Culture จากแท็บ "แนวทางการปฏิบัติตน"</p></div></header>
+  <section class="tile filters" aria-label="เลือกมิติและบทบาท" style="flex-direction:column;align-items:stretch">
+    <div class="chips" role="group" aria-label="มิติ Risk Culture">${DD.map((x,i)=>`<button class="fchip" data-act="dd-g" data-g="${i+1}" aria-pressed="${S.dd.g===i+1}"><span class="L">${x.dim[0]}</span>${esc(x.dim)}</button>`).join('')}</div>
+    <div class="seg" role="group" aria-label="บทบาท" style="box-shadow:none">${DD_ROLES.map((r,i)=>`<button data-act="dd-r" data-r="${i}" aria-pressed="${ri===i}">${r}</button>`).join('')}</div>
   </section>
   <div class="ddgrid">
-    <section class="glass ddcol do"><h3>${ic('thumbup')}พึงกระทำ</h3><ol>${items(d.c[ri*2]).map(s=>`<li>${esc(s)}</li>`).join('')}</ol></section>
-    <section class="glass ddcol dont"><h3>${ic('ban')}ไม่พึงกระทำ</h3><ol>${items(d.c[ri*2+1]).map(s=>`<li>${esc(s)}</li>`).join('')}</ol></section>
+    <section class="tile ddcol do"><h3><span class="ico">${ic('thumbup')}</span>พึงกระทำ</h3><ol>${items(d.c[ri*2]).map(s=>`<li>${esc(s)}</li>`).join('')}</ol></section>
+    <section class="tile ddcol dont"><h3><span class="ico">${ic('ban')}</span>ไม่พึงกระทำ</h3><ol>${items(d.c[ri*2+1]).map(s=>`<li>${esc(s)}</li>`).join('')}</ol></section>
   </div>
-  <section class="glass card"><div class="card-head"><h2>กิจกรรมที่ส่งเสริมมิตินี้</h2><p>ตามการจัดกลุ่มใน Sheet1</p></div>
-    <ul class="follow">${linked.map(a=>`<li><button data-act="open" data-no="${a.no}" data-p="${Math.max(...a.planned.filter(p=>p<CUR),a.planned[0])}"><span class="idtag">${a.no}</span><span class="t"><b>${esc(a.name)}</b><span>${esc(a.kpi)}</span></span>${chip(compute(a).st)}${ic('chevron')}</button></li>`).join('')}</ul></section>`;
+  <section class="tile"><div class="tile-head"><h2>กิจกรรมที่ส่งเสริมมิตินี้</h2><p>ตามการจัดกลุ่มใน Sheet1</p></div>
+    <ul class="list">${linked.map(a=>`<li><button data-act="open" data-no="${a.no}"><span class="idtag">${a.no}</span><span class="t"><b>${esc(a.name)}</b><span>${esc(a.kpi)}</span></span>${chip(compute(a).st)}${ic('chevron')}</button></li>`).join('')}</ul></section>`;
 }
 
 /* ---------- render ---------- */
+const VIEWS={dashboard:vDashboard,activities:vActivities,report:vReport,mytasks:vMyTasks,approvals:vApprovals,settings:vSettings,dodont:vDoDont};
 function render(){
   const me=PEOPLE[S.role];
   document.getElementById('meAvatar').textContent=me.short;
   document.getElementById('meName').textContent=me.name;
   document.getElementById('meRole').textContent=me.title;
   document.getElementById('mHello').textContent=`สวัสดี คุณ${me.greet}`;
-  const nt=myTasks().todo.length, na=inbox(S.role).length;
-  const tb=document.getElementById('navTaskBadge'), ab=document.getElementById('navApprBadge'), bb=document.getElementById('bellBadge');
-  tb.textContent=nt;tb.hidden=!nt||!['STAFF','GROUP_HEAD'].includes(S.role);
-  ab.textContent=na;ab.hidden=!na||!['GROUP_HEAD','DIRECTOR'].includes(S.role);
-  bb.textContent=nt;bb.hidden=!nt;
+  document.querySelectorAll('[data-role]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.role===S.role));
+  document.querySelectorAll('[data-only]').forEach(b=>b.hidden=b.dataset.only!==S.role);
+  const nt=myTasks().todo.length, na=inbox().length;
+  [['navTaskBadge',nt],['bnTask',nt],['navApprBadge',na],['bnAppr',na]].forEach(([id,n])=>{const el=document.getElementById(id);el.textContent=n;el.hidden=!n});
+  const bb=document.getElementById('bellBadge'), bn=S.role==='ADMIN'?na:nt;bb.textContent=bn;bb.hidden=!bn;
   const navPage=S.page==='report'?(S.from||'activities'):S.page;
   document.querySelectorAll('[data-page]').forEach(b=>b.setAttribute('aria-current',b.dataset.page===navPage?'page':'false'));
-  view.innerHTML=({dashboard:vDashboard,activities:vActivities,report:vReport,mytasks:vMyTasks,approvals:vApprovals,dodont:vDoDont}[S.page])();
+  view.innerHTML=VIEWS[S.page]();
   bindView();
 }
 
 /* ---------- events ---------- */
-document.querySelectorAll('[data-page]').forEach(b=>b.addEventListener('click',()=>go(b.dataset.page)));
-document.getElementById('roleSel').addEventListener('change',e=>{S.role=e.target.value;S.form=null;S.touched={};render();toast(`ดูในบทบาท ${PEOPLE[S.role].title}`)});
-document.getElementById('bellBtn').addEventListener('click',()=>go('mytasks',{taskTab:'todo'}));
+document.querySelectorAll('.nav [data-page],.bottomnav [data-page]').forEach(b=>b.addEventListener('click',()=>go(b.dataset.page)));
+document.querySelectorAll('[data-role]').forEach(b=>b.addEventListener('click',()=>{
+  S.role=b.dataset.role;S.form=null;S.touched={};
+  if((S.role==='ADMIN'&&S.page==='mytasks')||(S.role==='REPORTER'&&['approvals','settings'].includes(S.page))) S.page='dashboard';
+  render();toast(`ดูในบทบาท${S.role==='ADMIN'?'ผู้ดูแลระบบ':'ผู้รายงาน'}`)}));
+document.getElementById('bellBtn').addEventListener('click',()=>go(S.role==='ADMIN'?'approvals':'mytasks',{taskTab:'todo'}));
 
 view.addEventListener('click',e=>{
-  const t=e.target.closest('[data-act]');
   const fl=e.target.closest('[data-focus]');
   if(fl){e.preventDefault();const el=document.getElementById(fl.dataset.focus);el?.focus();el?.scrollIntoView({block:'center',behavior:'smooth'});return}
-  if(!t) return;
-  const act=t.dataset.act;
+  const t=e.target.closest('[data-act]');if(!t) return;
   const openRep=(no,p)=>{const a=actById[no];p=+p||Math.max(...a.planned.filter(x=>x<CUR),0)||a.planned[0];go('report',{rep:{no,p},from:S.page==='report'?S.from:S.page})};
-  switch(act){
+  switch(t.dataset.act){
     case 'open': e.preventDefault();e.stopPropagation();openRep(t.dataset.no,t.dataset.p);break;
     case 'open-row': openRep(t.dataset.no);break;
+    case 'nav': go(t.dataset.page);break;
     case 'back': go(S.from||'activities');break;
     case 'export': toast('ส่งออกรายงานสรุปไปยัง Google Sheet แล้ว (ตัวอย่าง)','download');break;
+    case 'mock': toast('ตัวอย่าง: เปิดฟอร์มเพิ่มผู้ใช้ (เลือกบทบาทผู้ดูแลระบบหรือผู้รายงาน)','pen');break;
     case 'report-now': {const f=myTasks().todo[0];if(f)openRep(f.a.no,f.p);break}
     case 'filter-group': S.f={q:'',st:'',owner:'',groups:new Set([+t.dataset.g])};go('activities');break;
     case 'toggle-group': {const g=+t.dataset.g;S.f.groups.has(g)?S.f.groups.delete(g):S.f.groups.add(g);render();break}
@@ -1333,59 +1040,53 @@ view.addEventListener('click',e=>{
     case 'tab': S.taskTab=t.dataset.k;render();break;
     case 'dd-g': S.dd.g=+t.dataset.g;render();break;
     case 'dd-r': S.dd.role=+t.dataset.r;render();break;
-    case 'cancel': S.form=null;go(S.from||'mytasks');break;
+    case 'cancel': S.form=null;go(S.from||'dashboard');break;
     case 'save': saveDraft(false);break;
-    case 'add-link': {const v=S.form,u=document.getElementById('f-link').value.trim();
-      if(!/^https:\/\/(drive|docs)\.google\.com\//.test(u)){toast('ใส่ลิงก์ Google Drive ที่ขึ้นต้นด้วย https://drive.google.com หรือ docs.google.com','alert');break}
-      v.evidence.push({kind:'LINK',name:u.replace(/^https:\/\//,'').slice(0,60),size:'ลิงก์',done:true});v.link='';S.dirty=true;render();break}
+    case 'add-link': {const u=document.getElementById('f-link').value.trim();
+      if(!/^https:\/\/(drive|docs)\.google\.com\//.test(u)){toast('ใส่ลิงก์ที่ขึ้นต้นด้วย https://drive.google.com หรือ https://docs.google.com','alert');break}
+      S.form.evidence.push({kind:'LINK',name:u.replace(/^https:\/\//,'').slice(0,60),size:'ลิงก์',done:true});S.form.link='';S.dirty=true;render();break}
     case 'rm-file': S.form.evidence.splice(+t.dataset.i,1);S.dirty=true;render();break;
-    case 'review': case 'approve': case 'return': decide(act);break;
+    case 'approve': case 'return': case 'reopen': decide(t.dataset.act);break;
   }
 });
 
 function bindView(){
   const fq=document.getElementById('fq');
-  if(fq){fq.addEventListener('input',()=>{S.f.q=fq.value;const pos=fq.selectionStart;render();const n=document.getElementById('fq');n.focus();n.setSelectionRange(pos,pos)})}
-  const fst=document.getElementById('fst');if(fst)fst.addEventListener('change',()=>{S.f.st=fst.value;render()});
-  const fow=document.getElementById('fow');if(fow)fow.addEventListener('change',()=>{S.f.owner=fow.value;render()});
-  const form=document.getElementById('repForm');
-  if(form){
-    const a=actById[S.rep.no],p=S.rep.p;
-    const sync=(name,val,rerender)=>{S.form[name]=val;S.dirty=true;if(rerender){const id=document.activeElement?.id;render();if(id)document.getElementById(id)?.focus()}};
-    form.addEventListener('input',e=>{const n=e.target.name;if(!n)return;
-      if(n==='summary'){S.form.summary=e.target.value;S.dirty=true;const c=document.getElementById('sumCount');c.textContent=`${e.target.value.length.toLocaleString()}/1,000`;c.classList.toggle('over',e.target.value.length>1000);updateSubmit(a,p);return}
-      if(n==='eta'){S.form.eta=e.target.value;S.dirty=true;const h=document.getElementById('etaBE');if(h)h.textContent=e.target.value?'= '+etaBE(e.target.value):'แสดงผลเป็น พ.ศ. หลังเลือกวันที่';updateSubmit(a,p);return}
-      if(n==='progress'){S.touched.progress=true;sync(n,e.target.value,true);return}
-      S.form[n]=e.target.value;S.dirty=true;updateSubmit(a,p)});
-    // defer so a click on a button that took focus still fires before the form re-renders
-    form.addEventListener('focusout',e=>{const n=e.target.name;if(!n||n==='progress'||!(n in FIELD_LABEL))return;S.touched[n]=true;
-      setTimeout(()=>{if(S.page!=='report'||!document.getElementById('repForm'))return;const id=document.activeElement?.id;render();if(id)document.getElementById(id)?.focus()},180)});
-    form.addEventListener('submit',e=>{e.preventDefault();
-      const errs=validate(a,p,S.form);
-      if(Object.keys(errs).length){Object.keys(FIELD_LABEL).forEach(k=>S.touched[k]=true);render();document.getElementById('errsum')?.focus();return}
-      if(S.form.evidence.some(f=>!f.done)){toast('รอให้ไฟล์อัปโหลดเสร็จก่อนส่ง','alert');return}
-      const r=persist('SUBMITTED');r.reporter=PEOPLE[S.role].name;r.submittedAt=new Date(NOW.getTime()+3600000);
-      S.form=null;toast(`ส่งรายงาน ${a.no} รอบ ${pLabel(p)} ให้หัวหน้ากลุ่มงานตรวจแล้ว`,'send');render()});
-    const fileIn=document.getElementById('f-file'), drop=document.getElementById('drop');
-    const addFiles=files=>{[...files].forEach(f=>{
-      const ext=f.name.split('.').pop().toLowerCase();
-      if(!['pdf','docx','xlsx','pptx','jpg','png'].includes(ext)){toast(`ไม่รองรับไฟล์ .${ext} — ใช้ PDF, Word, Excel, PowerPoint, JPG หรือ PNG`,'alert');return}
-      if(f.size>10*1024*1024){toast(`${f.name} ใหญ่เกิน 10 MB`,'alert');return}
-      const item={kind:'FILE',name:f.name,size:f.size>1048576?`${(f.size/1048576).toFixed(1)} MB`:`${Math.max(1,Math.round(f.size/1024))} KB`,done:false};
-      S.form.evidence.push(item);S.dirty=true;setTimeout(()=>{item.done=true;if(S.page==='report')render()},1200)});render()};
-    fileIn.addEventListener('change',()=>addFiles(fileIn.files));
-    drop.addEventListener('dragover',e=>{e.preventDefault();drop.classList.add('over')});
-    drop.addEventListener('dragleave',()=>drop.classList.remove('over'));
-    drop.addEventListener('drop',e=>{e.preventDefault();drop.classList.remove('over');addFiles(e.dataTransfer.files)});
-  }
+  if(fq) fq.addEventListener('input',()=>{S.f.q=fq.value;const pos=fq.selectionStart;render();const n=document.getElementById('fq');n.focus();n.setSelectionRange(pos,pos)});
+  const fst=document.getElementById('fst');if(fst) fst.addEventListener('change',()=>{S.f.st=fst.value;render()});
+  const fow=document.getElementById('fow');if(fow) fow.addEventListener('change',()=>{S.f.owner=fow.value;render()});
+  const form=document.getElementById('repForm');if(!form) return;
+  const a=actById[S.rep.no],p=S.rep.p;
+  form.addEventListener('input',e=>{const n=e.target.name;if(!n)return;S.form[n]=e.target.value;S.dirty=true;
+    if(n==='summary'){const c=document.getElementById('sumCount');c.textContent=`${e.target.value.length.toLocaleString()}/1,000`;c.classList.toggle('over',e.target.value.length>1000)}
+    if(n==='eta'){const h=document.getElementById('etaBE');if(h)h.textContent=e.target.value?'= '+etaBE(e.target.value):'แสดงผลเป็น พ.ศ. หลังเลือกวันที่'}
+    if(n==='progress'){S.touched.progress=true;render();document.querySelector(`input[name=progress][value=${e.target.value}]`)?.focus();return}
+    updateSubmit(a,p)});
+  // defer so a click on a button that took focus still fires before the form re-renders
+  form.addEventListener('focusout',e=>{const n=e.target.name;if(!n||!(n in FIELD_LABEL)||n==='progress')return;S.touched[n]=true;
+    setTimeout(()=>{if(S.page!=='report'||!document.getElementById('repForm'))return;const id=document.activeElement?.id;render();if(id)document.getElementById(id)?.focus()},180)});
+  form.addEventListener('submit',e=>{e.preventDefault();
+    if(Object.keys(validate(a,p,S.form)).length){Object.keys(FIELD_LABEL).forEach(k=>S.touched[k]=true);render();document.getElementById('errsum')?.focus();return}
+    if(S.form.evidence.some(f=>!f.done)){toast('รอให้ไฟล์อัปโหลดเสร็จก่อนส่ง','alert');return}
+    const r=persist('SUBMITTED');r.reporter=PEOPLE[S.role].name;r.submittedAt=new Date(NOW.getTime()+3600000);
+    S.form=null;toast(`ส่งรายงาน ${a.no} รอบ ${pLabel(p)} ให้ผู้ดูแลระบบตรวจแล้ว`,'send');render()});
+  const fileIn=document.getElementById('f-file'), drop=document.getElementById('drop');
+  const addFiles=files=>{[...files].forEach(f=>{
+    const ext=f.name.split('.').pop().toLowerCase();
+    if(!['pdf','docx','xlsx','pptx','jpg','png'].includes(ext)){toast(`ไม่รองรับไฟล์ .${ext} ใช้ PDF, Word, Excel, PowerPoint, JPG หรือ PNG`,'alert');return}
+    if(f.size>10*1024*1024){toast(`${f.name} ใหญ่เกิน 10 MB`,'alert');return}
+    const item={kind:'FILE',name:f.name,size:f.size>1048576?`${(f.size/1048576).toFixed(1)} MB`:`${Math.max(1,Math.round(f.size/1024))} KB`,done:false};
+    S.form.evidence.push(item);S.dirty=true;setTimeout(()=>{item.done=true;if(S.page==='report')render()},1200)});render()};
+  fileIn.addEventListener('change',()=>addFiles(fileIn.files));
+  drop.addEventListener('dragover',e=>{e.preventDefault();drop.classList.add('over')});
+  drop.addEventListener('dragleave',()=>drop.classList.remove('over'));
+  drop.addEventListener('drop',e=>{e.preventDefault();drop.classList.remove('over');addFiles(e.dataTransfer.files)});
 }
 function updateSubmit(a,p){const b=document.querySelector('#repForm [type=submit]');if(b)b.setAttribute('aria-disabled',Object.keys(validate(a,p,S.form)).length?'true':'false')}
 function persist(state){
-  const a=actById[S.rep.no],p=S.rep.p,v=S.form,k=key(a.no,p);
-  const prev=R[k]||{no:a.no,p,version:0};
+  const a=actById[S.rep.no],p=S.rep.p,v=S.form,k=key(a.no,p),prev=R[k]||{no:a.no,p,version:0};
   R[k]={...prev,actual:v.actual===''?'':+v.actual,progress:v.progress||'ON_PLAN',summary:v.summary,issues:v.issues,fix:v.fix,eta:v.eta,
     evidence:v.evidence.filter(f=>f.done).map(({done,...f})=>f),state,version:(prev.version||0)+1};
-  if(state==='SUBMITTED'){delete R[k].reviewComment;delete R[k].reviewer;delete R[k].reviewedAt}
   return R[k];
 }
 function saveDraft(auto){
@@ -1397,19 +1098,18 @@ function saveDraft(auto){
 }
 setInterval(()=>{if(S.dirty)saveDraft(true)},30000);
 function decide(act){
-  const r=R[key(S.rep.no,S.rep.p)], c=document.getElementById('f-comment'), cm=c.value.trim(), who=PEOPLE[S.role].name, now=new Date(NOW.getTime()+3600000);
-  if(act==='return'&&!cm){c.setAttribute('aria-invalid','true');c.setAttribute('aria-describedby','cmtErrMsg');
-    document.getElementById('cmtErr').innerHTML=`<div class="ferr" id="cmtErrMsg">${ic('alert')}<span>ระบุเหตุผลที่ส่งกลับ เพื่อให้ผู้รายงานแก้ไขได้ถูกจุด</span></div>`;c.focus();return}
-  if(act==='review'){r.state='REVIEWED';r.reviewer=who;r.reviewedAt=now;if(cm)r.reviewComment=cm;toast(`ผ่านการตรวจ ${r.no} แล้ว ส่งต่อผู้อำนวยการ`)}
-  if(act==='approve'){r.state='APPROVED';r.approver=who;r.approvedAt=now;if(cm)r.approveComment=cm;toast(`อนุมัติ ${r.no} รอบ ${pLabel(r.p)} แล้ว · ผลถูกนับในตัวชี้วัด`,'shield')}
-  if(act==='return'){r.state='RETURNED';r.reviewer=who;r.reviewedAt=now;r.reviewComment=cm;delete r.approver;delete r.approvedAt;toast(`ส่ง ${r.no} กลับให้ผู้รายงานแก้ไขแล้ว`,'undo')}
+  const r=R[key(S.rep.no,S.rep.p)], c=document.getElementById('f-comment'), cm=c.value.trim(), who=PEOPLE.ADMIN.name, now=new Date(NOW.getTime()+3600000);
+  if((act==='return'||act==='reopen')&&!cm){c.setAttribute('aria-invalid','true');c.setAttribute('aria-describedby','cmtErrMsg');
+    document.getElementById('cmtErr').innerHTML=`<div class="ferr" id="cmtErrMsg">${ic('alert')}<span>${act==='return'?'ระบุเหตุผลที่ส่งกลับ เพื่อให้ผู้รายงานแก้ไขได้ถูกจุด':'ระบุเหตุผลที่เปิดให้แก้ไข'}</span></div>`;c.focus();return}
+  if(act==='approve'){r.state='APPROVED';r.approver=who;r.approvedAt=now;if(cm)r.comment=cm;toast(`อนุมัติ ${r.no} รอบ ${pLabel(r.p)} แล้ว ผลถูกนับในตัวชี้วัด`,'shield')}
+  if(act==='return'){r.state='RETURNED';r.approver=who;r.returnedAt=now;r.comment=cm;delete r.approvedAt;toast(`ส่ง ${r.no} กลับให้ผู้รายงานแก้ไขแล้ว`,'undo')}
+  if(act==='reopen'){r.state='RETURNED';r.approver=who;r.returnedAt=now;r.comment=`เปิดให้แก้ไขโดยผู้ดูแลระบบ: ${cm}`;delete r.approvedAt;toast(`เปิดให้แก้ไข ${r.no} รอบ ${pLabel(r.p)} แล้ว (บันทึกใน audit log)`,'unlock')}
   r.version++;render();
 }
 
 /* ---------- boot ---------- */
-hydrateIcons(document);
 const h=(location.hash||'').slice(1);
-if(['dashboard','activities','mytasks','approvals','dodont'].includes(h)) S.page=h;
+if(['dashboard','activities','dodont'].includes(h)) S.page=h;
 else if(window.matchMedia('(max-width:480px)').matches) S.page='mytasks';
 render();
 </script>
