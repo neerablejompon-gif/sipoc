@@ -66,7 +66,8 @@ export function avatar(person, cls = '') {
   }
   return `<span class="avatar ${cls}">${initial}</span>`;
 }
-export const shortName = n => String(n || '').split('-')[0];
+// "พิมพ์-พิมพ์นารา" → "พิมพ์" · "พิมพ์นารา สุกใส" → "พิมพ์นารา"
+export const shortName = n => String(n || '').trim().split(/\s+/)[0].split('-')[0];
 
 // ---------------------------------------------------------------- ไฟล์
 export function fileType(f) {

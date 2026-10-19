@@ -3,12 +3,14 @@ import { api } from './api.js';
 import { $, $$, esc, icon, nl2br, modal, toast, planBadge, FM, filePicker, fileRow, bindPreviews, thDate, PLAN_STATUS } from './ui.js';
 import { openAssign } from './tasks-ui.js';
 
+// ชื่อจริงที่ใช้เทียบคน (ตรงกับ server/scope.js): "นูร-อัสนีรา หะยียูโซ๊ะ" / "นีรา-อัสนีรา" → "อัสนีรา"
+const personKey = n => (String(n || '').trim().replace(/^(นาย|นางสาว|นาง|น\.ส\.)\s*/, '').split(/\s+/)[0] || '').split('-').pop();
 export const matchesPerson = (text, name) => {
   const t = String(text || '');
   if (!t || !name) return false;
   if (t.split(/[,\n]/).map(s => s.trim()).includes(name)) return true;
-  const real = name.split('-').slice(1).join('-').trim();
-  return real.length >= 3 && t.includes(real);
+  const k = personKey(name);
+  return k.length >= 3 && t.includes(k);
 };
 
 /** รวมรายการจากแผนปฏิบัติการและ SIPOC เป็นรูปแบบเดียว */
@@ -61,7 +63,7 @@ function openPlanItem(app, r) {
     <div class="mt">${gantt([r])}</div>
     ${r.detail ? `<div class="mt"><div class="muted small">รายละเอียดผลการดำเนินงาน</div>${nl2br(r.detail)}</div>` : ''}
     ${r.reason ? `<div class="mt"><div class="muted small">สาเหตุที่ไม่สามารถดำเนินการได้ตามแผน</div>${nl2br(r.reason)}</div>` : ''}
-    <p class="hint mt">ข้อมูลจากชีต ActionPlanDATA (อ่านอย่างเดียว) — บันทึกผลผ่านระบบรายงาน GRC หรือมอบหมายงานแล้วผูกกับกิจกรรมนี้</p>`,
+    <p class="hint mt">ข้อมูลจากชีต Actionplan ข้อ 1–5 / ประชุม / อบรม (อ่านอย่างเดียว) — บันทึกผลผ่านระบบรายงาน GRC หรือมอบหมายงานแล้วผูกกับกิจกรรมนี้</p>`,
   foot: `<button class="btn" data-close>ปิด</button><button class="btn primary" id="pl-assign">${icon('add_task')}มอบหมายงานจากกิจกรรมนี้</button>` })
     .el.querySelector('#pl-assign').addEventListener('click', e => {
       e.target.closest('.modal-back').remove();

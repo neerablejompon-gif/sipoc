@@ -128,3 +128,48 @@ test('withLock: งานที่ล้มเหลวไม่ทำให้�
   assert.equal(await b, 2);
   assert.deepEqual(order, ['a', 'b']);
 });
+
+test('scope: ชื่อหลายรูปแบบเทียบเป็นคนเดียวกัน และหัวข้อจาก Staff_List', async () => {
+  const { personKey, samePerson, parseTopics, matchesPerson: mp } = await import('../server/scope.js');
+  assert.equal(personKey('นูร-อัสนีรา หะยียูโซ๊ะ'), 'อัสนีรา');
+  assert.ok(samePerson('นีรา-อัสนีรา', 'นูร-อัสนีรา หะยียูโซ๊ะ'));
+  assert.ok(samePerson('จอม-จอมพล', 'จอมพล สุวรรณวัฒน์'));
+  assert.ok(!samePerson('รัชดา กาญจนาทิพย์', 'ปอนด์-รัชชานนท์'));
+  assert.ok(mp('นายจอมพล สุวรรณวัฒน์', 'จอมพล สุวรรณวัฒน์'));
+  assert.ok(mp('จอมพล\nกัญญ์ณพัชญ์', 'กัญญ์ณพัชญ์ อัศวมิ่งขวัญ'));
+  assert.deepEqual(parseTopics('3.1 - 3.5'), ['3.1', '3.2', '3.3', '3.4', '3.5']);
+  assert.deepEqual(parseTopics('1.1, 1.2, 1.5, 2.2, 2.4'), ['1.1', '1.2', '1.5', '2.2', '2.4']);
+  assert.deepEqual(parseTopics('4.1 - 4.2'), ['4.1', '4.2']);
+  assert.deepEqual(parseTopics(''), []);
+});
+
+test('parseRoles: "Staff, Admin" = สายงาน Staff + สิทธิ์ตั้งค่าระบบ', async () => {
+  const { parseRoles } = await import('../server/auth.js');
+  assert.deepEqual(parseRoles('Staff, Admin'), { role: 'Staff', admin: true });
+  assert.deepEqual(parseRoles('Admin'), { role: 'Admin', admin: true });
+  assert.deepEqual(parseRoles('Manager'), { role: 'Manager', admin: false });
+  assert.deepEqual(parseRoles(''), { role: 'Staff', admin: false });
+});
+
+test('parsePlanSheet: ชีต Actionplan ข้อ N (หัวข้อ → แผน/ผล รายเดือน)', async () => {
+  const { parsePlanSheet } = await import('../server/sipoc.js');
+  const M = ['ต.ค.69', 'พ.ย.69', 'ธ.ค.69', 'ม.ค.70', 'ก.พ.70', 'มี.ค.70', 'เม.ย.70', 'พ.ค.70', 'มิ.ย.70', 'ก.ค.70', 'ส.ค.70', 'ก.ย.70'];
+  const row = (a, type, months = {}, resp = '') => [a, '', '', '', type, '', ...M.map((_, i) => months[i] || ''), resp];
+  const v = [
+    ['แผนปฏิบัติการกองบริหารความเสี่ยง ประจำปีงบประมาณ 2570'],
+    ['โครงการ/กิจกรรม', '', 'วัตถุประสงค์', 'เป้าหมาย/ตัวชี้วัด', '', 'ปริมาณงาน', ...M, 'ผู้รับผิดชอบ'],
+    ['1. ธรรมาภิบาลและวัฒนธรรมองค์กร'],
+    ['1.3 บรรยากาศและวัฒนธรรม'],
+    row('สำรวจทัศนคติ', 'แผน', { 0: '1', 6: '1' }, 'รัชชานนท์'),
+    row('', 'ผล', { 0: '1' }),
+    row('ประชุมคณะทำงาน', 'แผน', { 3: '1' }, 'กัญญ์ณพัชญ์  รัชดา'),
+    row('', 'ผล'),
+  ];
+  const p = parsePlanSheet(v, 'Actionplan ข้อ 1', '2026-11-15');
+  assert.equal(p.fiscalYear, 2570);
+  assert.equal(p.items.length, 2);
+  assert.equal(p.items[0].code, '1.3');
+  assert.deepEqual(p.items[0].plan.map(Number).slice(0, 7), [1, 0, 0, 0, 0, 0, 1]);
+  assert.equal(p.items[0].actual[0], true);
+  assert.deepEqual(p.items[1].resp, ['กัญญ์ณพัชญ์', 'รัชดา']);
+});

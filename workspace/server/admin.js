@@ -3,6 +3,7 @@ import { config, ROLES } from './config.js';
 import { readTable, appendObjects, updateObjects, ensureSheet, withLock, getValues } from './repo.js';
 import { loadStaffTable, staffFromRow, publicStaff, hashPassword } from './auth.js';
 import { httpError } from './drive.js';
+import { parseTopics } from './scope.js';
 
 const LINK_SHEET = 'External_Links';
 const LINK_HEADERS = ['id', 'name', 'description', 'url', 'category', 'icon', 'roles', 'order', 'active'];
@@ -62,7 +63,7 @@ export async function saveLink(input) {
 
 export async function adminStaff() {
   const t = await loadStaffTable(true);
-  return t.rows.map(r => ({ ...publicStaff(staffFromRow(r)), hasLine: !!r.LineUserID, passwordHashed: String(r.Password || '').startsWith('scrypt$') }))
+  return t.rows.map(r => ({ ...publicStaff(staffFromRow(r)), roleText: String(r.Role || 'Staff').trim(), hasLine: !!r.LineUserID, passwordHashed: String(r.Password || '').startsWith('scrypt$') }))
     .filter(s => s.name);
 }
 
@@ -70,10 +71,11 @@ export async function saveStaff(input, { isNew = false } = {}) {
   const name = String(input.name || '').trim();
   const id = String(input.employeeId || '').trim();
   if (!name || !/^[\w-]{1,20}$/.test(id)) throw httpError(400, 'กรุณาระบุชื่อ (ชื่อเล่น-ชื่อจริง) และรหัสพนักงาน');
-  if (input.role && !ROLES.includes(input.role)) throw httpError(400, 'บทบาทไม่ถูกต้อง');
+  if (input.role && !String(input.role).split(/\s*,\s*/).every(r => ROLES.includes(r))) throw httpError(400, 'บทบาทไม่ถูกต้อง');
+  const topics = v => (v === undefined ? undefined : parseTopics(v).join(', '));
   if (input.photoUrl && !validUrl(input.photoUrl)) throw httpError(400, 'URL รูปต้องขึ้นต้นด้วย https://');
   return withLock(config.tasksSpreadsheetId, async () => {
-    await ensureSheet(config.tasksSpreadsheetId, config.staffSheet, ['Active', 'FullName']);
+    await ensureSheet(config.tasksSpreadsheetId, config.staffSheet, ['Active', 'FullName', 'SIPOC (หัวข้อ)', 'SEAM (หัวข้อ)']);
     const t = await loadStaffTable(true);
     let row = t.rows.find(r => String(r.Employee_ID).trim() === id);
     if (isNew && row) throw httpError(400, 'รหัสพนักงานนี้มีอยู่แล้ว');
@@ -84,6 +86,8 @@ export async function saveStaff(input, { isNew = false } = {}) {
       ReportsTo: input.reportsTo ?? row.ReportsTo ?? '', JobTitle: input.jobTitle ?? row.JobTitle ?? '',
       PhotoURL: input.photoUrl ?? row.PhotoURL ?? '', Active: input.active === false ? 'FALSE' : 'TRUE',
       FullName: input.fullName ?? row.FullName ?? '',
+      'SIPOC (หัวข้อ)': topics(input.sipocTopics) ?? row['SIPOC (หัวข้อ)'] ?? '',
+      'SEAM (หัวข้อ)': topics(input.seamTopics) ?? row['SEAM (หัวข้อ)'] ?? '',
     });
     if (input.lineUserId !== undefined) row.LineUserID = String(input.lineUserId).trim();
     if (input.password) {
@@ -99,7 +103,7 @@ export async function health() {
   const checks = [
     ['สเปรดชีตงาน · ' + config.tasksSheet, config.tasksSpreadsheetId, config.tasksSheet],
     ['สเปรดชีตงาน · ' + config.staffSheet, config.tasksSpreadsheetId, config.staffSheet],
-    ['แผนปฏิบัติการ · ' + config.planSheet, config.planSpreadsheetId, config.planSheet],
+    ...config.planSheets.map(sh => ['แผนปฏิบัติการ · ' + sh, config.planSpreadsheetId, sh]),
     ['SIPOC · Tracking', config.sipocSpreadsheetId, 'Tracking'],
     ['แบบฟอร์ม SEAM · ' + config.seamSheet, config.seamSpreadsheetId, config.seamSheet],
   ];

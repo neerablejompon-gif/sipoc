@@ -4,7 +4,7 @@
 โดเมนที่ผูกกับ Cloudflare และ `gcloud` / `wrangler` (Node.js) ในเครื่อง
 
 > **ก่อนเริ่ม:** สำรองสเปรดชีตทั้งสองไฟล์ (File → Make a copy) ระบบจะเพิ่มคอลัมน์ต่อท้าย `Tasks_DB 70` และสร้างชีตใหม่
-> (`Task_Log`, `External_Links`, `Reports_Log`, `SEAM_Owners`, `SEAM_Files`, `SEAM_Log`) และเขียนผลลงแบบฟอร์ม SEAM (ชีต RM) เฉพาะช่องข้อมูลนำเข้า แต่ไม่ลบหรือย้ายข้อมูลเดิม
+> (`Task_Log`, `External_Links`, `Reports_Log`, `SEAM_Files`, `SEAM_Log`) และเขียนผลลงแบบฟอร์ม SEAM (ชีต RM) เฉพาะช่องข้อมูลนำเข้า แต่ไม่ลบหรือย้ายข้อมูลเดิม
 > แนะนำทดสอบกับสำเนาก่อนโดยตั้ง `TASKS_SPREADSHEET_ID` / `SIPOC_SPREADSHEET_ID` เป็น id ของสำเนา
 
 ## 1. ทดลองในเครื่อง (ไม่ต้องเชื่อม Google)

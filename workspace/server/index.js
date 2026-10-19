@@ -4,7 +4,8 @@ import cookieParser from 'cookie-parser';
 import multer from 'multer';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { config, isLead } from './config.js';
+import { config, isLead, isAdmin } from './config.js';
+import { canSeeTask, scopePlan, scopeSipoc } from './scope.js';
 import { useDriver, memoryDriver } from './repo.js';
 import { login, logout, requireAuth, requireRole, listStaff, publicStaff, setPassword, verifyPassword, loadStaffTable } from './auth.js';
 import { uploadFile, streamFile, useDemoDrive, httpError } from './drive.js';
@@ -82,7 +83,7 @@ export async function createApp() {
       user: publicStaff(req.user), today: todayISO(), fiscalYear: config.tasksFiscalYear, demo: config.driver === 'demo',
       staff: staff.filter(s => s.active).map(publicStaff),
       enums: { priorities: tasks.PRIORITIES, urgencies: tasks.URGENCIES, categories: tasks.CATEGORIES },
-      can: { approve: ['Manager', 'Director', 'Admin'].includes(req.user.role), team: isLead(req.user), admin: ['Admin', 'Director'].includes(req.user.role) },
+      can: { approve: ['Manager', 'Director', 'Admin'].includes(req.user.role), team: isLead(req.user), admin: isAdmin(req.user), all: isLead(req.user) },
     });
   }));
   api.post('/me/password', h(async (req, res) => {
@@ -94,12 +95,14 @@ export async function createApp() {
   }));
 
   // ---------------------------------------------------------------- งาน
+  // Staff เห็นเฉพาะงานที่ตนเองรับผิดชอบหรือมอบหมาย (กรองที่ server)
+  const myTasks = async (req, opts) => (await tasks.listTasks(opts)).filter(t => canSeeTask(req.user, t));
   api.get('/tasks', h(async (req, res) => {
-    const all = await tasks.listTasks();
+    const all = await myTasks(req);
     ok(res, { tasks: all, summary: tasks.summarize(all.filter(t => !t.readonly)) });
   }));
   api.get('/tasks/:id', h(async (req, res) => {
-    const t = (await tasks.listTasks()).find(x => x.id === req.params.id);
+    const t = (await myTasks(req)).find(x => x.id === req.params.id);
     if (!t) throw httpError(404, 'ไม่พบงาน');
     ok(res, { task: t, log: await tasks.readLog(t.id) });
   }));
@@ -130,8 +133,8 @@ export async function createApp() {
   // ---------------------------------------------------------------- แผนปฏิบัติการ & SIPOC
   api.get('/plan', h(async (req, res) => {
     const [plan, sp] = await Promise.all([
-      sipoc.getActionPlan().catch(e => ({ error: e.message, items: [] })),
-      sipoc.getSipoc().catch(e => ({ error: e.message, topics: [] })),
+      sipoc.getActionPlan().then(p => scopePlan(req.user, p)).catch(e => ({ error: e.message, items: [] })),
+      sipoc.getSipoc().then(s => scopeSipoc(req.user, s)).catch(e => ({ error: e.message, topics: [] })),
     ]);
     (sp.topics || []).forEach(t => t.activities.forEach(a => { a.canEdit = sipoc.canEditActivity(req.user, a); }));
     ok(res, { plan, sipoc: sp });
@@ -150,7 +153,8 @@ export async function createApp() {
   api.get('/dashboard', h(async (req, res) => {
     const safe = p => p.then(data => ({ ok: true, data })).catch(e => ({ ok: false, message: e.message }));
     const [t, plan, s, cbe] = await Promise.all([
-      safe(tasks.listTasks()), safe(sipoc.getActionPlan()), safe(sipoc.getSipoc()), safe(seam.getSeam(req.user)),
+      safe(myTasks(req)), safe(sipoc.getActionPlan().then(p => scopePlan(req.user, p))),
+      safe(sipoc.getSipoc().then(s => scopeSipoc(req.user, s))), safe(seam.getSeam(req.user)),
     ]);
     if (t.ok) t.data = { tasks: t.data.filter(x => !x.readonly), archive: t.data.filter(x => x.readonly).length };
     ok(res, { tasks: t, plan, sipoc: s, cbe });
@@ -167,8 +171,6 @@ export async function createApp() {
     const files = await uploadAll(req, config.seamFolderId, `SE-AM ${input.topicId}`);
     ok(res, await seam.saveSeam(req.user, input, files));
   }));
-  api.post('/seam/owners', requireRole('Admin', 'Director'), h(async (req, res) =>
-    ok(res, await seam.setSeamOwners(req.body.topicId, req.body.owners || []))));
 
   // ---------------------------------------------------------------- รายงาน ทม.13
   const reportTarget = async (name) => {
@@ -211,7 +213,9 @@ export async function createApp() {
   }));
 
   // ---------------------------------------------------------------- Team Performance
-  api.get('/team', requireRole('Manager', 'Director', 'Admin'), h(async (req, res) => {
+  // ผลประเมินรายบุคคล: เฉพาะหผ./หก./Admin (Staff ที่มีสิทธิ์ Admin ร่วมไม่เห็นผลประเมินเพื่อนร่วมงาน)
+  api.get('/team', h(async (req, res) => {
+    if (!isLead(req.user)) throw httpError(403, 'เฉพาะหัวหน้าแผนก/หัวหน้ากอง');
     const month = /^\d{4}-\d{2}$/.test(req.query.month || '') ? req.query.month : todayISO().slice(0, 7);
     ok(res, await teamPerformance(month, req.user));
   }));

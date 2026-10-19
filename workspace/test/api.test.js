@@ -89,11 +89,13 @@ test('ทั้งเส้นทาง: มอบหมาย → ส่งง�
   assert.ok(act.result.includes(id));
   assert.ok(act.attachments.some(a => a.name === 'หลักฐาน.pdf'));
 
-  // ไฟล์ที่อ้างอิงในระบบดาวน์โหลดได้ ไฟล์อื่นไม่ได้
+  // ไฟล์ที่อ้างอิงในระบบดาวน์โหลดได้เฉพาะผู้มีสิทธิ์ ไฟล์อื่นไม่ได้
   const fileId = sub.data.attachments[0].fileId;
-  const dl = await fetch(`${base}/files/${fileId}?download=1`, { headers: { Cookie: (await login('1004')).cookie } });
+  const dl = await fetch(`${base}/files/${fileId}?download=1`, { headers: { Cookie: (await login('1003')).cookie } });
   assert.equal(dl.status, 200);
   assert.match(dl.headers.get('content-disposition'), /^attachment/);
+  const other = await fetch(`${base}/files/${fileId}?download=1`, { headers: { Cookie: (await login('1004')).cookie } });
+  assert.equal(other.status, 404, 'Staff คนอื่นเปิดไฟล์งานที่ไม่ใช่ของตนเองไม่ได้');
   assert.equal((await staff.get('/files/not-a-real-file')).status, 404);
 });
 
@@ -111,8 +113,9 @@ test('สิทธิ์ตามบทบาท: Team Performance / ตั้�
 });
 
 test('SEAM: เขียนลงแบบฟอร์ม RM เฉพาะหัวข้อที่รับผิดชอบ และตรวจข้อมูลชนกัน', async () => {
-  const staff = client((await login('1005')).cookie);
-  const admin = client((await login('1000')).cookie);
+  const staff = client((await login('1005')).cookie); // SEAM 3.1–3.5 ตาม Staff_List
+  const outsider = client((await login('1004')).cookie); // SEAM 4.1–4.2
+  assert.ok(!(await outsider.get('/seam')).data.subs.some(s => s.id === '3.1'), 'ไม่เห็นหัวข้อที่ไม่ได้รับผิดชอบ');
   const view0 = await staff.get('/seam');
   const sub = view0.data.subs.find(s => s.id === '3.1');
   assert.ok(sub.applicable && sub.levels.length === 5);
@@ -126,8 +129,7 @@ test('SEAM: เขียนลงแบบฟอร์ม RM เฉพาะห�
     f.append('files', new Blob(['%PDF-1.4 x'], { type: 'application/pdf' }), 'หลักฐานระดับ3.pdf');
     return f;
   };
-  assert.equal((await staff.form('/seam', body())).status, 403);
-  assert.equal((await admin.post('/seam/owners', { topicId: '3.1', owners: ['แพร-แพรวา'] })).ok, true);
+  assert.equal((await outsider.form('/seam', body())).status, 403);
   const saved = await staff.form('/seam', body());
   assert.equal(saved.ok, true, saved.message);
   const after = (await staff.get('/seam')).data.subs.find(s => s.id === '3.1');
@@ -165,4 +167,32 @@ test('ทม.13: ใช้แบบฟอร์มของกอง เติ�
   assert.equal(pdf.status, 400, 'โหมด demo ไม่มี Drive สำหรับแปลง PDF');
   const other = await fetch(`${base}/reports/tm13?month=2026-10&user=${encodeURIComponent('ต้น-ธนากร')}`, { headers: { Cookie: cookie } });
   assert.equal(other.status, 403);
+});
+
+test('ขอบเขตข้อมูลตาม Staff_List: Staff เห็นเฉพาะงานและหัวข้อของตนเอง', async () => {
+  const staff = client((await login('1004')).cookie); // ต้น: หัวข้อ 4.1–4.2
+  const mgr = client((await login('1002')).cookie);
+  const mine = await staff.get('/tasks');
+  assert.ok(mine.data.tasks.length > 0 && mine.data.tasks.every(t => t.assignee === 'ต้น-ธนากร' || t.assignedBy === 'ต้น-ธนากร'));
+  assert.ok((await mgr.get('/tasks')).data.tasks.some(t => t.assignee !== 'ต้น-ธนากร'), 'หผ. เห็นงานทุกคน');
+  const other = (await mgr.get('/tasks')).data.tasks.find(t => t.assignee === 'มิ้นท์-มินตรา');
+  assert.equal((await staff.get('/tasks/' + encodeURIComponent(other.id))).status, 404);
+  const plan = await staff.get('/plan');
+  assert.deepEqual([...new Set(plan.data.sipoc.topics.map(t => t.id))].sort(), ['4.1', '4.2'].filter(id => plan.data.sipoc.topics.some(t => t.id === id)));
+  assert.ok(plan.data.sipoc.topics.every(t => ['4.1', '4.2'].includes(t.id)));
+  assert.ok(plan.data.plan.items.every(i => !/^\d+\.\d+/.test(i.code) || ['4.1', '4.2'].includes(i.code.match(/^\d+\.\d+/)[0])));
+  const dash = await staff.get('/dashboard');
+  assert.ok(dash.data.tasks.data.tasks.every(t => t.assignee === 'ต้น-ธนากร' || t.assignedBy === 'ต้น-ธนากร'));
+});
+
+test('บทบาท "Staff, Admin": ตั้งค่าระบบได้ แต่ขอบเขตข้อมูลและการอนุมัติเป็นแบบ Staff', async () => {
+  const jom = client((await login('1006')).cookie);
+  const me = await jom.get('/me');
+  assert.equal(me.data.user.role, 'Staff');
+  assert.equal(me.data.can.admin, true);
+  assert.equal(me.data.can.approve, false);
+  assert.equal((await jom.get('/admin/staff')).status, 200);
+  assert.equal((await jom.get('/approvals')).status, 403);
+  assert.equal((await jom.get('/team')).status, 403);
+  assert.ok((await jom.get('/tasks')).data.tasks.every(t => t.assignee === 'เก่ง-เก่งกาจ' || t.assignedBy === 'เก่ง-เก่งกาจ'));
 });

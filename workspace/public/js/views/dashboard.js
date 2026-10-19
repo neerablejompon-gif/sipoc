@@ -168,7 +168,7 @@ function build(d, app, tab) {
     ],
     plan, act, cur, watch, watchHref: '#/plan',
     chartTitle: `${isGrc ? 'กิจกรรมตามแผนปฏิบัติการ GRC' : 'กิจกรรมเสริมสร้างวัฒนธรรม'} สะสม · ปีงบประมาณ ${fy}`,
-    source: isGrc ? 'ActionPlanDATA · แผนปฏิบัติการฯ (GRC)' : 'ActionPlanDATA + SIPOC (หัวข้อวัฒนธรรม/ค่านิยม/การสื่อสาร)',
+    source: isGrc ? 'Actionplan ข้อ 1–5 · แผนปฏิบัติการฯ (GRC)' : 'Actionplan + SIPOC (หัวข้อวัฒนธรรม/ค่านิยม/การสื่อสาร)',
     subtitle: `${isGrc ? 'แผนปฏิบัติการ GRC' : 'กิจกรรม Risk Culture'} ดำเนินการแล้ว ${pct(c.done, c.total)}% · ล่าช้า ${c.late} กิจกรรม`,
     extra: `<div class="glass panel"><div class="panel-head"><h2>รายการกิจกรรม</h2>${legend()}</div><div id="db-gantt">${gantt(rows)}</div></div>`,
     ganttRows: rows,

@@ -24,9 +24,10 @@ export const config = {
   }),
   staffSheet: env('STAFF_SHEET', 'Staff_List'),
 
-  // แผนปฏิบัติการ (GRC) — ค่าเริ่มต้นคือชีต ActionPlanDATA ในสเปรดชีตงาน เปลี่ยนเป็นฐานข้อมูลระบบ GRC ได้
+  // แผนปฏิบัติการปีงบ 2570 — ชีต "Actionplan ข้อ 1–5 / ประชุม / อบรม" ในสเปรดชีตงาน (คั่นด้วย ,)
+  // ชีตรูปแบบเดิม (ActionPlanDATA: คอลัมน์ กิจกรรม + แผน/ผล) ยังอ่านได้ถ้าใส่ไว้ในรายการ
   planSpreadsheetId: env('PLAN_SPREADSHEET_ID', ''),
-  planSheet: env('PLAN_SHEET', 'ActionPlanDATA'),
+  planSheets: list(env('PLAN_SHEETS', env('PLAN_SHEET', 'Actionplan ข้อ 1,Actionplan ข้อ 2,Actionplan ข้อ 3,Actionplan ข้อ 4,Actionplan ข้อ 5,Actionplan ประชุม,Actionplan อบรม'))),
 
   // สเปรดชีต SIPOC
   sipocSpreadsheetId: env('SIPOC_SPREADSHEET_ID', '1YbHYhCH6ZPkPT6Fu1EhFjrfhlou6ryHksvpwDzNww1A'),
@@ -64,3 +65,5 @@ config.sipocFolderId = process.env.SIPOC_FOLDER_ID || config.attachmentFolderId;
 export const ROLES = ['Staff', 'Manager', 'Director', 'Admin'];
 export const isLead = u => ['Manager', 'Director', 'Admin'].includes(u.role);
 export const isApprover = u => ['Manager', 'Director'].includes(u.role) || u.role === 'Admin';
+/** สิทธิ์ตั้งค่าระบบ: บทบาท Admin / Director หรือ Staff ที่มี Admin ร่วม (Role "Staff, Admin") */
+export const isAdmin = u => ['Admin', 'Director'].includes(u.role) || !!u.admin;

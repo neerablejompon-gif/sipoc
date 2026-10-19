@@ -4,6 +4,7 @@ import { config } from './config.js';
 import { readTable, appendObjects, updateObjects, ensureSheet, withLock } from './repo.js';
 import { parseAnyDate, toISODate, isoOf, todayISO, nowISO, legacyStamp, legacyDate, fiscalYearBE } from './dates.js';
 import { listStaff } from './auth.js';
+import { samePerson } from './scope.js';
 import { httpError } from './drive.js';
 import { notify } from './notify.js';
 
@@ -118,6 +119,10 @@ export async function listTasks({ includeArchive = true } = {}) {
       out.push(taskFromRow(r, src, today));
     }
   }
+  // ชื่อผู้รับงาน/ผู้มอบหมายในชีตปีก่อนเป็นรูปแบบ "ชื่อเล่น-ชื่อจริง" → ใช้ชื่อตาม Staff_List เพื่อให้กรอง/อนุมัติตรงคน
+  const staff = await listStaff();
+  const canon = n => (n && staff.find(s => samePerson(s.name, n))?.name) || n;
+  out.forEach(t => { t.assignee = canon(t.assignee); t.assignedBy = canon(t.assignedBy); });
   return out;
 }
 

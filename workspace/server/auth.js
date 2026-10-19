@@ -3,6 +3,7 @@
 import crypto from 'node:crypto';
 import { config } from './config.js';
 import { readTable, updateObjects, withLock } from './repo.js';
+import { parseTopics, samePerson } from './scope.js';
 
 const COOKIE = 'rmic_session';
 
@@ -12,15 +13,28 @@ export async function loadStaffTable(fresh = false) {
   return readTable(config.tasksSpreadsheetId, config.staffSheet, { fresh });
 }
 
+// Role อาจมีหลายบทบาท เช่น "Staff, Admin" → role = บทบาทในสายงาน (อนุมัติ/ขอบเขตข้อมูล), admin = ตั้งค่าระบบได้
+const ROLE_ORDER = ['Director', 'Manager', 'Staff', 'Admin'];
+export function parseRoles(text) {
+  const roles = String(text || '').split(/[,&/+]|\s+/).map(s => s.trim()).filter(Boolean)
+    .map(s => ROLE_ORDER.find(r => r.toLowerCase() === s.toLowerCase())).filter(Boolean);
+  const role = ROLE_ORDER.find(r => roles.includes(r)) || 'Staff';
+  return { role, admin: roles.includes('Admin') };
+}
+
 export function staffFromRow(r) {
   const active = String(r.Active ?? '').trim().toUpperCase();
   return {
+    ...parseRoles(r.Role),
+    // หัวข้อที่รับผิดชอบตาม Staff_List — ใช้กำหนดสิ่งที่ Staff มองเห็น/แก้ไขได้
+    sipocTopics: parseTopics(r['SIPOC (หัวข้อ)']),
+    seamTopics: parseTopics(r['SEAM (หัวข้อ)']),
+    topicRole: String(r['Role:SIPOC & SEAM'] || '').trim(),
     name: String(r.Nickname || '').trim(),
     employeeId: String(r.Employee_ID || '').trim(),
     email: String(r.Email || '').trim(),
     photoUrl: r.PhotoURL || '',
     lineUserId: r.LineUserID || '',
-    role: String(r.Role || 'Staff').trim() || 'Staff',
     department: String(r.Department || '').trim(),
     reportsTo: String(r.ReportsTo || '').trim(),
     jobTitle: String(r.JobTitle || r.Position || '').trim(),
@@ -31,12 +45,16 @@ export function staffFromRow(r) {
 
 export async function listStaff() {
   const t = await loadStaffTable();
-  return t.rows.map(staffFromRow).filter(s => s.name && s.employeeId);
+  const list = t.rows.map(staffFromRow).filter(s => s.name && s.employeeId);
+  // ReportsTo อาจเป็นรูปแบบเดิม "โบว์-พริมารัศม์" → ใช้ชื่อตาม Staff_List
+  list.forEach(s => { s.reportsTo = (s.reportsTo && list.find(x => samePerson(x.name, s.reportsTo))?.name) || s.reportsTo; });
+  return list;
 }
 
 /** ข้อมูลที่ส่งให้ frontend ได้ (ไม่มีอีเมล / LINE ID / รหัสผ่าน) */
 export const publicStaff = s => ({
-  name: s.name, employeeId: s.employeeId, photoUrl: s.photoUrl, role: s.role,
+  name: s.name, employeeId: s.employeeId, photoUrl: s.photoUrl, role: s.role, admin: s.admin,
+  sipocTopics: s.sipocTopics, seamTopics: s.seamTopics, topicRole: s.topicRole,
   department: s.department, reportsTo: s.reportsTo, jobTitle: s.jobTitle, fullName: s.fullName, active: s.active,
 });
 
@@ -136,7 +154,7 @@ export async function requireAuth(req, res, next) {
 }
 
 export const requireRole = (...roles) => (req, res, next) =>
-  (roles.includes(req.user.role) ? next()
+  (roles.includes(req.user.role) || (req.user.admin && roles.includes('Admin')) ? next()
     : res.status(403).json({ ok: false, code: 'FORBIDDEN', message: 'บัญชีนี้ไม่มีสิทธิ์ใช้งานส่วนนี้' }));
 
 /** เปลี่ยนรหัสผ่าน (ตนเอง หรือ Admin ตั้งให้ผู้อื่น) — เก็บเป็น hash เสมอ */

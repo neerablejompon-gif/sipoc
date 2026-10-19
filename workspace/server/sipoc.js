@@ -1,23 +1,14 @@
-// แผนปฏิบัติการของ กบค. (ActionPlanDATA) และกิจกรรม SIPOC (สเปรดชีต SIPOC)
+// แผนปฏิบัติการของ กบค. (ชีต Actionplan ข้อ 1–5 / ประชุม / อบรม หรือ ActionPlanDATA) และกิจกรรม SIPOC (สเปรดชีต SIPOC)
 // พอร์ต logic จาก Code.gs ของระบบ SIPOC: Tracking แถวละกิจกรรม, เดือนเก็บเป็น "0,3,9" (0 = ต.ค.), ทุกการแก้ไขลง Log
 import { config } from './config.js';
 import { readTable, getValues, appendObjects, updateObjects, ensureSheet, listSheets, withLock, headerKey } from './repo.js';
 import { todayISO, nowISO, fiscalMonthIndex, fiscalYearBE, toISODate, parseAnyDate, thaiLongDate } from './dates.js';
 import { httpError } from './drive.js';
+import { matchesPerson, topicOf } from './scope.js';
 
 // ---------------------------------------------------------------- จับคู่ชื่อผู้รับผิดชอบ
 
-/**
- * ข้อความผู้รับผิดชอบ (เช่น "โบว์-พริมารัศม์, จอม-จอมพล" หรือ "นายจอมพล สุวรรณวัฒน์") มีชื่อพนักงานคนนี้หรือไม่
- * staff.name รูปแบบ "ชื่อเล่น-ชื่อจริง"
- */
-export function matchesPerson(text, staffName) {
-  const t = String(text || '');
-  if (!t || !staffName) return false;
-  if (t.split(/[,،\n]/).map(s => s.trim()).includes(staffName)) return true;
-  const real = String(staffName).split('-').slice(1).join('-').trim();
-  return real.length >= 3 && t.includes(real);
-}
+export { matchesPerson };
 
 // ---------------------------------------------------------------- สถานะตามเดือน
 
@@ -111,9 +102,63 @@ export function parseActionPlan(values, today = todayISO()) {
   return { title: String(title).trim(), fiscalYear, cursor, items };
 }
 
+const MONTH_HEAD = /^(ต\.ค|พ\.ย|ธ\.ค|ม\.ค|ก\.พ|มี\.ค|เม\.ย|พ\.ค|มิ\.ย|ก\.ค|ส\.ค|ก\.ย)\./;
+
+/**
+ * ชีตแผนรูปแบบ "Actionplan ข้อ N": แถวหัวมี "ผู้รับผิดชอบ" และเดือน "ต.ค.69 … ก.ย.70"
+ * แถวหัวข้อ "1.1 …" → แถวกิจกรรมที่มีคำว่า "แผน" → แถวถัดไป "ผล" · ชีตที่ไม่มีหัวข้อ (ประชุม/อบรม) ได้ code ว่าง
+ */
+export function parsePlanSheet(values, sheet = '', today = todayISO()) {
+  const hi = values.findIndex(r => r.some(c => headerKey(c) === 'ผู้รับผิดชอบ') && r.some(c => MONTH_HEAD.test(headerKey(c))));
+  if (hi < 0) throw new Error(`ชีต ${sheet}: ไม่พบแถวหัวตาราง (ผู้รับผิดชอบ / ต.ค.)`);
+  const head = values[hi].map(headerKey);
+  const mStart = head.findIndex(h => MONTH_HEAD.test(h));
+  const cResp = head.indexOf('ผู้รับผิดชอบ');
+  const cResult = head.findIndex(h => h.startsWith('ผลการดำเนินงาน'));
+  const cQty = head.indexOf('ปริมาณงาน');
+  const yy = String(head[mStart + 11] || '').match(/(\d{2})$/);
+  const fiscalYear = yy ? 2500 + Number(yy[1]) : fiscalYearBE(today);
+  const cursor = cursorFor(fiscalYear, today);
+  const items = [];
+  let group = '', topic = '', last = null;
+  for (let i = hi + 1; i < values.length; i++) {
+    const r = values[i];
+    const first = String(r[0] || '').trim();
+    const type = r.slice(0, mStart).map(c => String(c ?? '').trim()).find(c => c === 'แผน' || c === 'ผล');
+    if (!type && /^\d+\.\d*\s/.test(first)) { // หัวข้อหลัก "1. …" หรือหัวข้อย่อย "1.1 …"
+      topic = topicOf(first);
+      group = first.split('\n')[0];
+      continue;
+    }
+    if (type === 'แผน' && first) {
+      last = { id: `AP-${sheet.replace(/\s+/g, '')}-${items.length + 1}`, code: topic, name: first.replace(/\s+/g, ' '), group, sheet,
+        resp: String(r[cResp] || '').split(/[,\n]|\s{2,}/).map(s => s.trim()).filter(Boolean),
+        qty: cQty >= 0 ? String(r[cQty] || '').trim() : '', plan: Array(12).fill(false), actual: Array(12).fill(false),
+        detail: '', reason: '', attachment: '', source: 'plan', row: i + 1 };
+      for (let m = 0; m < 12; m++) last.plan[m] = !!String(r[mStart + m] ?? '').trim() && String(r[mStart + m]).trim() !== '0';
+      items.push(last);
+    } else if (type === 'ผล' && last) {
+      for (let m = 0; m < 12; m++) last.actual[m] = !!String(r[mStart + m] ?? '').trim() && String(r[mStart + m]).trim() !== '0';
+      if (cResult >= 0 && r[cResult]) last.detail = String(r[cResult]);
+      last = null;
+    }
+  }
+  items.forEach(it => { it.status = activityStatus(it.plan, it.actual, cursor); it.cells = monthCells(it.plan, it.actual, cursor); });
+  return { title: String((values[0] || []).find(Boolean) || 'แผนปฏิบัติการ').trim(), fiscalYear, cursor, items };
+}
+
+/** รวมทุกชีตแผนใน PLAN_SHEETS (ชีตที่ไม่มีข้ามได้) · ชีตรูปแบบเดิม (แผน/ผล + กิจกรรม) ใช้ parseActionPlan */
 export async function getActionPlan() {
-  const values = await getValues(config.planSpreadsheetId, config.planSheet);
-  return parseActionPlan(values);
+  const parts = [];
+  let lastErr;
+  for (const sheet of config.planSheets) {
+    let values;
+    try { values = await getValues(config.planSpreadsheetId, sheet); } catch (e) { lastErr = e; continue; }
+    const legacy = values.some(r => r.some(c => headerKey(c) === 'แผน/ผล'));
+    parts.push(legacy ? parseActionPlan(values) : parsePlanSheet(values, sheet));
+  }
+  if (!parts.length) throw lastErr || new Error('ไม่พบชีตแผนปฏิบัติการ');
+  return { title: parts[0].title, fiscalYear: parts[0].fiscalYear, cursor: parts[0].cursor, items: parts.flatMap(p => p.items) };
 }
 
 // ---------------------------------------------------------------- SIPOC
@@ -216,7 +261,9 @@ async function sipocLog(actor, action, activityId, detail) {
 }
 
 /** ผู้ใช้แก้ข้อมูลติดตามกิจกรรมนี้ได้หรือไม่: หัวหน้า/แอดมิน หรือเจ้าของกิจกรรม */
-export const canEditActivity = (user, act) => ['Manager', 'Director', 'Admin'].includes(user.role) || matchesPerson(act.owner, user.name);
+/** แก้ไขได้: หผ./หก./Admin หรือ Staff ที่หัวข้อนี้อยู่ใน "SIPOC (หัวข้อ)" ของ Staff_List */
+export const canEditActivity = (user, act) => ['Manager', 'Director', 'Admin'].includes(user.role)
+  || (user.sipocTopics || []).includes(String(act.topicId || topicOf(act.id)));
 
 /** บันทึกข้อมูลติดตามกิจกรรม SIPOC (optimistic concurrency ด้วย updatedAt) */
 export async function saveActivity(user, id, fields, expectedUpdatedAt) {

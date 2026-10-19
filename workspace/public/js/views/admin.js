@@ -1,9 +1,9 @@
-// ตั้งค่าระบบ (Admin / หัวหน้ากอง): ผู้ใช้งาน, ลิงก์ระบบภายนอก, ผู้รับผิดชอบหัวข้อ SEAM, การเชื่อมต่อข้อมูล
+// ตั้งค่าระบบ (Admin / หัวหน้ากอง / Staff ที่มีสิทธิ์ Admin): ผู้ใช้งาน, ลิงก์ระบบภายนอก, ผู้รับผิดชอบหัวข้อ SEAM (อ่านจาก Staff_List), การเชื่อมต่อข้อมูล
 import { api } from '../api.js';
 import { $, $$, esc, icon, errorBox, modal, toast, avatar } from '../ui.js';
 
-const ROLES = ['Staff', 'Manager', 'Director', 'Admin'];
-const ROLE_TH = { Staff: 'ผู้ปฏิบัติงาน', Manager: 'หัวหน้าแผนก', Director: 'หัวหน้ากอง', Admin: 'ผู้ดูแลระบบ' };
+const ROLES = ['Staff', 'Staff, Admin', 'Manager', 'Director', 'Admin'];
+const ROLE_TH = { Staff: 'ผู้ปฏิบัติงาน', 'Staff, Admin': 'ผู้ปฏิบัติงาน + ผู้ดูแลระบบ', Manager: 'หัวหน้าแผนก', Director: 'หัวหน้ากอง', Admin: 'ผู้ดูแลระบบ' };
 const state = { tab: 'users' };
 
 export async function render(el, ctx) {
@@ -22,9 +22,9 @@ export async function render(el, ctx) {
 async function users(body, { app }, reload) {
   const list = await api.get('/admin/staff');
   body.innerHTML = `<div class="panel-head"><h3>${icon('group')}ผู้ใช้งาน (ชีต Staff_List)</h3><button class="btn primary sm" id="u-add">${icon('person_add')}เพิ่มผู้ใช้</button></div>
-    <div class="table-wrap"><table class="t"><thead><tr><th>ชื่อ</th><th>รหัส</th><th>บทบาท</th><th>แผนก</th><th>หัวหน้า</th><th>ตำแหน่ง</th><th>LINE</th><th>รหัสผ่าน</th><th>สถานะ</th><th></th></tr></thead>
+    <div class="table-wrap"><table class="t"><thead><tr><th>ชื่อ</th><th>รหัส</th><th>บทบาท</th><th>หัวข้อ SIPOC / SEAM</th><th>แผนก</th><th>หัวหน้า</th><th>ตำแหน่ง</th><th>LINE</th><th>รหัสผ่าน</th><th>สถานะ</th><th></th></tr></thead>
     <tbody>${list.map((s, i) => `<tr><td><div class="row" style="gap:8px;flex-wrap:nowrap">${avatar(s, 'sm')}<b>${esc(s.name)}</b></div></td><td class="num">${esc(s.employeeId)}</td>
-      <td>${esc(ROLE_TH[s.role] || s.role)}</td><td class="small">${esc(s.department)}</td><td class="small">${esc(s.reportsTo)}</td><td class="small">${esc(s.jobTitle)}</td>
+      <td>${esc(ROLE_TH[s.roleText] || s.roleText)}</td><td class="small">${esc(s.sipocTopics.join(', ') || '-')}${s.seamTopics.join() !== s.sipocTopics.join() ? ` / ${esc(s.seamTopics.join(', ') || '-')}` : ''}</td><td class="small">${esc(s.department)}</td><td class="small">${esc(s.reportsTo)}</td><td class="small">${esc(s.jobTitle)}</td>
       <td>${s.hasLine ? '<span class="badge b-green">เชื่อมแล้ว</span>' : '<span class="badge b-gray">-</span>'}</td>
       <td>${s.passwordHashed ? '<span class="badge b-green">เข้ารหัสแล้ว</span>' : '<span class="badge b-amber">ข้อความธรรมดา</span>'}</td>
       <td>${s.active ? '<span class="badge b-blue">ใช้งาน</span>' : '<span class="badge b-gray">ระงับ</span>'}</td>
@@ -32,13 +32,15 @@ async function users(body, { app }, reload) {
     <p class="hint">แนะนำ: ตั้งรหัสผ่านใหม่ให้ทุกคน (ระบบจะเก็บเป็นค่า hash) และให้แต่ละคนเปลี่ยนรหัสผ่านเองจากเมนูบัญชีผู้ใช้</p>`;
   const open = (s, isNew) => {
     const m = modal({ title: isNew ? 'เพิ่มผู้ใช้' : `แก้ไข ${esc(s.name)}`, body: `<div class="form-grid">
-      <label class="field">ชื่อ (ชื่อเล่น-ชื่อจริง) *<input class="input" id="u-name" value="${esc(s.name || '')}"></label>
+      <label class="field">ชื่อ-นามสกุล (ตาม Staff_List) *<input class="input" id="u-name" value="${esc(s.name || '')}"></label>
       <label class="field">รหัสพนักงาน *<input class="input" id="u-id" value="${esc(s.employeeId || '')}" ${isNew ? '' : 'disabled'}></label>
-      <label class="field">บทบาท<select class="input" id="u-role">${ROLES.map(r => `<option value="${r}" ${s.role === r ? 'selected' : ''}>${ROLE_TH[r]}</option>`).join('')}</select></label>
+      <label class="field">บทบาท<select class="input" id="u-role">${ROLES.map(r => `<option value="${r}" ${(s.roleText || s.role) === r ? 'selected' : ''}>${ROLE_TH[r]}</option>`).join('')}</select></label>
       <label class="field">แผนก<input class="input" id="u-dep" value="${esc(s.department || '')}" list="u-deps"><datalist id="u-deps"><option>Risk Management</option><option>Internal Control</option></datalist></label>
       <label class="field">หัวหน้า (ReportsTo)<select class="input" id="u-rep"><option value="">-</option>${list.filter(x => ['Manager', 'Director'].includes(x.role)).map(x => `<option ${x.name === s.reportsTo ? 'selected' : ''}>${esc(x.name)}</option>`).join('')}</select></label>
       <label class="field">ตำแหน่ง<input class="input" id="u-job" value="${esc(s.jobTitle || '')}"></label>
-      <label class="field full">ชื่อ-นามสกุล (ใช้ในรายงาน ทม.13)<input class="input" id="u-full" value="${esc(s.fullName || '')}" placeholder="เช่น นายสมชาย ใจดี"></label>
+      <label class="field">หัวข้อ SIPOC ที่รับผิดชอบ <span class="hint">เช่น 3.1 - 3.5 หรือ 1.1, 2.2</span><input class="input" id="u-sipoc" value="${esc((s.sipocTopics || []).join(', '))}"></label>
+      <label class="field">หัวข้อ SEAM ที่รับผิดชอบ<input class="input" id="u-seam" value="${esc((s.seamTopics || []).join(', '))}"></label>
+      <label class="field full">ชื่อ-นามสกุลพร้อมคำนำหน้า (ใช้ในรายงาน ทม.13)<input class="input" id="u-full" value="${esc(s.fullName || '')}" placeholder="เช่น นายสมชาย ใจดี"></label>
       <label class="field full">URL รูปโปรไฟล์ (https://)<input class="input" id="u-photo" value="${esc(s.photoUrl || '')}"></label>
       <label class="field">LINE User ID <span class="hint">เว้นว่าง = ไม่เปลี่ยน</span><input class="input" id="u-line" placeholder="U..."></label>
       <label class="field">ตั้งรหัสผ่านใหม่ <span class="hint">อย่างน้อย 8 ตัวอักษร</span><input class="input" id="u-pw" type="password" autocomplete="new-password"></label>
@@ -50,6 +52,7 @@ async function users(body, { app }, reload) {
       try {
         await api.post('/admin/staff', { isNew, name: $('#u-name', m.el).value.trim(), employeeId: $('#u-id', m.el).value.trim(), role: $('#u-role', m.el).value,
           department: $('#u-dep', m.el).value.trim(), reportsTo: $('#u-rep', m.el).value, jobTitle: $('#u-job', m.el).value.trim(), fullName: $('#u-full', m.el).value.trim(),
+          sipocTopics: $('#u-sipoc', m.el).value, seamTopics: $('#u-seam', m.el).value,
           photoUrl: $('#u-photo', m.el).value.trim(), active: $('#u-active', m.el).checked, password: $('#u-pw', m.el).value,
           ...(line ? { lineUserId: line } : {}) });
         toast('บันทึกผู้ใช้แล้ว'); m.close(); app.invalidate(); reload();
@@ -94,15 +97,12 @@ async function links(body, { app }, reload) {
 async function seamOwners(body, { app }) {
   const d = await app.load('seam', '/seam');
   const staff = app.me.staff;
-  body.innerHTML = `<div class="panel-head"><h3>${icon('workspace_premium')}ผู้รับผิดชอบหัวข้อ SEAM</h3><span class="sub">ผู้รับผิดชอบจะเห็นหัวข้อในเมนู SEAM และรายงานผลได้</span></div>
+  body.innerHTML = `<div class="panel-head"><h3>${icon('workspace_premium')}ผู้รับผิดชอบหัวข้อ SEAM</h3><span class="sub">กำหนดที่ชีต Staff_List คอลัมน์ "SEAM (หัวข้อ)" — แก้ไขได้ที่แท็บผู้ใช้งาน</span></div>
     <div class="table-wrap"><table class="t"><thead><tr><th>หัวข้อ</th><th>ผู้รับผิดชอบ</th></tr></thead><tbody>
     ${d.subs.filter(s => s.applicable).map(s => `<tr><td style="min-width:260px"><b>${esc(s.id)}</b> ${esc(String(s.title).slice(0, 90))}</td>
-      <td><div class="picker" data-topic="${esc(s.id)}">${staff.filter(x => x.role !== 'Admin').map(x => `<label><input type="checkbox" value="${esc(x.name)}" ${s.owners.includes(x.name) ? 'checked' : ''}>${esc(x.name.split('-')[0])}</label>`).join('')}</div></td></tr>`).join('')}
-    </tbody></table></div>`;
-  $$('[data-topic]', body).forEach(p => p.addEventListener('change', async () => {
-    try { await api.post('/seam/owners', { topicId: p.dataset.topic, owners: $$('input:checked', p).map(i => i.value) }); app.invalidate('seam'); toast(`บันทึกผู้รับผิดชอบหัวข้อ ${p.dataset.topic} แล้ว`); }
-    catch (e) { toast(e.message, 'bad'); }
-  }));
+      <td>${s.owners.length ? s.owners.map(n => esc(n)).join(', ') : '<span class="badge b-amber">ยังไม่มีผู้รับผิดชอบ</span>'}</td></tr>`).join('')}
+    </tbody></table></div>
+    <p class="hint">${staff.filter(x => x.role === 'Staff' && !x.seamTopics.length).map(x => esc(x.name)).join(', ') || 'ผู้ปฏิบัติงานทุกคนมีหัวข้อ SEAM แล้ว'}</p>`;
 }
 
 async function health(body) {

@@ -5,11 +5,11 @@ import { legacyStamp, legacyDate, todayISO } from './dates.js';
 const STAFF = [
   ['ใหญ่-ประเสริฐ', '1001', 'Director', 'RMIC', '', 'หัวหน้ากองบริหารความเสี่ยง'],
   ['ฟ้า-ฟ้าใส', '1002', 'Manager', 'Risk Management', 'ใหญ่-ประเสริฐ', 'หัวหน้าแผนกความเสี่ยง'],
-  ['มิ้นท์-มินตรา', '1003', 'Staff', 'Risk Management', 'ฟ้า-ฟ้าใส', 'นักวิเคราะห์นโยบายและแผน 4'],
-  ['ต้น-ธนากร', '1004', 'Staff', 'Risk Management', 'ฟ้า-ฟ้าใส', 'นักวิเคราะห์นโยบายและแผน 4'],
-  ['แพร-แพรวา', '1005', 'Staff', 'Risk Management', 'ฟ้า-ฟ้าใส', 'นักวิเคราะห์นโยบายและแผน 3'],
-  ['เก่ง-เก่งกาจ', '1006', 'Staff', 'Internal Control', 'ฟ้า-ฟ้าใส', 'นักวิเคราะห์นโยบายและแผน 4'],
-  ['ปลา-ปลายฟ้า', '1007', 'Staff', 'Internal Control', 'ฟ้า-ฟ้าใส', 'นักวิเคราะห์นโยบายและแผน 3'],
+  ['มิ้นท์-มินตรา', '1003', 'Staff', 'Risk Management', 'ฟ้า-ฟ้าใส', 'นักวิเคราะห์นโยบายและแผน 4', '1.1, 1.2, 1.5, 2.2, 2.4'],
+  ['ต้น-ธนากร', '1004', 'Staff', 'Risk Management', 'ฟ้า-ฟ้าใส', 'นักวิเคราะห์นโยบายและแผน 4', '4.1 - 4.2'],
+  ['แพร-แพรวา', '1005', 'Staff', 'Risk Management', 'ฟ้า-ฟ้าใส', 'นักวิเคราะห์นโยบายและแผน 3', '3.1 - 3.5'],
+  ['เก่ง-เก่งกาจ', '1006', 'Staff, Admin', 'Internal Control', 'ฟ้า-ฟ้าใส', 'นักวิเคราะห์นโยบายและแผน 4', '1.3, 1.4'],
+  ['ปลา-ปลายฟ้า', '1007', 'Staff', 'Internal Control', 'ฟ้า-ฟ้าใส', 'นักวิเคราะห์นโยบายและแผน 3', '5.1 - 5.4'],
   ['แอดมิน-ระบบ', '1000', 'Admin', '', '', 'ผู้ดูแลระบบ'],
 ];
 
@@ -212,10 +212,10 @@ export function demoStore() {
       [config.tasksSheet]: makeTasks(today, 'RM70-', 48, 0, 7, false),
       ...Object.fromEntries(config.tasksArchiveSheets.map(a => [a.sheet, makeTasks(addDays(today, -365), 'T', 40, 0, 11, true)])),
       [config.staffSheet]: [
-        ['Nickname', 'Email', 'PhotoURL', 'LineUserID', 'Employee_ID', 'Role', 'Department', 'ReportsTo', 'JobTitle', 'Password'],
-        ...STAFF.map(([n, id, role, dep, rep, job]) => [n, 'demo@example.com', '', '', id, role, dep, rep, job, 'demo1234']),
+        ['Nickname', 'Email', 'PhotoURL', 'LineUserID', 'Employee_ID', 'Role', 'Department', 'ReportsTo', 'JobTitle', 'Password', 'SIPOC (หัวข้อ)', 'SEAM (หัวข้อ)'],
+        ...STAFF.map(([n, id, role, dep, rep, job, topics = '']) => [n, 'demo@example.com', '', '', id, role, dep, rep, job, 'demo1234', topics, topics]),
       ],
-      [config.planSheet]: actionPlan(),
+      [config.planSheets[0]]: actionPlan(),
     },
     [config.seamSpreadsheetId]: { [config.seamSheet]: seamForm() },
     [config.sipocSpreadsheetId]: {

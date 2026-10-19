@@ -6,10 +6,9 @@ import { config } from './config.js';
 import { getValues, readTable, appendObjects, updateObjects, ensureSheet, writeCells, withLock, headerKey } from './repo.js';
 import { nowISO } from './dates.js';
 import { httpError } from './drive.js';
-import { matchesPerson, cursorFor } from './sipoc.js';
-
-const OWNER_SHEET = 'SEAM_Owners';
-const OWNER_HEADERS = ['topicId', 'owners'];
+import { cursorFor } from './sipoc.js';
+import { listStaff } from './auth.js';
+import { scopeSeam } from './scope.js';
 const FILE_SHEET = 'SEAM_Files';
 const FILE_HEADERS = ['fileId', 'topicId', 'level', 'name', 'mimeType', 'size', 'addedAt', 'addedBy'];
 const LOG_SHEET = 'SEAM_Log';
@@ -135,19 +134,18 @@ export function parseSeam(values, cursor) {
 
 // ---------------------------------------------------------------- ผู้รับผิดชอบ / ไฟล์
 
+/** ผู้รับผิดชอบหัวข้อย่อยตามคอลัมน์ "SEAM (หัวข้อ)" ของ Staff_List */
 async function ownersMap() {
-  try {
-    const t = await readTable(config.tasksSpreadsheetId, OWNER_SHEET);
-    return Object.fromEntries(t.rows.map(r => [String(r.topicId), String(r.owners || '').split(',').map(s => s.trim()).filter(Boolean)]));
-  } catch { return {}; }
+  const map = {};
+  (await listStaff()).filter(s => s.active).forEach(s => s.seamTopics.forEach(t => (map[t] = map[t] || []).push(s.name)));
+  return map;
 }
 
 export async function seamFiles() {
   try { return (await readTable(config.tasksSpreadsheetId, FILE_SHEET)).rows; } catch { return []; }
 }
 
-const canEditSub = (user, owners) => ['Director', 'Admin'].includes(user.role)
-  || owners.some(o => o === user.name || matchesPerson(o, user.name)) || (user.role === 'Manager' && !owners.length);
+const canEditSub = (user, owners) => ['Director', 'Admin', 'Manager'].includes(user.role) || owners.includes(user.name);
 
 /** ข้อมูลแบบฟอร์มทั้งหมดสำหรับหน้า SEAM / Dashboard CBE */
 export async function getSeam(user) {
@@ -160,13 +158,13 @@ export async function getSeam(user) {
   delete form.columns;
   form.subs.forEach(s => {
     s.owners = owners[s.id] || [];
-    s.mine = s.owners.some(o => o === user.name || matchesPerson(o, user.name));
+    s.mine = s.owners.includes(user.name);
     s.canEdit = s.applicable && canEditSub(user, s.owners);
     s.files = files.filter(f => String(f.topicId) === s.id).map(f => ({ fileId: f.fileId, level: Number(f.level) || null, name: f.name,
       mimeType: f.mimeType, size: Number(f.size) || 0, addedAt: f.addedAt, addedBy: f.addedBy }));
   });
   form.sheetUrl = `https://docs.google.com/spreadsheets/d/${config.seamSpreadsheetId}/edit`;
-  return form;
+  return scopeSeam(user, form);
 }
 
 // ---------------------------------------------------------------- บันทึก
@@ -253,18 +251,6 @@ export async function saveSeam(user, input, files = []) {
       } catch (e) { console.warn('SEAM log', e.message); }
     }
     return { changed: changed.length, cells: cells.length };
-  });
-}
-
-/** กำหนดผู้รับผิดชอบหัวข้อย่อย (Admin / หัวหน้ากอง) */
-export async function setSeamOwners(topicId, owners) {
-  const ss = config.tasksSpreadsheetId;
-  return withLock(ss, async () => {
-    await ensureSheet(ss, OWNER_SHEET, OWNER_HEADERS);
-    const t = await readTable(ss, OWNER_SHEET, { fresh: true });
-    const row = t.rows.find(r => String(r.topicId) === String(topicId));
-    const value = owners.join(', ');
-    if (row) { row.owners = value; await updateObjects(t, [row]); } else await appendObjects(t, [{ topicId: String(topicId), owners: value }]);
   });
 }
 
