@@ -1,4 +1,4 @@
-// ไฟล์แนบบน Google Drive: อัปโหลด, ดาวน์โหลดผ่าน server (ตรวจสิทธิ์ก่อน), สร้างเอกสารจาก template
+// ไฟล์แนบบน Google Drive: อัปโหลด และดาวน์โหลดผ่าน server (ตรวจสิทธิ์ก่อน)
 import { Readable } from 'node:stream';
 import { config } from './config.js';
 import { google } from './google.js';
@@ -78,27 +78,6 @@ function sendHeaders(res, mime, name, download) {
 export async function trashFile(fileId) {
   if (demo) return memFiles.delete(fileId);
   await google().drive.files.update({ fileId, requestBody: { trashed: true }, supportsAllDrives: true });
-}
-
-/** คัดลอก Google Docs template แล้วแทนค่า {{key}} คืน id ของเอกสารใหม่ */
-export async function fillDocTemplate(templateId, name, folderId, replacements) {
-  const { drive, docs } = google();
-  const copy = await drive.files.copy({ fileId: templateId, requestBody: { name, parents: [folderId] }, supportsAllDrives: true });
-  const id = copy.data.id;
-  await docs.documents.batchUpdate({
-    documentId: id,
-    requestBody: {
-      requests: Object.entries(replacements).map(([k, v]) => ({
-        replaceAllText: { containsText: { text: `{{${k}}}`, matchCase: true }, replaceText: String(v) },
-      })),
-    },
-  });
-  return id;
-}
-
-export async function exportDoc(fileId, mimeType) {
-  const out = await google().drive.files.export({ fileId, mimeType }, { responseType: 'arraybuffer' });
-  return Buffer.from(out.data);
 }
 
 export function httpError(status, message, code) {

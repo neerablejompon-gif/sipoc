@@ -4,14 +4,24 @@ import { $, $$, esc, icon, nl2br, modal, toast, confirmBox, statusBadge, prioBad
   thDate, STATUS, STAGES, filePicker, fileRow, bindPreviews, ML, daysFrom } from './ui.js';
 
 // ---------------------------------------------------------------- การ์ดงาน
-export function taskCard(t, { selectable = false, checked = false, showAssignee = true, staffByName = {}, extra = '' } = {}) {
+function duePill(t, today) {
+  if (!t.dueISO || !today || ['Completed', 'Cancelled'].includes(t.status)) return '';
+  const d = daysFrom(today, t.dueISO);
+  if (t.overdue) return `<span class="badge b-red">เลย ${-d} วัน</span>`;
+  if (t.status.startsWith('Pending')) return '';
+  if (d === 0) return '<span class="badge b-amber">ครบวันนี้</span>';
+  if (d <= 3) return `<span class="badge b-amber">อีก ${d} วัน</span>`;
+  return '';
+}
+
+export function taskCard(t, { selectable = false, checked = false, showAssignee = true, staffByName = {}, extra = '', today = '' } = {}) {
   const lines = t.title.split('\n');
   return `<article class="task-card ${t.overdue ? 'overdue' : ''} ${selectable ? 'selectable' : ''} ${checked ? 'checked' : ''}" data-task="${esc(t.id)}" tabindex="0">
     ${selectable ? `<label class="sel" title="เลือก"><input type="checkbox" data-pick="${esc(t.id)}" ${checked ? 'checked' : ''} aria-label="เลือกงาน ${esc(t.id)}"></label>` : ''}
     <div class="top">${statusBadge(t)} ${prioBadge(t.priority)} <span class="chip">${esc(t.category)}</span>
       ${t.urgency && t.urgency !== 'ไม่ด่วน' ? `<span class="badge b-red">${icon('bolt')}${esc(t.urgency)}</span>` : ''}
       ${t.sipocId ? `<span class="chip sipoc">${icon('account_tree')}${esc(t.sipocId)}</span>` : ''}
-      <span class="chip num">${esc(t.id)}</span></div>
+      <span class="chip num">${esc(t.id)}</span><span style="margin-left:auto">${duePill(t, today)}</span></div>
     <div class="title">${esc(lines[0])}</div>
     ${lines.length > 1 ? `<div class="muted small">${esc(lines.slice(1).join(' ').slice(0, 160))}</div>` : ''}
     <div class="meta"><span>${icon('event')}กำหนดส่ง ${thDate(t.dueISO)}</span>

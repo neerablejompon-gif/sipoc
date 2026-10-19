@@ -98,8 +98,11 @@ export async function getValues(ssId, sheet, { fresh = false } = {}) {
 const locks = new Map();
 export function withLock(name, fn) {
   const prev = locks.get(name) || Promise.resolve();
-  const run = prev.catch(() => {}).then(fn);
-  locks.set(name, run.finally(() => { if (locks.get(name) === run) locks.delete(name); }));
+  const run = prev.then(fn);
+  // คิวถัดไปรอเฉพาะให้งานนี้จบ (สำเร็จหรือล้มเหลว) — ความผิดพลาดส่งคืนผู้เรียกทาง run เท่านั้น
+  const tail = run.then(() => {}, () => {});
+  locks.set(name, tail);
+  tail.then(() => { if (locks.get(name) === tail) locks.delete(name); });
   return run;
 }
 
@@ -149,6 +152,16 @@ export async function updateObjects(table, objs) {
 }
 
 export async function listSheets(ssId) { return driver.listSheets(ssId); }
+
+/**
+ * เขียนค่าลงช่องโดยคงชนิดข้อมูล (ตัวเลข / TRUE-FALSE / ข้อความ) — ใช้กับชีตแบบฟอร์มที่มีสูตรคำนวณจากช่องเหล่านี้
+ * cells: [{ row, col, value }] (1-based)
+ */
+export async function writeCells(ssId, sheet, cells) {
+  if (!cells.length) return;
+  await driver.update(ssId, sheet, cells.map(c => ({ row: c.row, col: c.col, values: [[c.value]] })));
+  invalidate(ssId, sheet);
+}
 
 /** สร้างชีตถ้ายังไม่มี และเติมหัวคอลัมน์ที่ขาดต่อท้าย (ไม่ลบ/ย้ายคอลัมน์เดิม) */
 export async function ensureSheet(ssId, sheet, headers, { headerRow = 1 } = {}) {

@@ -22,11 +22,12 @@ server/
   config.js     ค่าตั้งจาก environment variables
   auth.js       เข้าสู่ระบบ, session, รหัสผ่าน (scrypt), บทบาท
   repo.js       อ่าน/เขียน Google Sheets ตามชื่อหัวคอลัมน์ + cache + lock (driver: google | memory)
-  drive.js      อัปโหลด/ดาวน์โหลดไฟล์ Drive, template Google Docs
+  drive.js      อัปโหลด/ดาวน์โหลดไฟล์ Drive (ตรวจสิทธิ์ก่อน)
   tasks.js      งาน: มอบหมาย, รายงาน/ส่งงาน, เห็นชอบ/อนุมัติ/ส่งกลับ, Task_Log
   sipoc.js      แผนปฏิบัติการ (ActionPlanDATA) + กิจกรรม SIPOC + ผูกผลงานเข้า SIPOC
-  seam.js       รายงาน SEAM / CBE 5 หัวข้อหลัก
-  reports.js    รายงาน ทม.13 (Word / PDF)
+  seam.js       แบบฟอร์มรายงานผล SEAM (ชีต RM) อ่าน/เขียนเฉพาะช่องข้อมูลนำเข้า
+  reports.js    รายงาน ทม.13 จากแบบฟอร์มของกอง (Word / PDF)
+  templates/    tm13.docx (สร้างจากไฟล์ตัวอย่างด้วย tools/make_tm13_template.py)
   perf.js       Team Performance
   files.js      Document Repository
   admin.js      ผู้ใช้, ลิงก์ระบบภายนอก, ตรวจการเชื่อมต่อ

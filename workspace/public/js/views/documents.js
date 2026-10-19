@@ -5,7 +5,8 @@ import { openTask } from '../tasks-ui.js';
 const state = { group: '', source: '', q: '', view: 'grid' };
 const SOURCES = { task: 'ไฟล์งาน', sipoc: 'หลักฐาน SIPOC', seam: 'รายงาน SE-AM', report: 'รายงาน ทม.13' };
 
-export async function render(el, { app, isCurrent }) {
+export async function render(el, { app, params, isCurrent }) {
+  if (params?.get('q')) state.q = params.get('q');
   let files;
   try { files = await app.load('files', '/files'); } catch (e) { el.innerHTML = errorBox(e); return; }
   if (!isCurrent()) return;

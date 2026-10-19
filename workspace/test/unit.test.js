@@ -5,6 +5,7 @@ import { approvalTransition, statusAfterSubmit, normPriority, taskFromRow, STATU
 import { parseActionPlan, activityStatus, matchesPerson, cursorFor } from '../server/sipoc.js';
 import { scorePerson } from '../server/perf.js';
 import { hashPassword, verifyPassword } from '../server/auth.js';
+import { withLock } from '../server/repo.js';
 
 test('parseAnyDate รองรับทุกรูปแบบที่พบในชีต', () => {
   assert.equal(isoOf('18/11/2025, 7:00:00'), '2025-11-18');
@@ -117,4 +118,13 @@ test('รหัสผ่าน: hash แบบ scrypt และรองรั�
   assert.ok(!verifyPassword(h, 'wrong'));
   assert.ok(verifyPassword('legacy-plain-1', 'legacy-plain-1'));
   assert.ok(!verifyPassword('', ''));
+});
+
+test('withLock: งานที่ล้มเหลวไม่ทำให้คิวค้าง และไม่เกิด unhandled rejection', async () => {
+  const order = [];
+  const a = withLock('k', async () => { order.push('a'); throw new Error('x'); });
+  const b = withLock('k', async () => { order.push('b'); return 2; });
+  await assert.rejects(a);
+  assert.equal(await b, 2);
+  assert.deepEqual(order, ['a', 'b']);
 });

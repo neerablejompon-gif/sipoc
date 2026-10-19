@@ -24,8 +24,9 @@ export async function listFiles(user) {
   sipoc.topics.forEach(t => t.activities.forEach(a => a.attachments.forEach(f => {
     files.push({ ...f, source: 'sipoc', sourceLabel: 'หลักฐาน SIPOC', ref: a.id, refTitle: a.name, owner: f.addedBy, ...groupOf(t.id) });
   })));
-  seam.forEach(f => files.push({ ...f, source: 'seam', sourceLabel: `SE-AM ${f.period}/${f.fiscalYear}`, ref: f.topicId,
-    refTitle: 'รายงาน SE-AM หัวข้อ ' + f.topicId, owner: f.addedBy, ...groupOf(f.topicId) }));
+  seam.forEach(f => files.push({ ...f, source: 'seam', sourceLabel: 'หลักฐาน SE-AM', ref: f.topicId,
+    refTitle: `SE-AM หัวข้อ ${f.topicId}${f.level ? ' · ระดับ ' + f.level : ''}`, owner: f.addedBy,
+    ...(groupOf(f.topicId) || { group: f.topicId, groupTitle: 'SE-AM หัวข้อ ' + f.topicId }) }));
   reports.filter(r => r.docId && (isLead(user) || r.owner === user.name)).forEach(r => files.push({
     fileId: r.docId, name: `ทม.13 ${r.owner} ${r.period}`, mimeType: 'application/vnd.google-apps.document', size: 0,
     addedAt: r.createdAt, addedBy: r.createdBy, source: 'report', sourceLabel: 'รายงาน ทม.13', ref: r.period, refTitle: r.owner,

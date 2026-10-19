@@ -4,7 +4,7 @@
 โดเมนที่ผูกกับ Cloudflare และ `gcloud` / `wrangler` (Node.js) ในเครื่อง
 
 > **ก่อนเริ่ม:** สำรองสเปรดชีตทั้งสองไฟล์ (File → Make a copy) ระบบจะเพิ่มคอลัมน์ต่อท้าย `Tasks_DB 70` และสร้างชีตใหม่
-> (`Task_Log`, `External_Links`, `Reports_Log`, `SEAM_Topics`, `SEAM_Reports`) แต่ไม่ลบหรือย้ายข้อมูลเดิม
+> (`Task_Log`, `External_Links`, `Reports_Log`, `SEAM_Owners`, `SEAM_Files`, `SEAM_Log`) และเขียนผลลงแบบฟอร์ม SEAM (ชีต RM) เฉพาะช่องข้อมูลนำเข้า แต่ไม่ลบหรือย้ายข้อมูลเดิม
 > แนะนำทดสอบกับสำเนาก่อนโดยตั้ง `TASKS_SPREADSHEET_ID` / `SIPOC_SPREADSHEET_ID` เป็น id ของสำเนา
 
 ## 1. ทดลองในเครื่อง (ไม่ต้องเชื่อม Google)
@@ -34,7 +34,7 @@ gcloud projects add-iam-policy-binding $PROJECT_ID --member serviceAccount:$SA -
 ### บัญชีที่ระบบใช้เข้าถึง Sheets / Drive (เลือก 1 แบบ)
 
 **แบบ A — Service account (ง่ายที่สุด เหมาะถ้ากองมี Google Workspace + Shared Drive)**
-1. แชร์สเปรดชีตงาน และสเปรดชีต SIPOC ให้ `rmic-workspace@<project>.iam.gserviceaccount.com` เป็น **Editor**
+1. แชร์สเปรดชีตงาน, สเปรดชีต SIPOC และแบบฟอร์ม SEAM ให้ `rmic-workspace@<project>.iam.gserviceaccount.com` เป็น **Editor**
 2. ไฟล์แนบต้องอยู่ใน **Shared Drive** (service account ไม่มีพื้นที่ Drive ของตัวเอง) — เพิ่ม service account เป็นสมาชิก Shared Drive แล้วตั้ง `ATTACHMENT_FOLDER_ID` เป็นโฟลเดอร์ในนั้น
 
 **แบบ B — OAuth ของบัญชีระบบ (เช่น rmic.raot@gmail.com ที่เป็นเจ้าของชีต/โฟลเดอร์อยู่แล้ว)**

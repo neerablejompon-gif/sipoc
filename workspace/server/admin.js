@@ -10,6 +10,7 @@ const DEFAULT_LINKS = [
   ['L1', 'ระบบมอบหมายงาน กบค. (ระบบเดิม)', 'Google Apps Script — ใช้ระหว่างช่วงเปลี่ยนผ่าน', 'https://script.google.com/macros/s/AKfycbyLJkNnr3SpWGtBIPYmV2zVtTYZPA-WMgWvM2vGKO5qW1qLFlhagYuBugBYmFXnvtUfHQ/exec', 'ระบบของกอง', 'history', '', 1],
   ['L2', 'ฐานข้อมูลงาน (Google Sheets)', 'Backend ระบบมอบหมายและติดตามงาน กบค.', `https://docs.google.com/spreadsheets/d/${config.tasksSpreadsheetId}/edit`, 'ฐานข้อมูล', 'table', 'Manager,Director,Admin', 2],
   ['L3', 'ฐานข้อมูล SIPOC (Google Sheets)', 'ข้อมูลตั้งต้นและการติดตามกิจกรรม SIPOC', `https://docs.google.com/spreadsheets/d/${config.sipocSpreadsheetId}/edit`, 'ฐานข้อมูล', 'account_tree', 'Manager,Director,Admin', 3],
+  ['L5', 'แบบฟอร์มรายงานผล SEAM (Google Sheets)', 'ตัวชี้วัด RM&IC — ชีต RM', `https://docs.google.com/spreadsheets/d/${config.seamSpreadsheetId}/edit`, 'ฐานข้อมูล', 'workspace_premium', 'Manager,Director,Admin', 5],
   ['L4', 'โฟลเดอร์ไฟล์แนบ (Google Drive)', 'ไฟล์แนบของงานทั้งหมด', `https://drive.google.com/drive/folders/${config.attachmentFolderId}`, 'ฐานข้อมูล', 'folder', 'Manager,Director,Admin', 4],
 ];
 
@@ -72,7 +73,7 @@ export async function saveStaff(input, { isNew = false } = {}) {
   if (input.role && !ROLES.includes(input.role)) throw httpError(400, 'บทบาทไม่ถูกต้อง');
   if (input.photoUrl && !validUrl(input.photoUrl)) throw httpError(400, 'URL รูปต้องขึ้นต้นด้วย https://');
   return withLock(config.tasksSpreadsheetId, async () => {
-    await ensureSheet(config.tasksSpreadsheetId, config.staffSheet, ['Active']);
+    await ensureSheet(config.tasksSpreadsheetId, config.staffSheet, ['Active', 'FullName']);
     const t = await loadStaffTable(true);
     let row = t.rows.find(r => String(r.Employee_ID).trim() === id);
     if (isNew && row) throw httpError(400, 'รหัสพนักงานนี้มีอยู่แล้ว');
@@ -82,6 +83,7 @@ export async function saveStaff(input, { isNew = false } = {}) {
       Nickname: name, Role: input.role || row.Role || 'Staff', Department: input.department ?? row.Department ?? '',
       ReportsTo: input.reportsTo ?? row.ReportsTo ?? '', JobTitle: input.jobTitle ?? row.JobTitle ?? '',
       PhotoURL: input.photoUrl ?? row.PhotoURL ?? '', Active: input.active === false ? 'FALSE' : 'TRUE',
+      FullName: input.fullName ?? row.FullName ?? '',
     });
     if (input.lineUserId !== undefined) row.LineUserID = String(input.lineUserId).trim();
     if (input.password) {
@@ -99,6 +101,7 @@ export async function health() {
     ['สเปรดชีตงาน · ' + config.staffSheet, config.tasksSpreadsheetId, config.staffSheet],
     ['แผนปฏิบัติการ · ' + config.planSheet, config.planSpreadsheetId, config.planSheet],
     ['SIPOC · Tracking', config.sipocSpreadsheetId, 'Tracking'],
+    ['แบบฟอร์ม SEAM · ' + config.seamSheet, config.seamSpreadsheetId, config.seamSheet],
   ];
   const out = [];
   for (const [label, ss, sheet] of checks) {
@@ -109,8 +112,8 @@ export async function health() {
     driver: config.driver, checks: out,
     settings: {
       tasksSheet: config.tasksSheet, archive: config.tasksArchiveSheets.map(a => a.sheet).join(', '),
-      fiscalYear: config.tasksFiscalYear, seamSheet: config.seamSpreadsheetId === config.sipocSpreadsheetId ? 'ใช้สเปรดชีต SIPOC (รอฐานข้อมูลจริง)' : 'กำหนดแล้ว',
-      tm13Template: config.tm13TemplateId ? 'Google Docs template' : 'แบบบันทึกข้อความในระบบ',
+      fiscalYear: config.tasksFiscalYear, seamSheet: `แบบฟอร์มรายงานผล SEAM · ชีต ${config.seamSheet}`,
+      tm13Template: `แบบฟอร์ม ทม.13 (Word) · PDF ${config.driver === 'google' ? 'แปลงผ่าน Google Drive' : 'พิมพ์จากหน้าตัวอย่าง'}`,
       line: config.lineToken ? 'เปิดใช้' : 'ยังไม่ตั้งค่า',
     },
   };

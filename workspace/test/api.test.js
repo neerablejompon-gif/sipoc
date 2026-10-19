@@ -110,23 +110,59 @@ test('สิทธิ์ตามบทบาท: Team Performance / ตั้�
   assert.equal(link.status, 400);
 });
 
-test('SEAM: รายงานได้เฉพาะหัวข้อที่รับผิดชอบ', async () => {
+test('SEAM: เขียนลงแบบฟอร์ม RM เฉพาะหัวข้อที่รับผิดชอบ และตรวจข้อมูลชนกัน', async () => {
   const staff = client((await login('1005')).cookie);
   const admin = client((await login('1000')).cookie);
-  const fd = () => { const f = new FormData(); f.append('data', JSON.stringify({ topicId: '3.1', period: 'Q1', level: 3, result: 'ผล', status: 'submitted' })); return f; };
-  assert.equal((await staff.form('/seam', fd())).status, 403);
+  const view0 = await staff.get('/seam');
+  const sub = view0.data.subs.find(s => s.id === '3.1');
+  assert.ok(sub.applicable && sub.levels.length === 5);
+  const st = sub.levels[2].steps[0];
+  const actual = st.actual.map(v => (v == null ? '' : String(v)));
+  actual[11] = '1';
+  const body = () => {
+    const f = new FormData();
+    f.append('data', JSON.stringify({ topicId: '3.1', score: 3.5, original: { score: sub.score, 'L2.detail': sub.levels[2].detail },
+      levels: [{ index: 2, detail: 'สรุปผลเรียบร้อย', steps: [{ index: 0, actual }], evidence: [{ index: 0, checked: true, names: 'รายงานสรุปผล' }] }] }));
+    f.append('files', new Blob(['%PDF-1.4 x'], { type: 'application/pdf' }), 'หลักฐานระดับ3.pdf');
+    return f;
+  };
+  assert.equal((await staff.form('/seam', body())).status, 403);
   assert.equal((await admin.post('/seam/owners', { topicId: '3.1', owners: ['แพร-แพรวา'] })).ok, true);
-  const saved = await staff.form('/seam', fd());
-  assert.equal(saved.data.level, 3);
-  const view = await staff.get('/seam');
-  assert.equal(view.data.main.flatMap(m => m.subs).find(s => s.id === '3.1').current.status, 'submitted');
+  const saved = await staff.form('/seam', body());
+  assert.equal(saved.ok, true, saved.message);
+  const after = (await staff.get('/seam')).data.subs.find(s => s.id === '3.1');
+  assert.equal(after.score, 3.5);
+  assert.equal(after.levels[2].detail, 'สรุปผลเรียบร้อย');
+  assert.equal(after.levels[2].steps[0].actual[11], 1);
+  assert.equal(after.levels[2].evidence[0].checked, true);
+  assert.match(after.levels[2].evidence[0].names, /หลักฐานระดับ3\.pdf/);
+  assert.ok(after.files.some(f => f.name === 'หลักฐานระดับ3.pdf' && f.level === 3));
+  // ค่าเดิมที่ส่งมาไม่ตรงกับชีตแล้ว → 409
+  const stale = new FormData();
+  stale.append('data', JSON.stringify({ topicId: '3.1', original: { 'L2.detail': 'ค่าเก่า' }, levels: [{ index: 2, detail: 'แก้ทับ' }] }));
+  assert.equal((await staff.form('/seam', stale)).status, 409);
 });
 
-test('ทม.13 ส่งออก Word ได้ และผู้ปฏิบัติพิมพ์ของผู้อื่นไม่ได้', async () => {
+test('ทม.13: ใช้แบบฟอร์มของกอง เติมรายการงาน และผู้ปฏิบัติพิมพ์ของผู้อื่นไม่ได้', async () => {
   const { cookie } = await login('1003');
-  const own = await fetch(`${base}/reports/tm13/export?month=2026-10&format=docx`, { headers: { Cookie: cookie } });
-  assert.equal(own.status, 200);
-  assert.equal(own.headers.get('content-type'), 'application/msword');
+  const c = client(cookie);
+  const d = await c.get('/reports/tm13?month=2026-10');
+  assert.equal(d.data.header.monthName, 'ตุลาคม');
+  assert.equal(d.data.header.yearBE, '2569');
+  assert.equal(d.data.header.dayTo, '31');
+  const res = await fetch(`${base}/reports/tm13/export`, { method: 'POST', headers: { Cookie: cookie, 'X-Requested-With': 'rmic', 'Content-Type': 'application/json' },
+    body: JSON.stringify({ month: '2026-10', header: { ...d.data.header, fullName: 'นางสาวทดสอบ ระบบ' }, items: ['งานที่หนึ่ง & ทดสอบ <xml>', 'งานที่สอง'], format: 'docx' }) });
+  assert.equal(res.status, 200);
+  assert.match(res.headers.get('content-type'), /wordprocessingml/);
+  const JSZip = (await import('jszip')).default;
+  const xml = await (await JSZip.loadAsync(Buffer.from(await res.arrayBuffer()))).file('word/document.xml').async('string');
+  assert.ok(xml.includes('นางสาวทดสอบ ระบบ'));
+  assert.ok(xml.includes('งานที่หนึ่ง &amp; ทดสอบ &lt;xml&gt;'));
+  assert.ok(xml.includes('ผู้จ่ายงาน'));
+  assert.ok(!xml.includes('{{'), 'ไม่มี placeholder ค้าง');
+  const pdf = await fetch(`${base}/reports/tm13/export`, { method: 'POST', headers: { Cookie: cookie, 'X-Requested-With': 'rmic', 'Content-Type': 'application/json' },
+    body: JSON.stringify({ month: '2026-10', header: d.data.header, items: [], format: 'pdf' }) });
+  assert.equal(pdf.status, 400, 'โหมด demo ไม่มี Drive สำหรับแปลง PDF');
   const other = await fetch(`${base}/reports/tm13?month=2026-10&user=${encodeURIComponent('ต้น-ธนากร')}`, { headers: { Cookie: cookie } });
   assert.equal(other.status, 403);
 });

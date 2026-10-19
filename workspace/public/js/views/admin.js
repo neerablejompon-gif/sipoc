@@ -38,6 +38,7 @@ async function users(body, { app }, reload) {
       <label class="field">แผนก<input class="input" id="u-dep" value="${esc(s.department || '')}" list="u-deps"><datalist id="u-deps"><option>Risk Management</option><option>Internal Control</option></datalist></label>
       <label class="field">หัวหน้า (ReportsTo)<select class="input" id="u-rep"><option value="">-</option>${list.filter(x => ['Manager', 'Director'].includes(x.role)).map(x => `<option ${x.name === s.reportsTo ? 'selected' : ''}>${esc(x.name)}</option>`).join('')}</select></label>
       <label class="field">ตำแหน่ง<input class="input" id="u-job" value="${esc(s.jobTitle || '')}"></label>
+      <label class="field full">ชื่อ-นามสกุล (ใช้ในรายงาน ทม.13)<input class="input" id="u-full" value="${esc(s.fullName || '')}" placeholder="เช่น นายสมชาย ใจดี"></label>
       <label class="field full">URL รูปโปรไฟล์ (https://)<input class="input" id="u-photo" value="${esc(s.photoUrl || '')}"></label>
       <label class="field">LINE User ID <span class="hint">เว้นว่าง = ไม่เปลี่ยน</span><input class="input" id="u-line" placeholder="U..."></label>
       <label class="field">ตั้งรหัสผ่านใหม่ <span class="hint">อย่างน้อย 8 ตัวอักษร</span><input class="input" id="u-pw" type="password" autocomplete="new-password"></label>
@@ -48,7 +49,7 @@ async function users(body, { app }, reload) {
       const line = $('#u-line', m.el).value.trim();
       try {
         await api.post('/admin/staff', { isNew, name: $('#u-name', m.el).value.trim(), employeeId: $('#u-id', m.el).value.trim(), role: $('#u-role', m.el).value,
-          department: $('#u-dep', m.el).value.trim(), reportsTo: $('#u-rep', m.el).value, jobTitle: $('#u-job', m.el).value.trim(),
+          department: $('#u-dep', m.el).value.trim(), reportsTo: $('#u-rep', m.el).value, jobTitle: $('#u-job', m.el).value.trim(), fullName: $('#u-full', m.el).value.trim(),
           photoUrl: $('#u-photo', m.el).value.trim(), active: $('#u-active', m.el).checked, password: $('#u-pw', m.el).value,
           ...(line ? { lineUserId: line } : {}) });
         toast('บันทึกผู้ใช้แล้ว'); m.close(); app.invalidate(); reload();
@@ -91,15 +92,15 @@ async function links(body, { app }, reload) {
 }
 
 async function seamOwners(body, { app }) {
-  const d = await api.get('/seam');
+  const d = await app.load('seam', '/seam');
   const staff = app.me.staff;
   body.innerHTML = `<div class="panel-head"><h3>${icon('workspace_premium')}ผู้รับผิดชอบหัวข้อ SEAM</h3><span class="sub">ผู้รับผิดชอบจะเห็นหัวข้อในเมนู SEAM และรายงานผลได้</span></div>
     <div class="table-wrap"><table class="t"><thead><tr><th>หัวข้อ</th><th>ผู้รับผิดชอบ</th></tr></thead><tbody>
-    ${d.main.flatMap(m => m.subs).map(s => `<tr><td style="min-width:260px"><b>${esc(s.id)}</b> ${esc(String(s.title).slice(0, 90))}</td>
+    ${d.subs.filter(s => s.applicable).map(s => `<tr><td style="min-width:260px"><b>${esc(s.id)}</b> ${esc(String(s.title).slice(0, 90))}</td>
       <td><div class="picker" data-topic="${esc(s.id)}">${staff.filter(x => x.role !== 'Admin').map(x => `<label><input type="checkbox" value="${esc(x.name)}" ${s.owners.includes(x.name) ? 'checked' : ''}>${esc(x.name.split('-')[0])}</label>`).join('')}</div></td></tr>`).join('')}
     </tbody></table></div>`;
   $$('[data-topic]', body).forEach(p => p.addEventListener('change', async () => {
-    try { await api.post('/seam/owners', { topicId: p.dataset.topic, owners: $$('input:checked', p).map(i => i.value) }); toast(`บันทึกผู้รับผิดชอบหัวข้อ ${p.dataset.topic} แล้ว`); }
+    try { await api.post('/seam/owners', { topicId: p.dataset.topic, owners: $$('input:checked', p).map(i => i.value) }); app.invalidate('seam'); toast(`บันทึกผู้รับผิดชอบหัวข้อ ${p.dataset.topic} แล้ว`); }
     catch (e) { toast(e.message, 'bad'); }
   }));
 }

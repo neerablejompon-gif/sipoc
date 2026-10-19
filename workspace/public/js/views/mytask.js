@@ -3,7 +3,7 @@ import { $, $$, esc, icon, errorBox, empty, statusBadge, isoDay, pct } from '../
 import { taskCard, bindCards, openTask, stepper, calendar } from '../tasks-ui.js';
 import { planRows, gantt, bindGantt, legend, matchesPerson } from '../plan-ui.js';
 
-const state = { tab: 'list', filter: 'active', q: '', year: 'current', limit: 20, cal: {} };
+const state = { tab: 'list', filter: 'active', period: 'all', q: '', year: 'current', limit: 20, cal: {} };
 const FILTERS = {
   all: { th: 'ทั้งหมด', fn: () => true },
   active: { th: 'ต้องดำเนินการ', fn: t => ['Assigned', 'In Progress', 'Needs Revision'].includes(t.status) },
@@ -25,13 +25,15 @@ export async function render(el, { app, params }) {
   const sub = cur.filter(t => t.submittedAt && t.dueISO);
   const onTime = sub.filter(t => isoDay(t.submittedAt) <= t.dueISO).length;
 
+  const okRate = pct(onTime, sub.length);
+  app.head({ eyebrow: `${esc(me.name)} · ${esc(me.jobTitle || '')}`, title: 'งานของฉัน', sub: 'รายงานผล ส่งงาน แนบไฟล์ และติดตามเส้นทางงานที่ส่งไป' });
   el.innerHTML = `
-    <div class="grid g-5" id="mt-kpi" style="margin-bottom:16px">
-      ${[['active', 'ต้องดำเนินการ', 'tone-blue', 'pending_actions'], ['pending', 'รอเห็นชอบ/อนุมัติ', 'tone-violet', 'hourglass_top'],
-        ['revision', 'ส่งกลับแก้ไข', 'tone-amber', 'undo'], ['overdue', 'เลยกำหนด', 'tone-red', 'alarm'], ['done', 'เสร็จสิ้น', 'tone-green', 'task_alt']]
-        .map(([k, l, tone, ic]) => `<div class="glass kpi ${tone} clickable" data-f="${k}" role="button" tabindex="0"><div class="ico">${icon(ic)}</div>
-          <div class="label">${l}</div><div class="value">${n(k)}<small>งาน</small></div>
-          <div class="foot">${k === 'done' ? `ส่งทันกำหนด ${pct(onTime, sub.length)}%` : k === 'overdue' ? 'ควรดำเนินการโดยด่วน' : `จากทั้งหมด ${cur.length} งาน`}</div></div>`).join('')}
+    <div class="glass-blue m-hero" style="margin-bottom:16px">
+      <div class="row between"><span style="font-size:15px">งานของคุณ</span><span class="badge" style="background:rgba(255,255,255,.18);color:#fff">ทันกำหนด ${okRate}%</span></div>
+      <div class="stats" id="mt-kpi">
+        ${[['active', 'ต้องทำ'], ['pending', 'รออนุมัติ'], ['overdue', 'เลยกำหนด'], ['revision', 'ส่งกลับแก้ไข'], ['done', 'เสร็จสิ้น']]
+          .map(([k, l]) => `<button data-f="${k}" class="${k === 'overdue' || k === 'revision' ? 'warn' : ''}"><b>${n(k)}</b><small>${l}</small></button>`).join('')}
+      </div>
     </div>
     <div class="row between" style="margin-bottom:14px">
       <div class="tabs" role="tablist">
@@ -44,20 +46,24 @@ export async function render(el, { app, params }) {
     <div id="mt-body"></div>`;
 
   function drawList(body) {
-    const list = mine().filter(FILTERS[state.filter].fn)
+    const week = new Date(Date.parse(app.me.today) + 7 * 864e5).toISOString().slice(0, 10);
+    const inPeriod = t => state.period === 'all' || (t.dueISO && t.dueISO <= (state.period === 'today' ? app.me.today : week));
+    const list = mine().filter(FILTERS[state.filter].fn).filter(inPeriod)
       .filter(t => !state.q || (t.title + t.id + (t.sipocId || '')).toLowerCase().includes(state.q.toLowerCase()))
       .sort((a, b) => rank(a) - rank(b) || String(a.dueISO).localeCompare(String(b.dueISO)) * (state.filter === 'done' ? -1 : 1));
     body.innerHTML = `<div class="glass panel">
       <div class="toolbar">
+        <div class="tabs" id="mt-period">${[['today', 'วันนี้'], ['week', 'สัปดาห์นี้'], ['all', 'ทั้งหมด']].map(([k, l]) => `<button data-p="${k}" class="${state.period === k ? 'active' : ''}">${l}</button>`).join('')}</div>
         <select class="input" id="mt-filter" aria-label="สถานะงาน">${Object.entries(FILTERS).map(([k, f]) => `<option value="${k}" ${k === state.filter ? 'selected' : ''}>${f.th}</option>`).join('')}</select>
         <select class="input" id="mt-year" aria-label="ปีงบประมาณ"><option value="current">ปีงบ ${app.me.fiscalYear}</option><option value="all" ${state.year === 'all' ? 'selected' : ''}>ทุกปี (รวมปีก่อน)</option></select>
         <div class="search"><span class="ms">search</span><input class="input" id="mt-q" placeholder="ค้นหางาน / รหัส" value="${esc(state.q)}"></div>
         <span class="spacer" style="flex:1"></span><span class="muted small">${list.length} งาน</span>
       </div>
-      <div class="task-list">${list.slice(0, state.limit).map(t => taskCard(t, { showAssignee: false })).join('') || empty('ไม่มีงานในสถานะนี้', 'task_alt', 'เลือกตัวกรองอื่น หรือกด "มอบหมายงาน" เพื่อสร้างงานใหม่')}</div>
+      <div class="task-list">${list.slice(0, state.limit).map(t => taskCard(t, { showAssignee: false, today: app.me.today })).join('') || empty('ไม่มีงานในสถานะนี้', 'task_alt', 'เลือกตัวกรองอื่น หรือกด "มอบหมายงาน" เพื่อสร้างงานใหม่')}</div>
       ${list.length > state.limit ? `<div class="row" style="justify-content:center;margin-top:12px"><button class="btn" id="mt-more">แสดงเพิ่ม (${list.length - state.limit})</button></div>` : ''}
     </div>`;
     bindCards(body, app);
+    $$('[data-p]', body).forEach(b => b.addEventListener('click', () => { state.period = b.dataset.p; draw(); }));
     $('#mt-filter', body).addEventListener('change', e => { state.filter = e.target.value; state.limit = 20; draw(); });
     $('#mt-year', body).addEventListener('change', e => { state.year = e.target.value; draw(); });
     const q = $('#mt-q', body);

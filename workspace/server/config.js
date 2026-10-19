@@ -31,14 +31,17 @@ export const config = {
   // สเปรดชีต SIPOC
   sipocSpreadsheetId: env('SIPOC_SPREADSHEET_ID', '1YbHYhCH6ZPkPT6Fu1EhFjrfhlou6ryHksvpwDzNww1A'),
 
-  // SEAM / CBE (รอผู้ใช้ส่งลิงก์ฐานข้อมูลจริง — ระหว่างนี้ใช้สเปรดชีต SIPOC)
-  seamSpreadsheetId: env('SEAM_SPREADSHEET_ID', ''),
+  // SEAM / CBE: สเปรดชีต "แบบฟอร์มรายงานผลการดำเนินงาน SEAM" ชีต RM (ตัวชี้วัด RM&IC)
+  seamSpreadsheetId: env('SEAM_SPREADSHEET_ID', '1GvItfukndr1GGl3hte2dVTy58u3FqSuixxK_IgkQflo'),
+  seamSheet: env('SEAM_SHEET', 'RM'),
   seamFolderId: env('SEAM_FOLDER_ID', ''),
 
   // Google Drive
   attachmentFolderId: env('ATTACHMENT_FOLDER_ID', '18ZB15hRtrpXTT9EkcnijUoVW-CfRivK2'),
   reportFolderId: env('REPORT_FOLDER_ID', ''),
-  tm13TemplateId: env('TEMPLATE_ID_TM13', ''),
+  // ข้อความในแบบ ทม.13
+  tm13Division: env('TM13_DIVISION', 'บริหารความเสี่ยง (กบค.)'),
+  tm13Faction: env('TM13_FACTION', 'ฝ่ายยุทธศาสตร์องค์กร'),
   maxFileBytes: Number(env('MAX_FILE_MB', 15)) * 1024 * 1024,
 
   // บัญชี Google ที่ใช้เรียก API: ถ้าตั้ง OAuth refresh token จะใช้บัญชีนั้น (จำเป็นสำหรับอัปโหลดลง Drive ของ Gmail)
@@ -54,7 +57,6 @@ export const config = {
 };
 
 config.planSpreadsheetId = config.planSpreadsheetId || config.tasksSpreadsheetId;
-config.seamSpreadsheetId = config.seamSpreadsheetId || config.sipocSpreadsheetId;
 config.seamFolderId = config.seamFolderId || config.attachmentFolderId;
 config.reportFolderId = config.reportFolderId || config.attachmentFolderId;
 config.sipocFolderId = process.env.SIPOC_FOLDER_ID || config.attachmentFolderId;

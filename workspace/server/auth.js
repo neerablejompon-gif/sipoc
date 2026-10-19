@@ -24,6 +24,7 @@ export function staffFromRow(r) {
     department: String(r.Department || '').trim(),
     reportsTo: String(r.ReportsTo || '').trim(),
     jobTitle: String(r.JobTitle || r.Position || '').trim(),
+    fullName: String(r.FullName || r['ชื่อ-นามสกุล'] || '').trim(),
     active: active !== 'FALSE' && active !== 'NO' && active !== '0',
   };
 }
@@ -36,7 +37,7 @@ export async function listStaff() {
 /** ข้อมูลที่ส่งให้ frontend ได้ (ไม่มีอีเมล / LINE ID / รหัสผ่าน) */
 export const publicStaff = s => ({
   name: s.name, employeeId: s.employeeId, photoUrl: s.photoUrl, role: s.role,
-  department: s.department, reportsTo: s.reportsTo, jobTitle: s.jobTitle, active: s.active,
+  department: s.department, reportsTo: s.reportsTo, jobTitle: s.jobTitle, fullName: s.fullName, active: s.active,
 });
 
 // ---------------------------------------------------------------- รหัสผ่าน

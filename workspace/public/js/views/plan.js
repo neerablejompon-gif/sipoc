@@ -8,6 +8,7 @@ export async function render(el, { app, params }) {
   let data;
   try { data = await app.plan(); } catch (e) { el.innerHTML = errorBox(e); return; }
   if (params.get('person') !== null) state.person = params.get('person');
+  if (params.get('q') !== null) { state.q = params.get('q'); if (/^\d+\.\d+-/.test(state.q)) state.tab = 'sipoc'; }
   const all = planRows(data);
   const topics = data.sipoc.topics || [];
 

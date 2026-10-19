@@ -79,7 +79,7 @@ export async function createApp() {
   api.get('/me', h(async (req, res) => {
     const staff = await listStaff();
     ok(res, {
-      user: publicStaff(req.user), today: todayISO(), fiscalYear: config.tasksFiscalYear,
+      user: publicStaff(req.user), today: todayISO(), fiscalYear: config.tasksFiscalYear, demo: config.driver === 'demo',
       staff: staff.filter(s => s.active).map(publicStaff),
       enums: { priorities: tasks.PRIORITIES, urgencies: tasks.URGENCIES, categories: tasks.CATEGORIES },
       can: { approve: ['Manager', 'Director', 'Admin'].includes(req.user.role), team: isLead(req.user), admin: ['Admin', 'Director'].includes(req.user.role) },
@@ -149,49 +149,54 @@ export async function createApp() {
   // ---------------------------------------------------------------- Dashboard (แต่ละแหล่งล้มเหลวได้โดยไม่ทำให้ทั้งหน้าล้ม)
   api.get('/dashboard', h(async (req, res) => {
     const safe = p => p.then(data => ({ ok: true, data })).catch(e => ({ ok: false, message: e.message }));
-    const sp = sipoc.getSipoc();
     const [t, plan, s, cbe] = await Promise.all([
-      safe(tasks.listTasks()), safe(sipoc.getActionPlan()), safe(sp),
-      safe(sp.then(x => seam.getSeam(req.user, x.topics))),
+      safe(tasks.listTasks()), safe(sipoc.getActionPlan()), safe(sipoc.getSipoc()), safe(seam.getSeam(req.user)),
     ]);
     if (t.ok) t.data = { tasks: t.data.filter(x => !x.readonly), archive: t.data.filter(x => x.readonly).length };
     ok(res, { tasks: t, plan, sipoc: s, cbe });
   }));
 
   // ---------------------------------------------------------------- SEAM
-  api.get('/seam', h(async (req, res) => {
-    const sp = await sipoc.getSipoc();
-    ok(res, await seam.getSeam(req.user, sp.topics, { fiscalYear: req.query.fy, period: req.query.period }));
-  }));
+  api.get('/seam', h(async (req, res) => ok(res, await seam.getSeam(req.user))));
   api.post('/seam', upload.array('files', 10), h(async (req, res) => {
-    const sp = await sipoc.getSipoc();
-    const input = JSON.parse(req.body.data || '{}');
+    let input;
+    try { input = JSON.parse(req.body.data || '{}'); } catch { throw httpError(400, 'ข้อมูลไม่ถูกต้อง'); }
     // ตรวจสิทธิ์ก่อนอัปโหลดไฟล์
-    const view = await seam.getSeam(req.user, sp.topics, { fiscalYear: input.fiscalYear, period: input.period });
-    const sub = view.main.flatMap(m => m.subs).find(s => s.id === String(input.topicId));
+    const sub = (await seam.getSeam(req.user)).subs.find(s => s.id === String(input.topicId));
     if (!sub || !sub.canEdit) throw httpError(403, 'รายงานได้เฉพาะหัวข้อที่ท่านรับผิดชอบ');
-    const files = await uploadAll(req, config.seamFolderId, `SE-AM ${input.topicId} ${input.period}`);
-    ok(res, await seam.saveSeamReport(req.user, sp.topics, input, files));
+    const files = await uploadAll(req, config.seamFolderId, `SE-AM ${input.topicId}`);
+    ok(res, await seam.saveSeam(req.user, input, files));
   }));
   api.post('/seam/owners', requireRole('Admin', 'Director'), h(async (req, res) =>
     ok(res, await seam.setSeamOwners(req.body.topicId, req.body.owners || []))));
 
   // ---------------------------------------------------------------- รายงาน ทม.13
-  const reportTarget = async (req) => {
-    const name = req.query.user || req.user.name;
-    if (name !== req.user.name && !isLead(req.user)) throw httpError(403, 'พิมพ์รายงานได้เฉพาะของตนเอง');
+  const reportTarget = async (name) => {
+    name = name || '';
     const s = (await listStaff()).find(x => x.name === name);
     if (!s) throw httpError(404, 'ไม่พบพนักงาน');
     return s;
   };
+  const canReportFor = (req, name) => {
+    if (name !== req.user.name && !isLead(req.user)) throw httpError(403, 'พิมพ์รายงานได้เฉพาะของตนเอง');
+  };
   api.get('/reports/tm13', h(async (req, res) => {
-    const d = await reports.tm13Data(await reportTarget(req), req.query.month);
-    ok(res, { ...d, html: reports.tm13Html(d), hasTemplate: !!config.tm13TemplateId && config.driver === 'google' });
+    const name = req.query.user || req.user.name;
+    canReportFor(req, name);
+    const d = await reports.tm13Data(await reportTarget(name), req.query.month);
+    ok(res, { ...d, canPdf: reports.canMakePdf() });
   }));
-  api.get('/reports/tm13/export', h(async (req, res) => {
-    const d = await reports.tm13Data(await reportTarget(req), req.query.month);
-    const out = await reports.exportTm13(d, req.query.format === 'pdf' ? 'pdf' : 'docx', req.user.name);
-    if (!out) throw httpError(400, 'ยังไม่ได้ตั้ง Google Docs template — ใช้ปุ่ม "พิมพ์ / บันทึก PDF" จากหน้าตัวอย่าง');
+  api.post('/reports/tm13/preview', h(async (req, res) => {
+    const { header, items } = reports.cleanInput(req.body.header, req.body.items);
+    ok(res, { html: reports.tm13Html(header, items) });
+  }));
+  api.post('/reports/tm13/export', h(async (req, res) => {
+    const name = String(req.body.user || req.user.name);
+    canReportFor(req, name);
+    await reportTarget(name);
+    if (!/^\d{4}-\d{2}$/.test(String(req.body.month))) throw httpError(400, 'รูปแบบเดือนไม่ถูกต้อง');
+    const { header, items } = reports.cleanInput(req.body.header, req.body.items);
+    const out = await reports.exportTm13({ staffName: name, month: req.body.month, header, items }, req.body.format === 'pdf' ? 'pdf' : 'docx', req.user.name);
     res.setHeader('Content-Type', out.mimeType);
     res.setHeader('Content-Disposition', `attachment; filename*=UTF-8''${encodeURIComponent(out.filename)}`);
     res.end(out.buffer);
