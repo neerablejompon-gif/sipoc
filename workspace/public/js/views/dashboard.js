@@ -90,7 +90,7 @@ function build(d, app, tab) {
   const last6 = Array.from({ length: 6 }, (_, k) => new Date(Date.UTC(+today.slice(0, 4), +today.slice(5, 7) - 6 + k, 1)).toISOString().slice(0, 7));
 
   if (tab === 'overview') {
-    if (!d.tasks.ok) return blankCtx(srcError('งาน (Tasks_DB)', d.tasks), '#/my-task');
+    if (!d.tasks.ok) return blankCtx(srcError('งาน (Tasks)', d.tasks), '#/my-task');
     const live = d.tasks.data.tasks.filter(t => t.status !== 'Cancelled');
     const active = live.filter(t => ['Assigned', 'In Progress', 'Needs Revision'].includes(t.status));
     const pending = live.filter(t => t.status.startsWith('Pending'));
@@ -113,7 +113,7 @@ function build(d, app, tab) {
         ['เลยกำหนด', overdue.length, overdue.length ? 'ต้องติดตามทันที' : 'ไม่มีงานเลยกำหนด', C.red, 'warning', last6.map(m => live.filter(t => t.overdue && t.dueISO.startsWith(m)).length)],
       ],
       plan, act, cur: curIdx, watch, watchHref: '#/my-task',
-      chartTitle: `งานที่ปิดได้เทียบแผน รายเดือน · ปีงบประมาณ ${app.me.fiscalYear}`, source: 'Tasks_DB (งานที่ครบกำหนดแต่ละเดือน / งานที่อนุมัติแล้ว)',
+      chartTitle: `งานที่ปิดได้เทียบแผน รายเดือน · ปีงบประมาณ ${app.me.fiscalYear}`, source: 'ชีต Tasks (งานที่ครบกำหนดแต่ละเดือน / งานที่อนุมัติแล้ว)',
       subtitle: pending.length > overdue.length
         ? `งานรออนุมัติ ${pending.length} งาน (รอนานสุด ${maxWait} วัน) และเลยกำหนด ${overdue.length} งาน — ควรเคลียร์งานรออนุมัติภายในสัปดาห์นี้`
         : `งานกำลังดำเนินการ ${active.length} งาน · เลยกำหนด ${overdue.length} งาน · ส่งทันกำหนด ${onTime}%`,

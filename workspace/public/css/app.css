@@ -574,3 +574,4 @@ table.t td.num, table.t th.num { text-align: right; }
   .wp-months { grid-template-columns: repeat(12, 10px); gap: 3px; } .wp-months span { width: 10px; height: 10px; }
   .wp-month { flex-wrap: nowrap; overflow-x: auto; max-width: 100%; padding-bottom: 4px; } .wp-month button { flex: 0 0 auto; }
 }
+.chip.plan { background: var(--ok-bg); color: var(--ok); font-weight: 600; }

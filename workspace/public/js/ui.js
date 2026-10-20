@@ -191,3 +191,9 @@ export function bindPreviews(el) {
 }
 
 export const pct = (a, b) => (b ? Math.round((a / b) * 100) : 0);
+
+/** ป้ายงานตามแผน (PlanRef "W70-001|ต.ค.69") หรือ งานนอกแผน */
+export const planChip = t => {
+  const m = /^(W\d+-\d+)\|(.+)$/.exec(t.planRef || '');
+  return m ? `<span class="chip plan" title="${esc(m[1])}">${icon('event_note')}งานตามแผน ${esc(m[2])}</span>` : `<span class="chip">${icon('bolt')}นอกแผน</span>`;
+};

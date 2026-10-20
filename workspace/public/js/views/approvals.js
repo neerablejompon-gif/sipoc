@@ -1,6 +1,6 @@
 // กล่องอนุมัติ — หัวหน้าแผนก (เห็นชอบ) / หัวหน้ากอง (อนุมัติ) · มุมมองแบ่งสองฝั่ง · เลือกหลายรายการ · ส่งกลับต้องมีเหตุผล
 import { api } from '../api.js';
-import { $, $$, esc, icon, nl2br, errorBox, empty, toast, confirmBox, daysFrom, isoDay, thDate, fileRow, bindPreviews, STATUS } from '../ui.js';
+import { $, $$, esc, icon, nl2br, errorBox, empty, toast, confirmBox, daysFrom, isoDay, thDate, fileRow, bindPreviews, STATUS, planChip } from '../ui.js';
 import { stepper, historyList, openTask } from '../tasks-ui.js';
 import { refreshBadges } from '../app.js';
 
@@ -64,7 +64,7 @@ export async function render(el, { app, isCurrent }) {
       const d = waitDays(t);
       return `<div class="ap-item ${t.id === state.active ? 'active' : ''}" data-id="${esc(t.id)}" tabindex="0">
         ${t.waiting ? `<input type="checkbox" data-pick="${esc(t.id)}" ${state.picked.has(t.id) ? 'checked' : ''} aria-label="เลือก ${esc(t.id)}">` : `<span>${icon(t.myDecision?.action === 'reject' ? 'undo' : 'task_alt')}</span>`}
-        <span style="min-width:0"><b>${esc(t.title.split('\n')[0])}</b><small>${esc(t.assignee.split('-')[0])}${t.sipocId ? ` <span class="chip sipoc">${esc(t.sipocId)}</span>` : ''}${t.attachments.length ? ` · ${icon('attach_file')}${t.attachments.length}` : ''}</small></span>
+        <span style="min-width:0"><b>${esc(t.title.split('\n')[0])}</b><small>${planChip(t)} ${esc(t.assignee.split('-')[0])}${t.sipocId ? ` <span class="chip sipoc">${esc(t.sipocId)}</span>` : ''}${t.attachments.length ? ` · ${icon('attach_file')}${t.attachments.length}` : ''}</small></span>
         ${t.waiting ? `<span class="badge ${d > SLA ? 'b-red' : 'b-gray'}">รอ ${d} วัน</span>` : `<span class="badge ${STATUS[t.status]?.cls || 'b-gray'}">${esc(STATUS[t.status]?.th || t.status)}</span>`}</div>`;
     }).join('') || empty(state.filter === 'waiting' ? `ไม่มีงานรอ${verb}` : 'ไม่มีรายการ', 'inbox');
     $$('.ap-item', el).forEach(it => {

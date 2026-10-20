@@ -35,7 +35,7 @@ export async function render(el, { app, params }) {
       </div>
       <div id="pl-sipoc"></div>
       <div id="pl-gantt"></div>
-      <p class="hint" style="margin-top:10px">คลิกกิจกรรมเพื่อดูรายละเอียด · กิจกรรม SIPOC บันทึกผลและแนบหลักฐานได้ (ผู้รับผิดชอบ/หัวหน้า) · แผนปฏิบัติการอ่านจากชีต ActionPlanDATA</p>
+      <p class="hint" style="margin-top:10px">คลิกกิจกรรมเพื่อดูรายละเอียด · กิจกรรม SIPOC บันทึกผลและแนบหลักฐานได้ (ผู้รับผิดชอบ/หัวหน้า) · งานตามแผนอ่านจากชีต WorkItems (รายงานผลได้ที่ งานของฉัน › งานตามแผน)</p>
     </div>`;
 
   const $p = $('#pl-person', el), $s = $('#pl-status', el), $q = $('#pl-q', el), $t = $('#pl-topic', el);
