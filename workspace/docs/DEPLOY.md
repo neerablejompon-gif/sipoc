@@ -3,8 +3,8 @@
 ใช้เวลาประมาณ 1–2 ชั่วโมงสำหรับครั้งแรก ต้องมี: โปรเจกต์ Google Cloud (เปิด billing), สิทธิ์แก้ไขสเปรดชีตทั้งสองไฟล์,
 โดเมนที่ผูกกับ Cloudflare และ `gcloud` / `wrangler` (Node.js) ในเครื่อง
 
-> **ก่อนเริ่ม:** สำรองสเปรดชีตทั้งสองไฟล์ (File → Make a copy) ระบบจะเพิ่มคอลัมน์ต่อท้าย `Tasks_DB 70` และสร้างชีตใหม่
-> (`Task_Log`, `External_Links`, `Reports_Log`, `SEAM_Files`, `SEAM_Log`) และเขียนผลลงแบบฟอร์ม SEAM (ชีต RM) เฉพาะช่องข้อมูลนำเข้า แต่ไม่ลบหรือย้ายข้อมูลเดิม
+> **ก่อนเริ่ม:** ระบบเขียนข้อมูลลง **ฐานข้อมูลใหม่** (`DB_SPREADSHEET_ID`) เป็นหลัก — สเปรดชีตเดิม (Tasks_DB ปี 69 / Staff_List) ใช้อ่านอย่างเดียว
+> ยกเว้นแบบฟอร์ม SEAM (ชีต RM) ที่เขียนเฉพาะช่องข้อมูลนำเข้า ควรสำรองไฟล์ทั้งหมดก่อน (File → Make a copy)
 > แนะนำทดสอบกับสำเนาก่อนโดยตั้ง `DB_SPREADSHEET_ID` / `LEGACY_SPREADSHEET_ID` / `SIPOC_SPREADSHEET_ID` เป็น id ของสำเนา
 
 ## 1. ทดลองในเครื่อง (ไม่ต้องเชื่อม Google)
@@ -34,7 +34,9 @@ gcloud projects add-iam-policy-binding $PROJECT_ID --member serviceAccount:$SA -
 ### บัญชีที่ระบบใช้เข้าถึง Sheets / Drive (เลือก 1 แบบ)
 
 **แบบ A — Service account (ง่ายที่สุด เหมาะถ้ากองมี Google Workspace + Shared Drive)**
-1. แชร์สเปรดชีตงาน, สเปรดชีต SIPOC และแบบฟอร์ม SEAM ให้ `rmic-workspace@<project>.iam.gserviceaccount.com` เป็น **Editor**
+1. แชร์ให้ `rmic-workspace@<project>.iam.gserviceaccount.com`
+   - **Editor:** ฐานข้อมูลใหม่ `RMIC Workspace ฐานข้อมูล ปีงบประมาณ 2570` (`DB_SPREADSHEET_ID`), สเปรดชีต SIPOC, แบบฟอร์ม SEAM
+   - **Viewer:** สเปรดชีตเดิม Tasks_DB / Staff_List (`LEGACY_SPREADSHEET_ID`) — ใช้อ่านงานปี 69 และรหัสผ่านเดิมตอนเข้าสู่ระบบครั้งแรก
 2. ไฟล์แนบต้องอยู่ใน **Shared Drive** (service account ไม่มีพื้นที่ Drive ของตัวเอง) — เพิ่ม service account เป็นสมาชิก Shared Drive แล้วตั้ง `ATTACHMENT_FOLDER_ID` เป็นโฟลเดอร์ในนั้น
 
 **แบบ B — OAuth ของบัญชีระบบ (เช่น rmic.raot@gmail.com ที่เป็นเจ้าของชีต/โฟลเดอร์อยู่แล้ว)**
@@ -88,7 +90,9 @@ PROJECT_ID=$PROJECT_ID REGION=asia-southeast1 ./deploy/deploy.sh
 
 - เข้าสู่ระบบด้วยบัญชี Admin → **ตั้งค่าระบบ → การเชื่อมต่อข้อมูล** ตรวจว่าทุกแหล่งข้อมูลเป็นสีเขียว
 - **ตั้งรหัสผ่านใหม่ให้ทุกคน** (ระบบเก็บเป็น hash) หรือรัน `npm run hash-password -- '<รหัสผ่าน>'` แล้ววางค่าในคอลัมน์ Password
-- กำหนดผู้รับผิดชอบหัวข้อ SEAM และเพิ่มลิงก์ระบบภายนอก
+- ผู้ใช้เข้าครั้งแรกด้วยรหัสผ่านเดิมจาก Staff_List ได้ (ระบบแปลงเป็น hash เก็บในชีต Staff ให้อัตโนมัติ) — แนะนำให้เปลี่ยนรหัสผ่านหลังเข้าครั้งแรก
+- เจ้าของหัวข้อตรวจคอลัมน์ "ตรงกับงานอื่น" (รอยืนยัน) และกรอกเดือนที่ทำในชีต WorkItems / หน้า "งานตามแผน"
+- ผู้รับผิดชอบ SEAM ยึดตาม Staff_List (แก้ที่ชีต Staff)
 - อัปเดตเว็บแอปเดิม (Apps Script) ให้แสดงข้อความแจ้งย้ายระบบ หรือเปิดแบบอ่านอย่างเดียวช่วงเปลี่ยนผ่าน
 
 ## ค่าใช้จ่ายโดยประมาณ
