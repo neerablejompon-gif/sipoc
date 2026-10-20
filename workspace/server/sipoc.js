@@ -149,6 +149,8 @@ export function parsePlanSheet(values, sheet = '', today = todayISO()) {
 
 /** รวมทุกชีตแผนใน PLAN_SHEETS (ชีตที่ไม่มีข้ามได้) · ชีตรูปแบบเดิม (แผน/ผล + กิจกรรม) ใช้ parseActionPlan */
 export async function getActionPlan() {
+  // ค่าเริ่มต้น: แผนปีงบ 2570 จากชีต WorkItems ของฐานข้อมูลใหม่ (รวมแผนปฏิบัติการ SIPOC และ SEAM แล้ว)
+  if (config.planSource === 'workitems') return (await import('./workplan.js')).planFromWorkItems();
   const parts = [];
   let lastErr;
   for (const sheet of config.planSheets) {

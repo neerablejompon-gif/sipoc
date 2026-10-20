@@ -108,7 +108,7 @@ export async function listTasks({ includeArchive = true } = {}) {
   const out = [];
   for (const src of sources) {
     let t;
-    try { t = await readTable(config.tasksSpreadsheetId, src.sheet); } catch (e) {
+    try { t = await readTable(src.readonly ? config.legacySpreadsheetId : config.tasksSpreadsheetId, src.sheet); } catch (e) {
       if (src.readonly) continue; // ชีตปีก่อนไม่มี ไม่เป็นไร
       throw e;
     }
@@ -235,7 +235,7 @@ export async function assignTasks(user, input) {
     await writeLog(rows.map(r => ({ taskId: r.TaskID, actor: user.name, action: 'assign', fromStatus: '', toStatus: STATUS.ASSIGNED, comment: title })));
     return rows;
   });
-  created.forEach(r => notify.assigned(byName[r.Assignee], r, user));
+  if (!input.silent) created.forEach(r => notify.assigned(byName[r.Assignee], r, user));
   return created.map(r => r.TaskID);
 }
 
@@ -339,6 +339,11 @@ export async function decideTasks(user, ids, decision, comment = '') {
   });
   for (const c of changed) {
     notify.decided(c.row, byName, user, c.to, comment);
+    if (/^W\d+-\d+\|/.test(String(c.row.PlanRef || ''))) {
+      // งานตามแผน: บันทึกสถานะลงชีต Results (best-effort)
+      const { syncResult } = await import('./workplan.js');
+      syncResult(String(c.row.TaskID), c.to, user).catch(e => console.error('syncResult', c.row.TaskID, e));
+    }
     if (c.to === STATUS.COMPLETED && c.row.SipocId) {
       // ผูกผลงานเข้า SIPOC (best-effort — ไม่ย้อนการอนุมัติถ้าล้มเหลว)
       const { linkTaskEvidence } = await import('./sipoc.js');

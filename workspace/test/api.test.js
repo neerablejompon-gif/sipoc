@@ -196,3 +196,39 @@ test('บทบาท "Staff, Admin": ตั้งค่าระบบได้
   assert.equal((await jom.get('/team')).status, 403);
   assert.ok((await jom.get('/tasks')).data.tasks.every(t => t.assignee === 'เก่ง-เก่งกาจ' || t.assignedBy === 'เก่ง-เก่งกาจ'));
 });
+
+test('งานตามแผน: เห็นเฉพาะของตน → รายงานผลเดือนนี้ → อนุมัติ → นับเป็นผลของเดือน', async () => {
+  const staff = client((await login('1004')).cookie); // ต้น: หัวข้อ 4.1–4.2
+  const mgr = client((await login('1002')).cookie);
+  const dir = client((await login('1001')).cookie);
+  const wp = await staff.get('/workplan');
+  assert.equal(wp.status, 200);
+  assert.deepEqual(wp.data.items.map(i => i.id).sort(), ['W70-003', 'W70-004', 'W70-008']);
+  const cur = wp.data.cursor;
+  const it = wp.data.items.find(i => i.id === 'W70-003');
+  assert.ok(it.plan[cur] && it.canReport);
+
+  const report = () => { const f = new FormData(); f.append('month', String(cur)); f.append('detail', 'ติดตามครบทุกปัจจัยเสี่ยง'); f.append('qty', '1');
+    f.append('files', new Blob(['%PDF-1.4 x'], { type: 'application/pdf' }), 'หลักฐานแผน.pdf'); return f; };
+  const r = await staff.form('/workplan/W70-003/report', report());
+  assert.equal(r.ok, true, r.message);
+  assert.equal((await staff.form('/workplan/W70-003/report', report())).status, 400, 'เดือนเดียวกันรายงานซ้ำไม่ได้');
+  const after1 = (await staff.get('/workplan')).data.items.find(i => i.id === 'W70-003');
+  assert.equal(after1.pending[cur], 'Pending Manager Approval');
+  const task = (await staff.get('/tasks/' + r.data.taskId)).data.task;
+  assert.equal(task.planRef.split('|')[0], 'W70-003');
+  assert.ok(task.attachments.some(a => a.name === 'หลักฐานแผน.pdf'));
+
+  assert.equal((await mgr.post('/tasks/decide', { ids: [r.data.taskId], decision: 'approve' })).ok, true);
+  assert.equal((await dir.post('/tasks/decide', { ids: [r.data.taskId], decision: 'approve' })).ok, true);
+  const done = (await staff.get('/workplan')).data.items.find(i => i.id === 'W70-003');
+  assert.equal(done.actual[cur], true);
+
+  // อีกคนรายงาน/กำหนดเดือนงานที่ไม่ใช่ของตนไม่ได้ · เจ้าของกำหนดเดือนเองได้
+  const other = client((await login('1005')).cookie);
+  assert.equal((await other.post('/workplan/W70-004/months', { months: [5] })).status, 404);
+  const set = await staff.post('/workplan/W70-004/months', { months: [5, 8] });
+  assert.deepEqual(set.data.months, [5, 8]);
+  assert.deepEqual((await staff.get('/workplan')).data.items.find(i => i.id === 'W70-004').plan.map((v, i) => (v ? i : -1)).filter(i => i >= 0), [5, 8]);
+  assert.equal((await staff.post('/workplan/W70-003/match', { value: 'ยืนยันแล้ว' })).data.match, 'ยืนยันแล้ว');
+});

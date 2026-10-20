@@ -11,6 +11,7 @@ import { login, logout, requireAuth, requireRole, listStaff, publicStaff, setPas
 import { uploadFile, streamFile, useDemoDrive, httpError } from './drive.js';
 import * as tasks from './tasks.js';
 import * as sipoc from './sipoc.js';
+import * as workplan from './workplan.js';
 import * as seam from './seam.js';
 import * as reports from './reports.js';
 import { teamPerformance } from './perf.js';
@@ -148,6 +149,16 @@ export async function createApp() {
     await sipoc.addSipocAttachments(req.user, req.params.id, files.map(({ fileId, name, mimeType, size }) => ({ fileId, name, mimeType, size })));
     ok(res, files);
   }));
+
+  // ---------------------------------------------------------------- งานตามแผน (WorkItems)
+  api.get('/workplan', h(async (req, res) => ok(res, await workplan.getWorkPlan(req.user))));
+  api.post('/workplan/:id/report', upload.array('files', 10), h(async (req, res) => {
+    await workplan.checkReport(req.user, req.params.id, req.body.month);
+    const files = await uploadAll(req, config.attachmentFolderId, `RMIC workplan ${req.params.id}`);
+    ok(res, await workplan.reportItem(req.user, req.params.id, req.body, files));
+  }));
+  api.post('/workplan/:id/months', h(async (req, res) => ok(res, await workplan.setMonths(req.user, req.params.id, req.body.months))));
+  api.post('/workplan/:id/match', h(async (req, res) => ok(res, await workplan.setMatch(req.user, req.params.id, req.body.value))));
 
   // ---------------------------------------------------------------- Dashboard (แต่ละแหล่งล้มเหลวได้โดยไม่ทำให้ทั้งหน้าล้ม)
   api.get('/dashboard', h(async (req, res) => {

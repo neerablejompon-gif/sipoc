@@ -13,19 +13,26 @@ export const config = {
   appUrl: env('APP_URL', ''),
   timezone: 'Asia/Bangkok',
 
-  // สเปรดชีต "Backend ระบบมอบหมายและติดตามงาน กบค."
-  tasksSpreadsheetId: env('TASKS_SPREADSHEET_ID', '13g8B7n79pECbGhb1wYWyXgcznDpKkDFEGDQQcHAeX_8'),
-  // ชีตงานปีปัจจุบัน (เขียนได้) และชีตปีก่อน (อ่านอย่างเดียว) รูปแบบ "ชื่อชีต:ปีงบ พ.ศ."
-  tasksSheet: env('TASKS_SHEET', 'Tasks_DB 70'),
+  // ฐานข้อมูลหลักปีงบ 2570: Staff, Topics, WorkItems (งานตามแผน), Tasks, Results และชีตที่ระบบสร้างเอง
+  dbSpreadsheetId: env('DB_SPREADSHEET_ID', '1Ao93DBHLcxNYa-FnAiSOevWawEzcqENwZwpKgJREyw8'),
+  tasksSpreadsheetId: env('TASKS_SPREADSHEET_ID', ''),
+  workItemsSheet: env('WORKITEMS_SHEET', 'WorkItems'),
+  resultsSheet: env('RESULTS_SHEET', 'Results'),
+  // สเปรดชีตเดิม "Backend ระบบมอบหมายและติดตามงาน กบค." — งานปี 2569 (อ่านอย่างเดียว) และรหัสผ่านเดิมสำหรับย้ายระบบ
+  legacySpreadsheetId: env('LEGACY_SPREADSHEET_ID', '13g8B7n79pECbGhb1wYWyXgcznDpKkDFEGDQQcHAeX_8'),
+  legacyStaffSheet: env('LEGACY_STAFF_SHEET', 'Staff_List'),
+  // ชีตงานปีปัจจุบัน (เขียนได้) และชีตปีก่อนในสเปรดชีตเดิม (อ่านอย่างเดียว) รูปแบบ "ชื่อชีต:ปีงบ พ.ศ."
+  tasksSheet: env('TASKS_SHEET', 'Tasks'),
   tasksFiscalYear: Number(env('TASKS_FISCAL_YEAR', 2570)),
   tasksArchiveSheets: list(env('TASKS_ARCHIVE_SHEETS', 'Tasks_DB:2569')).map(s => {
     const i = s.lastIndexOf(':');
     return i > 0 ? { sheet: s.slice(0, i), year: Number(s.slice(i + 1)) } : { sheet: s, year: 0 };
   }),
-  staffSheet: env('STAFF_SHEET', 'Staff_List'),
+  staffSheet: env('STAFF_SHEET', 'Staff'),
 
   // แผนปฏิบัติการปีงบ 2570 — ชีต "Actionplan ข้อ 1–5 / ประชุม / อบรม" ในสเปรดชีตงาน (คั่นด้วย ,)
   // ชีตรูปแบบเดิม (ActionPlanDATA: คอลัมน์ กิจกรรม + แผน/ผล) ยังอ่านได้ถ้าใส่ไว้ในรายการ
+  planSource: env('PLAN_SOURCE', 'workitems'), // workitems | sheets (ชีต Actionplan เดิม)
   planSpreadsheetId: env('PLAN_SPREADSHEET_ID', ''),
   planSheets: list(env('PLAN_SHEETS', env('PLAN_SHEET', 'Actionplan ข้อ 1,Actionplan ข้อ 2,Actionplan ข้อ 3,Actionplan ข้อ 4,Actionplan ข้อ 5,Actionplan ประชุม,Actionplan อบรม'))),
 
@@ -57,7 +64,8 @@ export const config = {
   cacheSeconds: Number(env('CACHE_SECONDS', 30)),
 };
 
-config.planSpreadsheetId = config.planSpreadsheetId || config.tasksSpreadsheetId;
+config.tasksSpreadsheetId = config.tasksSpreadsheetId || config.dbSpreadsheetId;
+config.planSpreadsheetId = config.planSpreadsheetId || config.legacySpreadsheetId;
 config.seamFolderId = config.seamFolderId || config.attachmentFolderId;
 config.reportFolderId = config.reportFolderId || config.attachmentFolderId;
 config.sipocFolderId = process.env.SIPOC_FOLDER_ID || config.attachmentFolderId;

@@ -1,6 +1,6 @@
 // ข้อมูลตัวอย่าง (สมมติทั้งหมด) สำหรับ DATA_DRIVER=demo — โครงสร้างชีตเหมือนฐานข้อมูลจริง
 import { config } from './config.js';
-import { legacyStamp, legacyDate, todayISO } from './dates.js';
+import { legacyStamp, legacyDate, todayISO, fiscalYearBE, fiscalMonthIndex } from './dates.js';
 
 const STAFF = [
   ['ใหญ่-ประเสริฐ', '1001', 'Director', 'RMIC', '', 'หัวหน้ากองบริหารความเสี่ยง'],
@@ -199,6 +199,29 @@ function seamForm() {
   return v;
 }
 
+/** งานตามแผนตัวอย่าง (โครงสร้างเดียวกับชีต WorkItems ของฐานข้อมูลจริง) */
+function workItems(today) {
+  const fy = fiscalYearBE(today), yy = n => String((n - 2500) % 100).padStart(2, '0');
+  const MS = ['ต.ค.', 'พ.ย.', 'ธ.ค.', 'ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.'];
+  const months = MS.map((m, i) => m + yy(i < 3 ? fy - 1 : fy));
+  const cur = fiscalMonthIndex(today);
+  const head = ['รหัสงาน', 'หัวข้อ', 'ชื่องาน/กิจกรรม', 'ที่มา', 'ผู้รับผิดชอบ (Employee_ID)', 'ชื่อผู้รับผิดชอบ', ...months,
+    'จำนวนเดือนตามแผน', 'ชีตแผนปฏิบัติการ', 'อ้างอิง SIPOC', 'อ้างอิง SEAM', 'ใช้ตอบหัวข้ออื่นได้', 'ข้อสังเกต', 'สถานะการจับคู่'];
+  const all = [...Array(12).keys()];
+  const items = [
+    ['W70-001', '1.1', 'ติดตามและรายงานผลตามแผนปฏิบัติการ GRC (รายงานทุกวันที่ 10 ของเดือน)', 'แผน', '1003', all, '1.1-P01', 'SM-1.1-004', '', 'รอยืนยัน'],
+    ['W70-002', '2.2', 'ถ่ายทอด RA/RT ประจำปีแก่ผู้มีส่วนได้ส่วนเสียที่เกี่ยวข้อง', 'แผน', '1003', [cur], '', '', '1.1', '-'],
+    ['W70-003', '4.1', 'กำกับติดตามการรายงานผลปัจจัยเสี่ยงระดับองค์กรผ่านระบบสารสนเทศ', 'แผน', '1004', [cur, (cur + 3) % 12], '4.1-P01', '', '', 'รอยืนยัน'],
+    ['W70-004', '4.2', 'ทบทวนกระบวนการปรับปรุงให้เชื่อมโยงกับแผนงานและ KPI', 'SEAM', '1004', [], '', 'SM-4.2-091', '', '-'],
+    ['W70-005', '3.1', 'Workshop ร่วมกับ Risk Owner ระบุปัจจัยเสี่ยงระดับองค์กร', 'แผน', '1005', [cur], '', '', '', '-'],
+    ['W70-006', '1.3', 'จัดทำ กบค.สาร ประจำเดือน', 'แผน', '1006', all, '1.3-P01', '', '1.4', 'รอยืนยัน'],
+    ['W70-007', '5.2', 'สรุปผลการรายงานผลปัจจัยเสี่ยงรายไตรมาส', 'แผน', '1007', [0, 3, 6, 9], '', '', '', '-'],
+    ['W70-008', '', 'จัดประชุมร่วมกับเจ้าของปัจจัยเสี่ยง (Risk Owner)', 'แผน', 'ทุกคน', [cur], '', '', '', '-'],
+  ];
+  return [head, ...items.map(([id, topic, name, src, owner, plan, sipoc, seam, also, match]) =>
+    [id, topic, name, src, owner, '', ...months.map((_, i) => (plan.includes(i) ? '1' : '')), '', src === 'แผน' ? 'Actionplan ข้อ 1' : '', sipoc, seam, also, '', match])];
+}
+
 export function demoStore() {
   const today = todayISO();
   const tracking = [
@@ -210,13 +233,15 @@ export function demoStore() {
   return {
     [config.tasksSpreadsheetId]: {
       [config.tasksSheet]: makeTasks(today, 'RM70-', 48, 0, 7, false),
-      ...Object.fromEntries(config.tasksArchiveSheets.map(a => [a.sheet, makeTasks(addDays(today, -365), 'T', 40, 0, 11, true)])),
+      [config.workItemsSheet]: workItems(today),
+      Topics: [['หัวข้อ', 'หมวด', 'ชื่อหัวข้อ'], ['1.1', '1', 'การกำกับดูแลกิจการที่ดี (GRC)'], ['4.1', '4', 'การทบทวนผลการบริหารความเสี่ยง']],
       [config.staffSheet]: [
         ['Nickname', 'Email', 'PhotoURL', 'LineUserID', 'Employee_ID', 'Role', 'Department', 'ReportsTo', 'JobTitle', 'Password', 'SIPOC (หัวข้อ)', 'SEAM (หัวข้อ)'],
         ...STAFF.map(([n, id, role, dep, rep, job, topics = '']) => [n, 'demo@example.com', '', '', id, role, dep, rep, job, 'demo1234', topics, topics]),
       ],
       [config.planSheets[0]]: actionPlan(),
     },
+    [config.legacySpreadsheetId]: Object.fromEntries(config.tasksArchiveSheets.map(a => [a.sheet, makeTasks(addDays(today, -365), 'T', 40, 0, 11, true)])),
     [config.seamSpreadsheetId]: { [config.seamSheet]: seamForm() },
     [config.sipocSpreadsheetId]: {
       'sipoc-seed': sipocSeed(),

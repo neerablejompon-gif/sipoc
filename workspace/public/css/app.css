@@ -556,3 +556,21 @@ table.t td.num, table.t th.num { text-align: right; }
   .shell { display: block; }
   .glass { box-shadow: none; backdrop-filter: none; background: #fff; }
 }
+
+/* ---------- งานตามแผน (WorkItems) ---------- */
+.wp-month button.active { background: var(--grad); color: #fff; border-color: transparent; box-shadow: 0 6px 16px rgba(30, 79, 224, .3); }
+.wp-month button.now:not(.active) { border-color: var(--primary-2); color: var(--primary); }
+.wp-month button { min-height: 40px; padding: 0 12px; }
+.wp-months { display: grid; grid-template-columns: repeat(12, 14px); gap: 4px; }
+.wp-months span { width: 14px; height: 14px; border-radius: 4px; background: rgba(82, 98, 138, .12); }
+.wp-months span.pl { background: transparent; border: 2px dashed var(--primary-2); }
+.wp-months span.p { background: var(--warn-c); }
+.wp-months span.a { background: var(--ok); }
+.wp-months span.x { background: var(--crit-bg); border: 2px solid var(--crit-c); }
+.wp-months span.cur { outline: 2px solid var(--ink); outline-offset: 1px; }
+.wp-pick { border: 0; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; }
+.wp-pick legend { margin-bottom: 8px; }
+@media (max-width: 640px) {
+  .wp-months { grid-template-columns: repeat(12, 10px); gap: 3px; } .wp-months span { width: 10px; height: 10px; }
+  .wp-month { flex-wrap: nowrap; overflow-x: auto; max-width: 100%; padding-bottom: 4px; } .wp-month button { flex: 0 0 auto; }
+}

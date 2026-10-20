@@ -22,23 +22,27 @@ export function parseRoles(text) {
   return { role, admin: roles.includes('Admin') };
 }
 
+// ชีต Staff ของฐานข้อมูลใหม่ใช้หัวคอลัมน์ภาษาไทย ส่วน Staff_List เดิมใช้ภาษาอังกฤษ — อ่านได้ทั้งสองแบบ
+const pick = (r, ...keys) => { for (const k of keys) if (r[k] !== undefined && String(r[k]).trim() !== '') return String(r[k]).trim(); return ''; };
+
 export function staffFromRow(r) {
   const active = String(r.Active ?? '').trim().toUpperCase();
   return {
     ...parseRoles(r.Role),
-    // หัวข้อที่รับผิดชอบตาม Staff_List — ใช้กำหนดสิ่งที่ Staff มองเห็น/แก้ไขได้
-    sipocTopics: parseTopics(r['SIPOC (หัวข้อ)']),
-    seamTopics: parseTopics(r['SEAM (หัวข้อ)']),
-    topicRole: String(r['Role:SIPOC & SEAM'] || '').trim(),
-    name: String(r.Nickname || '').trim(),
+    // หัวข้อที่รับผิดชอบ — ใช้กำหนดสิ่งที่ Staff มองเห็น/แก้ไขได้
+    sipocTopics: parseTopics(pick(r, 'หัวข้อ (หลัก)', 'SIPOC (หัวข้อ)')),
+    seamTopics: parseTopics(pick(r, 'หัวข้อ (หลัก)', 'SEAM (หัวข้อ)')),
+    topicRole: pick(r, 'Role:SIPOC & SEAM'),
+    name: pick(r, 'ชื่อ-นามสกุล', 'Nickname'),
+    nickname: pick(r, 'ชื่อเล่น'),
     employeeId: String(r.Employee_ID || '').trim(),
     email: String(r.Email || '').trim(),
     photoUrl: r.PhotoURL || '',
     lineUserId: r.LineUserID || '',
-    department: String(r.Department || '').trim(),
-    reportsTo: String(r.ReportsTo || '').trim(),
-    jobTitle: String(r.JobTitle || r.Position || '').trim(),
-    fullName: String(r.FullName || r['ชื่อ-นามสกุล'] || '').trim(),
+    department: pick(r, 'แผนก', 'Department'),
+    reportsTo: pick(r, 'หัวหน้า (Employee_ID)', 'ReportsTo'),
+    jobTitle: pick(r, 'ตำแหน่ง', 'JobTitle', 'Position'),
+    fullName: pick(r, 'FullName', 'ชื่อ-นามสกุล'),
     active: active !== 'FALSE' && active !== 'NO' && active !== '0',
   };
 }
@@ -46,14 +50,17 @@ export function staffFromRow(r) {
 export async function listStaff() {
   const t = await loadStaffTable();
   const list = t.rows.map(staffFromRow).filter(s => s.name && s.employeeId);
-  // ReportsTo อาจเป็นรูปแบบเดิม "โบว์-พริมารัศม์" → ใช้ชื่อตาม Staff_List
-  list.forEach(s => { s.reportsTo = (s.reportsTo && list.find(x => samePerson(x.name, s.reportsTo))?.name) || s.reportsTo; });
+  // หัวหน้าอาจเป็นรหัสพนักงาน หรือรูปแบบเดิม "โบว์-พริมารัศม์" → ใช้ชื่อตามชีต Staff
+  list.forEach(s => {
+    const rt = s.reportsTo;
+    s.reportsTo = (rt && (list.find(x => x.employeeId === rt) || list.find(x => samePerson(x.name, rt)))?.name) || rt;
+  });
   return list;
 }
 
 /** ข้อมูลที่ส่งให้ frontend ได้ (ไม่มีอีเมล / LINE ID / รหัสผ่าน) */
 export const publicStaff = s => ({
-  name: s.name, employeeId: s.employeeId, photoUrl: s.photoUrl, role: s.role, admin: s.admin,
+  name: s.name, nickname: s.nickname, employeeId: s.employeeId, photoUrl: s.photoUrl, role: s.role, admin: s.admin,
   sipocTopics: s.sipocTopics, seamTopics: s.seamTopics, topicRole: s.topicRole,
   department: s.department, reportsTo: s.reportsTo, jobTitle: s.jobTitle, fullName: s.fullName, active: s.active,
 });
@@ -121,7 +128,10 @@ export async function login(req, res) {
   const t = await loadStaffTable(true);
   const row = t.rows.find(r => String(r.Employee_ID).trim() === id);
   const staff = row && staffFromRow(row);
-  if (!staff || !staff.active || !verifyPassword(row.Password, pw)) {
+  // ย้ายระบบ: บัญชีที่ยังไม่มีรหัสผ่านในฐานข้อมูลใหม่ ใช้รหัสผ่านเดิมจาก Staff_List ได้ครั้งแรก แล้วเก็บเป็น hash ทันที
+  const migrated = staff && staff.active && !String(row.Password || '').trim() && await legacyPasswordOk(id, pw);
+  if (migrated) await setPassword(id, pw).catch(e => console.error('migrate password', id, e.message));
+  if (!staff || !staff.active || !(migrated || verifyPassword(row.Password, pw))) {
     addFail(k);
     return res.status(401).json({ ok: false, message: 'รหัสพนักงานหรือรหัสผ่านไม่ถูกต้อง' });
   }
@@ -134,6 +144,15 @@ export async function login(req, res) {
     ...(remember ? { maxAge: hours * 3600 * 1000 } : {}),
   });
   res.json({ ok: true, data: publicStaff(staff) });
+}
+
+async function legacyPasswordOk(id, pw) {
+  if (!config.legacyStaffSheet || config.legacySpreadsheetId === config.tasksSpreadsheetId) return false;
+  try {
+    const t = await readTable(config.legacySpreadsheetId, config.legacyStaffSheet);
+    const r = t.rows.find(x => String(x.Employee_ID).trim() === id);
+    return !!r && !!String(r.Password || '').trim() && verifyPassword(r.Password, pw);
+  } catch { return false; }
 }
 
 export function logout(req, res) {

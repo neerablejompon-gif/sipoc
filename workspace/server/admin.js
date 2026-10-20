@@ -70,18 +70,31 @@ export async function adminStaff() {
 export async function saveStaff(input, { isNew = false } = {}) {
   const name = String(input.name || '').trim();
   const id = String(input.employeeId || '').trim();
-  if (!name || !/^[\w-]{1,20}$/.test(id)) throw httpError(400, 'กรุณาระบุชื่อ (ชื่อเล่น-ชื่อจริง) และรหัสพนักงาน');
+  if (!name || !/^[\w-]{1,20}$/.test(id)) throw httpError(400, 'กรุณาระบุชื่อ-นามสกุล และรหัสพนักงาน');
   if (input.role && !String(input.role).split(/\s*,\s*/).every(r => ROLES.includes(r))) throw httpError(400, 'บทบาทไม่ถูกต้อง');
   const topics = v => (v === undefined ? undefined : parseTopics(v).join(', '));
   if (input.photoUrl && !validUrl(input.photoUrl)) throw httpError(400, 'URL รูปต้องขึ้นต้นด้วย https://');
   return withLock(config.tasksSpreadsheetId, async () => {
-    await ensureSheet(config.tasksSpreadsheetId, config.staffSheet, ['Active', 'FullName', 'SIPOC (หัวข้อ)', 'SEAM (หัวข้อ)']);
-    const t = await loadStaffTable(true);
+    let t = await loadStaffTable(true);
+    const thai = t.headers.includes('ชื่อ-นามสกุล'); // ชีต Staff ของฐานข้อมูลใหม่ (หัวคอลัมน์ภาษาไทย)
+    if (!thai) {
+      await ensureSheet(config.tasksSpreadsheetId, config.staffSheet, ['Active', 'FullName', 'SIPOC (หัวข้อ)', 'SEAM (หัวข้อ)']);
+      t = await loadStaffTable(true);
+    }
     let row = t.rows.find(r => String(r.Employee_ID).trim() === id);
     if (isNew && row) throw httpError(400, 'รหัสพนักงานนี้มีอยู่แล้ว');
     if (!isNew && !row) throw httpError(404, 'ไม่พบผู้ใช้');
     row = row || { Employee_ID: id, Email: '', LineUserID: '' };
-    Object.assign(row, {
+    if (thai) {
+      const staff = t.rows.map(staffFromRow);
+      const boss = input.reportsTo === undefined ? undefined : (staff.find(s => s.name === input.reportsTo)?.employeeId || '');
+      Object.assign(row, {
+        'ชื่อ-นามสกุล': name, Role: input.role || row.Role || 'Staff', 'แผนก': input.department ?? row['แผนก'] ?? '',
+        'หัวหน้า (Employee_ID)': boss ?? row['หัวหน้า (Employee_ID)'] ?? '', 'ตำแหน่ง': input.jobTitle ?? row['ตำแหน่ง'] ?? '',
+        PhotoURL: input.photoUrl ?? row.PhotoURL ?? '', Active: input.active === false ? 'FALSE' : 'TRUE',
+        'หัวข้อ (หลัก)': topics(input.sipocTopics) ?? row['หัวข้อ (หลัก)'] ?? '',
+      });
+    } else Object.assign(row, {
       Nickname: name, Role: input.role || row.Role || 'Staff', Department: input.department ?? row.Department ?? '',
       ReportsTo: input.reportsTo ?? row.ReportsTo ?? '', JobTitle: input.jobTitle ?? row.JobTitle ?? '',
       PhotoURL: input.photoUrl ?? row.PhotoURL ?? '', Active: input.active === false ? 'FALSE' : 'TRUE',

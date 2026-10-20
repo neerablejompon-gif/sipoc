@@ -1,9 +1,10 @@
-// My Task — สถานะงาน, รายการงาน (รายงาน/ส่งงาน/แนบไฟล์), Task Tracking, แผนของฉัน, ปฏิทิน
+// My Task — งานตามแผนประจำเดือน, สถานะงาน, รายการงาน (รายงาน/ส่งงาน/แนบไฟล์), Task Tracking, แผนของฉัน, ปฏิทิน
 import { $, $$, esc, icon, errorBox, empty, statusBadge, isoDay, pct } from '../ui.js';
 import { taskCard, bindCards, openTask, stepper, calendar } from '../tasks-ui.js';
 import { planRows, gantt, bindGantt, legend, matchesPerson } from '../plan-ui.js';
+import { drawWorkPlan } from '../workplan-ui.js';
 
-const state = { tab: 'list', filter: 'active', period: 'all', q: '', year: 'current', limit: 20, cal: {} };
+const state = { tab: 'work', filter: 'active', period: 'all', q: '', year: 'current', limit: 20, cal: {} };
 const FILTERS = {
   all: { th: 'ทั้งหมด', fn: () => true },
   active: { th: 'ต้องดำเนินการ', fn: t => ['Assigned', 'In Progress', 'Needs Revision'].includes(t.status) },
@@ -37,9 +38,10 @@ export async function render(el, { app, params }) {
     </div>
     <div class="row between" style="margin-bottom:14px">
       <div class="tabs" role="tablist">
+        <button data-tab="work">${icon('event_note')}งานตามแผน</button>
         <button data-tab="list">${icon('view_agenda')}รายการงาน</button>
         <button data-tab="tracking">${icon('route')}Task Tracking</button>
-        <button data-tab="plan">${icon('view_timeline')}แผนของฉัน</button>
+        <button data-tab="plan">${icon('view_timeline')}แผนทั้งปี</button>
         <button data-tab="calendar">${icon('calendar_month')}ปฏิทินงาน</button>
       </div>
     </div>
@@ -83,7 +85,7 @@ export async function render(el, { app, params }) {
   }
 
   function drawPlan(body) {
-    body.innerHTML = `<div class="glass panel"><div class="panel-head"><h3>${icon('view_timeline')}แผนปฏิบัติการ & SIPOC ที่ฉันรับผิดชอบ</h3>${legend()}</div><div id="mt-gantt">${'<div class="skeleton"></div>'}</div></div>`;
+    body.innerHTML = `<div class="glass panel"><div class="panel-head"><h3>${icon('view_timeline')}แผนทั้งปีที่ฉันรับผิดชอบ</h3>${legend()}</div><div id="mt-gantt">${'<div class="skeleton"></div>'}</div></div>`;
     app.plan().then(d => {
       const rows = planRows(d).filter(r => matchesPerson(r.who, me.name));
       const g = $('#mt-gantt', body);
@@ -97,6 +99,7 @@ export async function render(el, { app, params }) {
     $$('[data-tab]', el).forEach(b => b.classList.toggle('active', b.dataset.tab === state.tab));
     $$('[data-f]', el).forEach(k => k.classList.toggle('selected', state.tab === 'list' && k.dataset.f === state.filter));
     const body = $('#mt-body', el);
+    if (state.tab === 'work') drawWorkPlan(body, app);
     if (state.tab === 'list') drawList(body);
     if (state.tab === 'tracking') drawTracking(body);
     if (state.tab === 'plan') drawPlan(body);
